@@ -1,5 +1,19 @@
 # Project Progress
 
+## 2026-09-27 — Operator-confirmed live v0.3.0 acceptance
+
+- Operator confirmed live Telegram menus, both languages, search/download controls,
+  health-card interaction, completion delivery and normal restart recovery for
+  exact release `18e940b` on Linux amd64 NAS.
+- Added a public acceptance record and replaced the outdated blanket statement
+  that live Telegram acceptance had not occurred. Scope distinguishes operator
+  observations, agent checks and automated coverage; crash duplicates and ARM
+  limitations remain documented. No private setup data was copied.
+- Runtime/tag unchanged. Documentation-only validation: reviewed scope and relative
+  links, whitespace checks. Previous release tests remain the runtime evidence.
+- Next: apply relevant verification to future changes; no live v0.3.0 test stack
+  needs to keep running after acceptance.
+
 ## 2026-09-27 — Runtime package and file organization
 
 - Moved all 12 root Python modules into `qbitbot/`; maintenance commands live in

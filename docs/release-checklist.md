@@ -13,7 +13,8 @@ private Git refs, diagnostic reports or database snapshots into a release.
 - Inspect the generated preview pixels and metadata; record real Telegram acceptance separately.
 
 Only Linux amd64 containers are accepted. Automated scenarios have no live tracker
-accounts or Telegram token and cannot prove real Telegram delivery.
+accounts or Telegram token and cannot prove real Telegram delivery. The separate
+[operator-confirmed v0.3.0 live acceptance](acceptance-v0.3.0.md) supplements those checks.
 
 ## Privacy audit
 

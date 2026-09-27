@@ -35,7 +35,10 @@ is separate and may replay notices. See bilingual backup guides for name mapping
 
 `v0.3.0` is the first public release; qBittorrent 5.x is required for controls
 (the bundled tested version is 5.1.2). Release CI accepts Linux amd64 and uses only
-synthetic Telegram transport. Real Telegram acceptance remains a separate check.
+synthetic Telegram transport. The operator confirmed live acceptance of the exact
+v0.3.0 release on Linux amd64 on 2026-09-27, including completion delivery and normal
+restart recovery; see `docs/acceptance-v0.3.0.md`. This does not certify ARM or later
+source revisions. Crash-time notification duplicates remain an expected limitation.
 
 ## Source layout and rollback fixtures
 

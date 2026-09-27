@@ -32,10 +32,11 @@ Synthetic examples rendered from the bot's message formatters; these are not liv
 
 [Troubleshooting](docs/troubleshooting.en.md) · [Устранение неполадок](docs/troubleshooting.ru.md)
 
-Tested platform: Linux amd64 containers. Automated checks use generated torrents,
-local APIs and a fake Telegram transport. Real Telegram delivery for this public
-version has not yet had manual acceptance. No prebuilt registry image is published;
-Compose builds the bot from the reviewed source.
+Tested platform: Linux amd64 containers, including a NAS deployment of v0.3.0.
+Live Telegram acceptance was confirmed by the operator on 2026-09-27; see the
+[acceptance record](docs/acceptance-v0.3.0.md) for scope and remaining limitations.
+Automated checks use generated torrents, local APIs and a fake Telegram transport.
+No prebuilt registry image is published; Compose builds the bot from reviewed source.
 
 ## Development
 

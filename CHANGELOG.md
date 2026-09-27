@@ -24,6 +24,10 @@ restore on Linux amd64. Independent review findings were fixed and regression-te
 Public history/source and image layers passed privacy scans with only a reviewed
 upstream public signing fingerprint exception in the artifact audit.
 
-Limits: real Telegram delivery for this public version has not had manual acceptance;
-other architectures are not verified. Notifications may repeat after a crash. No
+Post-release verification (2026-09-27): operator-confirmed live Telegram acceptance
+on a Linux amd64 NAS covers both languages, search/download controls, completion
+messages, restart recovery and health-card interaction. See
+[acceptance scope](docs/acceptance-v0.3.0.md).
+
+Limits: other architectures are not verified. Notifications may repeat after a crash. No
 prebuilt registry image, Telegram torrent-file upload or media-app integration is included.
