@@ -1,0 +1,18 @@
+# Used only by public_stack.py with a new, recorded project name.
+services:
+  bot:
+    image: ${TEST_BOT_IMAGE}
+    command: [python, -c, 'import time; time.sleep(1800)']
+    restart: 'no'
+  qbittorrent:
+    ports: !reset []
+    volumes: !override [qbit-config:/config, test-downloads:/downloads]
+    restart: 'no'
+  jackett:
+    ports: !reset []
+    restart: 'no'
+networks:
+  default:
+    internal: true
+volumes:
+  test-downloads:

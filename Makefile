@@ -22,3 +22,7 @@ integration:
 .PHONY: compose-check
 compose-check:
 	$(PYTHON) integration/compose_check.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),)
+
+.PHONY: integration-public
+integration-public:
+	$(PYTHON) integration/public_stack.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),) --scenario all
