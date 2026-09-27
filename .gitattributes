@@ -1,0 +1,2 @@
+# Preserve the imported application's CRLF without flagging CR as trailing space.
+tg_torrent_bot.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

@@ -1,0 +1,20 @@
+PYTHON ?= .venv/bin/python
+RUFF ?= .venv/bin/ruff
+DOCKER ?= docker
+DOCKER_CONTEXT ?=
+MODULES = watch_store.py monitoring.py downloads.py search_ui.py health.py
+.PHONY: test known-bugs lint format check integration
+test:
+	$(PYTHON) -m pytest
+known-bugs:
+	$(PYTHON) -m pytest -m known_bug --runxfail
+lint:
+	$(RUFF) check tests integration $(MODULES)
+	$(RUFF) format --check tests integration $(MODULES)
+format:
+	$(RUFF) format tests integration $(MODULES)
+check: test lint
+	$(PYTHON) -m py_compile tg_torrent_bot.py $(MODULES)
+	$(PYTHON) -m pip --no-cache-dir check
+integration:
+	$(PYTHON) integration/run.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),)
