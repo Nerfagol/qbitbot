@@ -1026,17 +1026,19 @@ def search_browser(language_for_user=lambda user: "en"):
 
 
 def search_jobs(context):
-    return context.application.bot_data.setdefault("search_jobs", SearchJobs())
+    return context.application.bot_data.setdefault("search_jobs", SearchJobs(language_service(context).for_user))
 
 
 async def dispatch_search(update, context):
     if allowed(update):
+        language_for_update(update, context)
         await search_jobs(context).start(update, context, on_text)
 
 
 async def dispatch_pick(update, context):
     if not allowed(update):
         return
+    language_for_update(update, context)
     jobs = search_jobs(context)
     if jobs.busy(update.effective_user.id):
         await jobs.unavailable(update)

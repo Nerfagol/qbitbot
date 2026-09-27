@@ -11,10 +11,23 @@ import requests
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 
+from i18n import tr
+
 PAGE_SIZE = 5
 ENOUGH_SOURCES = 25
-QUALITY_FILTERS = {"any": "Любое качество", "1080p": "1080p", "4K": "4K"}
-SIZE_FILTERS = {0: "Любой размер", 5: "До 5 ГБ", 10: "До 10 ГБ", 20: "До 20 ГБ"}
+
+
+def quality_filters(language):
+    return {"any": tr("search.filter.any_quality", language), "1080p": "1080p", "4K": "4K"}
+
+
+def size_filters(language):
+    return {
+        0: tr("search.filter.any_size", language),
+        5: tr("search.filter.max5", language),
+        10: tr("search.filter.max10", language),
+        20: tr("search.filter.max20", language),
+    }
 
 
 class SearchResults(list):
@@ -36,25 +49,28 @@ class SearchResults(list):
         )
 
 
-def search_notice(results):
+def search_notice(results, *, language="en"):
     status = getattr(results, "availability", "unknown")
     if status == "complete":
-        return f"📡 Ответили поисковые источники: {results.responded} из {results.total}."
+        return tr("search.coverage.complete", language, v0=results.responded, v1=results.total)
     if status == "partial":
-        return f"⚠️ Поиск неполный: ответили {results.responded} из {results.total} источников."
+        return tr("search.coverage.partial", language, v0=results.responded, v1=results.total)
     if status == "unavailable":
-        return "⚠️ Поиск временно недоступен: поисковые источники не ответили успешно."
-    return "📡 Состояние поисковых источников неизвестно."
+        return tr("search.coverage.unavailable", language)
+    return tr("search.coverage.unknown", language)
 
 
-SORTS = {
-    "recommended": "⭐ Рекомендуемые",
-    "quality": "🎬 Качество",
-    "original": "🔎 Порядок поиска",
-    "seeds": "🌱 Источники ↓",
-    "small": "💾 Размер ↑",
-    "large": "💾 Размер ↓",
-}
+def sorts(language):
+    return {
+        "recommended": tr("search.sort.recommended", language),
+        "quality": tr("search.sort.quality", language),
+        "original": tr("search.sort.original", language),
+        "seeds": tr("search.sort.seeds", language),
+        "small": tr("search.sort.small", language),
+        "large": tr("search.sort.large", language),
+    }
+
+
 # Delimited release tokens only; resolution is inferred, not a verified media property.
 QUALITY_TIERS = (
     (9, "4K", r"2160p|4k|uhd"),
@@ -89,17 +105,17 @@ def source_count(item):
     return value if isinstance(value, int) and value >= 0 else None
 
 
-def availability(item):
+def availability(item, *, language="en"):
     seeds = source_count(item)
     if seeds is None:
-        return "⚪ Источники неизвестны"
+        return tr("search.sources.unknown", language)
     if seeds == 0:
-        return "🔴 Нет источников"
+        return tr("search.sources.none", language)
     if seeds < 5:
-        return "🟡 Мало источников"
+        return tr("search.sources.few", language)
     if seeds < 20:
-        return "🟢 Есть источники"
-    return "🟢 Много источников"
+        return tr("search.sources.available", language)
+    return tr("search.sources.many", language)
 
 
 def recommended_key(item):
@@ -126,23 +142,23 @@ def recommended_key(item):
     return 1, band, -(quality_points[rank] + size_points + seed_points), -(seeds or 0), 0
 
 
-def quality_label(item):
+def quality_label(item, *, language="en"):
     _, label = quality(item.get("title"))
     return {
         "4K": "Ultra HD (4K)",
-        "1440p": "Высокое разрешение",
+        "1440p": tr("search.quality.high", language),
         "1080p": "Full HD",
         "1080i": "Full HD",
         "720p": "HD",
-        "576p": "Обычное качество",
-        "480p": "Обычное качество",
-        "SD": "Обычное качество",
-        "CAM/TS": "Экранная запись",
-        "—": "Качество неизвестно",
+        "576p": tr("search.quality.standard", language),
+        "480p": tr("search.quality.standard", language),
+        "SD": tr("search.quality.standard", language),
+        "CAM/TS": tr("search.quality.camera", language),
+        "—": tr("search.quality.unknown", language),
     }[label]
 
 
-STALE = "Список устарел. Отправь запрос ещё раз через /search."
+STALE = "search.stale"
 
 
 def compact(value, limit):
@@ -150,9 +166,9 @@ def compact(value, limit):
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
-def release_details(value):
+def release_details(value, *, language="en"):
     """Conservative title hints, not verified media metadata; retain ambiguous names."""
-    original = str(value or "Без названия")
+    original = str(value or tr("search.untitled", language))
     text = compact(original, len(original) + 1)
     details = {"heading": text, "episode": None, "audio": None}
 
@@ -180,10 +196,12 @@ def release_details(value):
         and release_tail(text[episode.end() :])
     ):
         season, first, last = episode.groups()
-        details["episode"] = f"Сезон {int(season)}"
+        details["episode"] = tr("search.release.season", language, v0=int(season))
         if first:
             details["episode"] += (
-                f" · Серии {int(first)}–{int(last)}" if last else f" · Серия {int(first)}"
+                tr("search.release.episodes", language, v0=int(first), v1=int(last))
+                if last
+                else tr("search.release.episode", language, v0=int(first))
             )
     else:
         episode = None
@@ -221,23 +239,25 @@ def release_details(value):
         original,
         re.I,
     )
-    language = r"(?:rus|russian|русский|русская|eng|english|английский|английская)"
+    audio_pattern = r"(?:rus|russian|русский|русская|eng|english|английский|английская)"
     # Accept complete language lists only. Prose, unknown terms, negations or
     # subtitle annotations make the field ambiguous, so leave it out entirely.
     audio = " ".join(
         field
         for field in audio_fields
-        if re.fullmatch(rf"\s*{language}(?:\s*[/,+&]\s*{language})*\s*", field, re.I)
+        if re.fullmatch(rf"\s*{audio_pattern}(?:\s*[/,+&]\s*{audio_pattern})*\s*", field, re.I)
     )
     languages = []
     for pattern, label in (
-        (r"rus|russian|русский|русская", "Русский"),
-        (r"eng|english|английский|английская", "английский"),
+        (r"rus|russian|русский|русская", tr("search.release.russian", language)),
+        (r"eng|english|английский|английская", tr("search.release.english", language)),
     ):
         if re.search(r"(?<!\w)(?:" + pattern + r")(?!\w)", audio, re.I):
             languages.append(label)
     if languages:
-        details["audio"] = ", ".join(languages).capitalize()
+        details["audio"] = (
+            ", ".join(languages).capitalize() if language == "ru" else ", ".join(languages)
+        )
     return details
 
 
@@ -287,61 +307,58 @@ class SearchBrowser:
     async def search(self, update, context, query=None, message=None):
         if not self.api.allowed(update):
             return
+        language = self.api.language_for_user(update.effective_user.id)
         query = query if query is not None else (update.message.text or "").strip()
         if not query:
             return
         if message is None:
-            message = await update.message.reply_text(
-                "👀 Ищу… Индексаторам может понадобиться время."
-            )
+            message = await update.message.reply_text(tr("search.searching", language))
         else:
-            await message.edit_text(
-                "👀 Ищу… Индексаторам может понадобиться время.", reply_markup=None
-            )
+            await message.edit_text(tr("search.searching", language), reply_markup=None)
         request = secrets.token_hex(8)
         context.user_data["search_request"] = request
         session = self.session(update, message, query)
-        failure = "Поиск временно недоступен. Попробуй ещё раз."
+        failure = tr("search.unavailable", language)
         try:
             results = await asyncio.to_thread(self.api.search, query, self.api.limit)
         except requests.Timeout:
             results = None
-            failure = "Поиск не успел завершиться. Попробуй ещё раз."
+            failure = tr("search.timeout", language)
         except Exception:
             results = None
         if context.user_data.get("search_request") != request:
-            await message.edit_text(
-                "Открыт более новый поиск. Используй его результаты.", reply_markup=None
-            )
+            await message.edit_text(tr("search.superseded", language), reply_markup=None)
             return
         if not results:
             status = getattr(results, "availability", "unknown")
             if results is None:
                 text = failure
             elif status == "complete":
-                text = "Ничего не нашёл 😕 Попробуй уточнить название или год.\n" + search_notice(
-                    results
-                )
+                text = tr("search.empty", language) + search_notice(results, language=language)
             elif status == "partial":
-                text = (
-                    search_notice(results)
-                    + "\nВ ответивших источниках ничего не найдено. Попробуй повторить поиск."
+                text = search_notice(results, language=language) + tr(
+                    "search.partial_empty", language
                 )
             elif status == "unavailable":
-                text = search_notice(results) + "\nПопробуй повторить позже."
+                text = search_notice(results, language=language) + tr("search.later", language)
             else:
                 text = (
-                    "Ничего не нашёл в полученном ответе.\n"
-                    + search_notice(results)
-                    + "\nУточни запрос или повтори позже."
+                    tr("search.unknown_empty", language)
+                    + search_notice(results, language=language)
+                    + tr("search.refine", language)
                 )
             if context.user_data.get("search"):
-                text += "\nПредыдущие результаты остаются доступны до истечения срока кнопок."
+                text += tr("search.previous", language)
             await self.render(
                 message,
                 session,
                 text,
-                [[("🔄 Повторить", ("retry", None)), ("🔎 Изменить запрос", ("new", None))]],
+                [
+                    [
+                        (tr("search.retry", language), ("retry", None)),
+                        (tr("search.change_query", language), ("new", None)),
+                    ]
+                ],
             )
             context.user_data["search_retry"] = session
             return
@@ -363,7 +380,11 @@ class SearchBrowser:
             show_filters=False,
             quality_filter="any",
             size_filter=0,
-            search_notice=search_notice(results),
+            search_coverage=SimpleNamespace(
+                availability=getattr(results, "availability", "unknown"),
+                responded=getattr(results, "responded", 0),
+                total=getattr(results, "total", 0),
+            ),
             search_incomplete=getattr(results, "availability", "unknown")
             in {"partial", "unavailable"},
         )
@@ -411,72 +432,94 @@ class SearchBrowser:
 
         return sorted(indices, key=key)
 
-    def metadata(self, item, *, preview=False):
+    def metadata(self, item, *, preview=False, language="en"):
         size = item.get("size")
         size_text = (
-            self.api.human_size(size) if isinstance(size, int) and size > 0 else "неизвестно"
+            self.api.human_size(size)
+            if isinstance(size, int) and size > 0
+            else tr("search.unknown", language)
         )
         seeds = source_count(item)
-        label = quality_label(item)
+        label = quality_label(item, language=language)
         if preview:
             raw = quality(item.get("title"))[1]
-            exact = str(seeds) if seeds is not None else "неизвестно"
-            return (
-                f"🎬 Качество: {label} ({raw}, по названию)\n💾 Размер: {size_text}\n"
-                f"{availability(item)}\nПолных источников: {exact}"
+            exact = str(seeds) if seeds is not None else tr("search.unknown", language)
+            return tr(
+                "search.metadata",
+                language,
+                v0=label,
+                v1=raw,
+                v2=size_text,
+                v3=availability(item, language=language),
+                v4=exact,
             )
-        return f"🎬 {label} · 💾 {size_text} · {availability(item)}"
+        return f"🎬 {label} · 💾 {size_text} · {availability(item, language=language)}"
 
     async def list_view(self, message, session):
+        language = self.api.language_for_user(session["user"])
         indices = self.ordered(session)
         pages = max(1, (len(indices) + PAGE_SIZE - 1) // PAGE_SIZE)
         page = session["page"] = max(0, min(session["page"], pages - 1))
         resolution, ceiling = session.get("quality_filter", "any"), session.get("size_filter", 0)
         filtered = resolution != "any" or bool(ceiling)
-        count = f"{len(indices)} из {len(session['results'])}" if filtered else str(len(indices))
+        count = (
+            tr("search.filtered_count", language, v0=len(indices), v1=len(session["results"]))
+            if filtered
+            else str(len(indices))
+        )
         lines = [
             f"🔎 {compact(session['query'], 140)}",
-            f"📋 {count} результатов" + (f" · 📄 Страница {page + 1}/{pages}" if indices else ""),
-            f"{SORTS[session['sort']]}",
-        ]
-        if session.get("search_notice"):
-            lines.append(session["search_notice"])
-        if filtered:
-            lines.append(f"🎛 {QUALITY_FILTERS[resolution]} · {SIZE_FILTERS[ceiling]}")
-        if filtered or session.get("show_filters"):
-            lines.append("Фильтры — по найденным вариантам; качество — по названию.")
-        if not indices:
-            lines.append(
-                "\nПо этим фильтрам в найденных результатах ничего нет. Измени или сбрось фильтры."
+            (
+                tr("search.result_count", language, v0=count)
+                if filtered
+                else tr("search.results", language, count=len(indices))
             )
+            + (tr("search.page", language, v0=page + 1, v1=pages) if indices else ""),
+            f"{sorts(language)[session['sort']]}",
+        ]
+        if session.get("search_coverage"):
+            lines.append(search_notice(session["search_coverage"], language=language))
+        if filtered:
+            lines.append(
+                f"🎛 {quality_filters(language)[resolution]} · {size_filters(language)[ceiling]}"
+            )
+        if filtered or session.get("show_filters"):
+            lines.append(tr("search.filter_hint", language))
+        if not indices:
+            lines.append(tr("search.filter_empty", language))
         buttons, selections = [], []
         for position in range(page * PAGE_SIZE, min((page + 1) * PAGE_SIZE, len(indices))):
             index = indices[position]
             item = session["results"][index]
-            title = item.get("title") or "Без названия"
-            lines.append(f"\n{position + 1}. {compact(title, 140)}\n{self.metadata(item)}")
+            title = item.get("title") or tr("search.untitled", language)
+            lines.append(
+                f"\n{position + 1}. {compact(title, 140)}\n{self.metadata(item, language=language)}"
+            )
             selections.append((str(position + 1), ("preview", index)))
         if selections:
             buttons.append(selections)
         navigation = []
         if page:
-            navigation.append(("← Назад", ("page", page - 1)))
+            navigation.append((tr("search.back", language), ("page", page - 1)))
         if page + 1 < pages:
-            navigation.append(("Далее →", ("page", page + 1)))
+            navigation.append((tr("search.next", language), ("page", page + 1)))
         if navigation:
             buttons.append(navigation)
         if session.get("show_sorts"):
             for modes in (("recommended", "quality"), ("seeds", "original"), ("small", "large")):
                 buttons.append(
                     [
-                        (("✓ " if session["sort"] == mode else "") + SORTS[mode], ("sort", mode))
+                        (
+                            ("✓ " if session["sort"] == mode else "") + sorts(language)[mode],
+                            ("sort", mode),
+                        )
                         for mode in modes
                     ]
                 )
         if session.get("show_filters"):
             for field, options in (
-                ("quality_filter", QUALITY_FILTERS),
-                ("size_filter", SIZE_FILTERS),
+                ("quality_filter", quality_filters(language)),
+                ("size_filter", size_filters(language)),
             ):
                 buttons.append(
                     [
@@ -494,87 +537,105 @@ class SearchBrowser:
                     ]
                 )
         if filtered:
-            buttons.append([("↺ Сбросить фильтры", ("reset_filters", None))])
+            buttons.append([(tr("search.reset_filters", language), ("reset_filters", None))])
         if session.get("search_incomplete"):
-            buttons.append([("🔄 Повторить поиск", ("retry", None))])
+            buttons.append([(tr("search.retry_search", language), ("retry", None))])
         buttons.append(
             [
                 (
-                    "✖ Скрыть сортировку" if session.get("show_sorts") else "↕️ Сортировка",
+                    tr("search.hide_sort", language)
+                    if session.get("show_sorts")
+                    else tr("search.show_sort", language),
                     ("sort_menu", None),
                 ),
                 (
-                    "✖ Скрыть фильтры" if session.get("show_filters") else "🎛 Фильтры",
+                    tr("search.hide_filters", language)
+                    if session.get("show_filters")
+                    else tr("search.show_filters", language),
                     ("filter_menu", None),
                 ),
-                ("🔎 Новый поиск", ("new", None)),
+                (tr("search.new", language), ("new", None)),
             ]
         )
         if indices:
-            lines.append("\n👇 Нажми номер для просмотра")
+            lines.append(tr("search.select_number", language))
         await self.render(message, session, "\n".join(lines), buttons)
 
     async def preview(self, message, session, index):
+        language = self.api.language_for_user(session["user"])
         item = session["results"][index]
-        details = release_details(item.get("title"))
-        text = (
-            f"📄 {compact(details['heading'], 1000)}\n\n"
-            f"{self.metadata(item, preview=True)}\n📡 Трекер: {compact(item.get('source') or 'не указан', 100)}"
+        details = release_details(item.get("title"), language=language)
+        text = tr(
+            "search.preview",
+            language,
+            v0=compact(details["heading"], 1000),
+            v1=self.metadata(item, preview=True, language=language),
+            v2=compact(item.get("source") or tr("search.not_provided", language), 100),
         )
         if details["episode"]:
-            text += f"\n📺 {details['episode']} (по названию)"
+            text += tr("search.episode_hint", language, v0=details["episode"])
         if details["audio"]:
-            text += f"\n🔊 Аудио: {details['audio']} (по названию)"
-        text += "\n\nДобавить этот торрент в загрузки?"
+            text += tr("search.audio_hint", language, v0=details["audio"])
+        text += tr("search.confirm_add", language)
         buttons = [
-            [("⬇ Скачать", ("download", index))],
-            [("📄 Исходное название", ("original_name", (index, 0)))],
-            [("← К результатам", ("list", None)), ("🔎 Новый поиск", ("new", None))],
+            [(tr("search.download", language), ("download", index))],
+            [(tr("search.original_name", language), ("original_name", (index, 0)))],
+            [
+                (tr("search.back_results", language), ("list", None)),
+                (tr("search.new", language), ("new", None)),
+            ],
         ]
         await self.render(message, session, text, buttons)
 
     async def original_name(self, message, session, index, page):
-        original = str(session["results"][index].get("title") or "Без названия")
+        language = self.api.language_for_user(session["user"])
+        original = str(session["results"][index].get("title") or tr("search.untitled", language))
         # 1400 characters fit even if every character occupies two UTF-16 units.
         pages = max(1, (len(original) + 1399) // 1400)
         page = max(0, min(page, pages - 1))
         text = (
-            f"📄 Исходное название · {page + 1}/{pages}\n\n"
+            tr("search.original_page", language, v0=page + 1, v1=pages)
             + original[page * 1400 : (page + 1) * 1400]
         )
         navigation = []
         if page:
-            navigation.append(("← Назад", ("original_name", (index, page - 1))))
+            navigation.append((tr("search.back", language), ("original_name", (index, page - 1))))
         if page + 1 < pages:
-            navigation.append(("Далее →", ("original_name", (index, page + 1))))
+            navigation.append((tr("search.next", language), ("original_name", (index, page + 1))))
         buttons = [navigation] if navigation else []
-        buttons.append([("← К описанию", ("preview", index))])
+        buttons.append([(tr("search.back_preview", language), ("preview", index))])
         await self.render(message, session, text, buttons)
 
     async def feedback(self, message, session, index, outcome):
+        language = self.api.language_for_user(session["user"])
         status = outcome.get("status")
-        heading = {"added": "✅ Добавлено в загрузки", "exists": "ℹ️ Уже есть в загрузках"}.get(
-            status, "⚠️ Добавление пока не подтверждено"
-        )
+        heading = {
+            "added": tr("search.added", language),
+            "exists": tr("search.exists", language),
+        }.get(status, tr("search.uncertain", language))
         text = f"{heading}\n\n{compact(session['results'][index].get('title'), 1000)}"
         if status not in ("added", "exists"):
-            text += "\n\nОткрой загрузки перед повторной попыткой: торрент мог уже добавиться."
+            text += tr("search.check_before_retry", language)
         elif outcome.get("watching") is False:
-            text += "\n\n⚠️ Не удалось подтвердить уведомления. Проверяй прогресс в загрузках."
+            text += tr("search.watch_uncertain", language)
         elif outcome.get("watching") is True:
-            text += "\n\n🔔 Сообщу, когда скачивание завершится."
+            text += tr("search.watching", language)
         buttons = []
         if outcome.get("target"):
-            buttons.append([("📥 Открыть эту загрузку", ("target", outcome["target"]))])
+            buttons.append([(tr("search.open_download", language), ("target", outcome["target"]))])
         buttons += [
-            [("📥 Все загрузки", ("downloads", None))],
-            [("← К результатам", ("list", None)), ("🔎 Новый поиск", ("new", None))],
+            [(tr("search.all_downloads", language), ("downloads", None))],
+            [
+                (tr("search.back_results", language), ("list", None)),
+                (tr("search.new", language), ("new", None)),
+            ],
         ]
         await self.render(message, session, text, buttons)
 
     async def callback(self, update, context):
         if not self.api.allowed(update):
             return
+        language = self.api.language_for_user(update.effective_user.id)
         query = update.callback_query
         await query.answer()
         session = None
@@ -590,7 +651,7 @@ class SearchBrowser:
                 session = candidate
                 break
         if session is None:
-            await query.message.reply_text(STALE)
+            await query.message.reply_text(tr(STALE, language))
             return
         action, value = session["actions"][query.data]
         if action in ("downloads", "target"):
@@ -606,7 +667,7 @@ class SearchBrowser:
             return
         if action == "new":
             # This prompt does not change the current view, including Retry buttons.
-            await query.message.reply_text("🔎 Отправь новый запрос — название и, если нужно, год.")
+            await query.message.reply_text(tr("search.new_prompt", language))
             return
         preserve_results = action == "retry" and bool(session.get("results"))
         if preserve_results:
@@ -618,7 +679,7 @@ class SearchBrowser:
         try:
             if action == "retry":
                 message = (
-                    await query.message.reply_text("👀 Повторяю поиск…")
+                    await query.message.reply_text(tr("search.retrying", language))
                     if preserve_results
                     else query.message
                 )
@@ -628,7 +689,7 @@ class SearchBrowser:
             elif action == "original_name":
                 await self.original_name(query.message, session, *value)
             elif action == "download":
-                await query.message.edit_text("⏳ Добавляю выбранный торрент…", reply_markup=None)
+                await query.message.edit_text(tr("search.adding", language), reply_markup=None)
                 outcome = await self.api.add_selected(update, context, session["results"][value])
                 await self.feedback(query.message, session, value, outcome)
             else:
@@ -648,7 +709,4 @@ class SearchBrowser:
                     session["page"] = value
                 await self.list_view(query.message, session)
         except TelegramError:
-            await query.message.reply_text(
-                "Не удалось обновить сообщение. Открой /search заново; "
-                "если нажимал «Скачать», сначала проверь /downloads."
-            )
+            await query.message.reply_text(tr("search.edit_error", language))

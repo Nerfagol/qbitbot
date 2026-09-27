@@ -3,6 +3,8 @@
 import asyncio
 from types import SimpleNamespace
 
+from i18n import tr
+
 from telegram import InlineKeyboardMarkup
 from telegram.error import BadRequest, Forbidden, RetryAfter
 
@@ -197,7 +199,8 @@ class WatchManager:
 class SearchJobs:
     """Bound slow work per user without blocking the sequential control handlers."""
 
-    def __init__(self):
+    def __init__(self, language_for_user=lambda user: "en"):
+        self.language_for_user = language_for_user
         self.tasks = {}
         self.closed = False
 
@@ -210,11 +213,9 @@ class SearchJobs:
         if query:
             await query.answer()
         message = query.message if query else update.message
+        language = self.language_for_user(update.effective_user.id)
         await message.reply_text(
-            "⏳ Дождись завершения текущего поиска или добавления. "
-            "Загрузки и их управление доступны через /downloads."
-            if not self.closed
-            else "Бот перезапускается. Попробуй ещё раз через минуту."
+            tr("search.busy" if not self.closed else "search.restarting", language)
         )
 
     async def start(self, update, context, callback):
@@ -230,9 +231,7 @@ class SearchJobs:
                 print("SEARCH JOB ERROR:", type(error).__name__)
                 message = update.callback_query.message if update.callback_query else update.message
                 try:
-                    await message.reply_text(
-                        "Не удалось завершить запрос. Если добавлял торрент, сначала проверь /downloads."
-                    )
+                    await message.reply_text(tr("search.job_failed", self.language_for_user(user)))
                 except Exception as delivery_error:
                     print("SEARCH JOB NOTICE ERROR:", type(delivery_error).__name__)
             finally:

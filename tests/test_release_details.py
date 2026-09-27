@@ -20,7 +20,7 @@ from tests.test_search_ui import button, click, results, start
 def test_ambiguous_audio_fields_never_claim_languages(field):
     from search_ui import release_details
 
-    assert release_details(f"Film.2024.1080p [Audio: {field}]")["audio"] is None
+    assert release_details(f"Film.2024.1080p [Audio: {field}]", language="ru")["audio"] is None
 
 
 @pytest.mark.parametrize(
@@ -34,7 +34,7 @@ def test_ambiguous_audio_fields_never_claim_languages(field):
 def test_unbracketed_numbers_remain_title_text_not_asserted_years(name, heading):
     from search_ui import release_details
 
-    assert release_details(name)["heading"] == heading
+    assert release_details(name, language="ru")["heading"] == heading
 
 
 @pytest.mark.parametrize(
@@ -58,7 +58,7 @@ def test_unbracketed_numbers_remain_title_text_not_asserted_years(name, heading)
 def test_extracts_only_clear_release_markers(name, heading, episode):
     from search_ui import release_details
 
-    details = release_details(name)
+    details = release_details(name, language="ru")
     assert details["heading"] == heading
     assert details["episode"] == episode
 
@@ -81,7 +81,7 @@ def test_extracts_only_clear_release_markers(name, heading, episode):
 def test_ambiguous_titles_are_preserved(name):
     from search_ui import release_details
 
-    assert release_details(name)["heading"] == name
+    assert release_details(name, language="ru")["heading"] == name
 
 
 @pytest.mark.parametrize(
@@ -98,7 +98,7 @@ def test_ambiguous_titles_are_preserved(name):
 def test_audio_requires_explicit_label_and_known_language(name, audio):
     from search_ui import release_details
 
-    assert release_details(name)["audio"] == audio
+    assert release_details(name, language="ru")["audio"] == audio
 
 
 def test_preview_readable_details_original_and_add_keep_filters_and_identity(bot, monkeypatch):
