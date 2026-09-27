@@ -92,5 +92,10 @@ class LanguagePicker:
         await query.message.edit_text(
             tr("language.saved", language), reply_markup=None, parse_mode=None
         )
-        if getattr(update.effective_chat, "type", None) == "private":
-            await set_private_commands(context.application.bot, update.effective_chat.id, language)
+        # A group choice changes only this user's private command scope.
+        private_chat = (
+            update.effective_chat.id
+            if getattr(update.effective_chat, "type", None) == "private"
+            else update.effective_user.id
+        )
+        await set_private_commands(context.application.bot, private_chat, language)

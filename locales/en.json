@@ -233,5 +233,6 @@
   "setup.unavailable": "Service unavailable. Check its address and network access.",
   "setup.response": "Unexpected service response. Check the API address.",
   "setup.storage": "Cannot write state. Check the state directory permissions.",
-  "setup.configuration": "{field}: invalid or missing configuration. Check bot.env.example."
+  "setup.configuration": "{field}: invalid or missing configuration. Check bot.env.example.",
+  "setup.version": "qBittorrent 5.x is required for download controls. Upgrade the service or use the bundled stack (tested with 5.1.2)."
 }

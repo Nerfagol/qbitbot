@@ -31,15 +31,39 @@ def archive(files):
     return stream.getvalue()
 
 
-def cleanup_resources(docker, containers, volumes, images, network):
+def create_tracked(docker, registry, name, *parts, **kwargs):
+    # Register intent before a daemon operation can succeed with a lost CLI reply.
+    if name not in registry:
+        registry.append(name)
+    return docker(*parts, **kwargs)
+
+
+def cleanup_resources(docker, containers, volumes, images, network, *, owner):
     errors = []
-    actions = [("container " + n, ("rm", "-f", n)) for n in reversed(containers)]
-    actions += [("volume " + n, ("volume", "rm", n)) for n in reversed(volumes)]
+    actions = [("container", n, ("rm", "-f", n)) for n in reversed(containers)]
+    actions += [("volume", n, ("volume", "rm", n)) for n in reversed(volumes)]
     if network:
-        actions.append(("network " + network, ("network", "rm", network)))
-    actions += [("image " + n, ("image", "rm", n)) for n in reversed(images)]
-    for label, command in actions:
+        actions.append(("network", network, ("network", "rm", network)))
+    actions += [("image", n, ("image", "rm", n)) for n in reversed(images)]
+    seen = set()
+    for kind, name, command in actions:
+        if (kind, name) in seen:
+            continue
+        seen.add((kind, name))
+        label = kind + " " + name
         try:
+            template = (
+                "{{json .Config.Labels}}" if kind in ("container", "image") else "{{json .Labels}}"
+            )
+            found = docker("inspect", "--type", kind, "--format", template, name, check=False)
+            if found.returncode:
+                if b"no such" in found.stderr.lower():
+                    continue
+                errors.append(label + ": ownership inspection failed")
+                continue
+            if (json.loads(found.stdout) or {}).get("qbitbot.verification") != owner:
+                errors.append(label + ": ownership mismatch")
+                continue
             if docker(*command, check=False).returncode:
                 errors.append(label + ": nonzero exit")
         except Exception as error:
@@ -47,11 +71,20 @@ def cleanup_resources(docker, containers, volumes, images, network):
     return errors
 
 
-def run_ephemeral(docker, containers, name, *parts, check=True, timeout=120):
+def run_ephemeral(docker, containers, name, *parts, check=True, timeout=120, owner=None):
     # Register the unique name before create: the daemon may finish an operation
     # even if its CLI times out. The parent's finally block can still remove it.
-    containers.append(name)
-    docker("create", "--name", name, "--label", "qbitbot.verification=disposable", *parts)
+    create_tracked(
+        docker,
+        containers,
+        name,
+        "create",
+        "--name",
+        name,
+        "--label",
+        "qbitbot.verification=" + (owner or name),
+        *parts,
+    )
     result = docker("start", "--attach", name, check=False, timeout=timeout)
     state = docker("inspect", "--format", "{{json .State}}", name)
     state = json.loads(state.stdout)
@@ -103,7 +136,7 @@ def main():
 
     def ephemeral(*parts, **kwargs):
         name = prefix + "-helper-" + uuid.uuid4().hex[:8]
-        return run_ephemeral(docker, containers, name, *parts, **kwargs)
+        return run_ephemeral(docker, containers, name, *parts, owner=prefix, **kwargs)
 
     def ephemeral_output(*parts, **kwargs):
         return ephemeral(*parts, **kwargs).stdout.decode().strip()
@@ -114,15 +147,32 @@ def main():
 
     def volume(suffix):
         name = prefix + "-" + suffix
-        output("volume", "create", "--label", "qbitbot.verification=" + prefix, name)
-        volumes.append(name)
+        create_tracked(
+            docker,
+            volumes,
+            name,
+            "volume",
+            "create",
+            "--label",
+            "qbitbot.verification=" + prefix,
+            name,
+        )
         return name
 
     def run_container(name, *parts):
-        cid = output("create", "--name", name, "--label", "qbitbot.verification=" + prefix, *parts)
-        containers.append(cid)
-        docker("start", cid)
-        return cid
+        create_tracked(
+            docker,
+            containers,
+            name,
+            "create",
+            "--name",
+            name,
+            "--label",
+            "qbitbot.verification=" + prefix,
+            *parts,
+        )
+        docker("start", name)
+        return name
 
     def wait_password(cid):
         started = output("inspect", "--format", "{{.State.StartedAt}}", cid)
@@ -151,7 +201,11 @@ def main():
             "JACKETT_TORZNAB_URL": "http://fixtures:8765/torznab",
             "JACKETT_API_KEY": "synthetic",
         }
-        cid = output(
+        cid = name
+        create_tracked(
+            docker,
+            containers,
+            name,
             "create",
             "--name",
             name,
@@ -172,7 +226,6 @@ def main():
             "/tmp/probe.py",
             mode,
         )
-        containers.append(cid)
         docker(
             "cp",
             "-",
@@ -219,8 +272,19 @@ def main():
                 "locales/ru.json",
             ]
         }
-        docker("build", "-t", image, "-", stdin=archive(build), timeout=300)
-        images.append(image)
+        create_tracked(
+            docker,
+            images,
+            image,
+            "build",
+            "--label",
+            "qbitbot.verification=" + prefix,
+            "-t",
+            image,
+            "-",
+            stdin=archive(build),
+            timeout=300,
+        )
         summary["bot_image_id"] = output("image", "inspect", "--format", "{{.Id}}", image)
         passed("bot container build with pinned runtime dependencies")
         smoke = ephemeral("--network", "none", image, check=False)
@@ -238,10 +302,10 @@ def main():
         passed("built source checksum matches current local source")
         docker("pull", QBIT_IMAGE, timeout=300)
         summary["qbit_image"] = QBIT_IMAGE
+        network_created = True
         output(
             "network", "create", "--internal", "--label", "qbitbot.verification=" + prefix, network
         )
-        network_created = True
         config, data, state = volume("config"), volume("data"), volume("state")
         qbit = run_container(
             prefix + "-qbit",
@@ -311,8 +375,13 @@ print(hashlib.sha256(open('/app/tg_torrent_bot.py','rb').read()).hexdigest())
             "--network", "none", "-v", app + ":/app", image, "python", "-c", check
         )
         assert original == digest
-        docker(
+        create_tracked(
+            docker,
+            images,
+            candidate,
             "build",
+            "--label",
+            "qbitbot.verification=" + prefix,
             "-t",
             candidate,
             "-",
@@ -320,7 +389,6 @@ print(hashlib.sha256(open('/app/tg_torrent_bot.py','rb').read()).hexdigest())
                 {"Dockerfile": f"FROM {image}\nRUN echo candidate > /candidate-marker\n".encode()}
             ),
         )
-        images.append(candidate)
         assert (
             output("image", "inspect", "--format", "{{.Id}}", candidate) != summary["bot_image_id"]
         )
@@ -382,7 +450,7 @@ with tarfile.open('/backup/app.tar') as t: t.extractall('/restore',filter='data'
         summary["completed"] = True
     finally:
         cleanup_errors = cleanup_resources(
-            docker, containers, volumes, images, network if network_created else None
+            docker, containers, volumes, images, network if network_created else None, owner=prefix
         )
         summary["cleanup_errors"] = cleanup_errors
         (ROOT / ".verification").mkdir(exist_ok=True)

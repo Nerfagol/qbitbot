@@ -28,6 +28,10 @@ class AuthenticationError(Exception):
     pass
 
 
+class UnsupportedVersionError(Exception):
+    pass
+
+
 def _qbit(settings):
     client = requests.Session()
     try:
@@ -43,6 +47,8 @@ def _qbit(settings):
         response.raise_for_status()
         if not re.fullmatch(r"v?\d+\.\d+(?:\.[\w.-]+)?", response.text.strip()):
             raise ValueError
+        if int(response.text.strip().lstrip("v").split(".", 1)[0]) != 5:
+            raise UnsupportedVersionError
     finally:
         client.close()
 
@@ -68,6 +74,8 @@ def _remote_check(service, function):
         try:
             function()
             return CheckResult(service, True, "setup.ok")
+        except UnsupportedVersionError:
+            return CheckResult(service, False, "setup.version")
         except AuthenticationError:
             return CheckResult(service, False, "setup.auth")
         except requests.HTTPError as error:

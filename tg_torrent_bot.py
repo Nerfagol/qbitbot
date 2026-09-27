@@ -699,6 +699,7 @@ async def watch_torrent_until_done(
         # Errors may recover after Resume, a recheck or storage repair. Keep watching.
 
         if is_completed(info):
+            language = getattr(context, "language_for_user", lambda user: "en")(getattr(context, "user_id", None))
             markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id, label=tr("notice.details", language), language=language)
             await context.bot.send_message(
                 chat_id,

@@ -148,3 +148,22 @@ def test_restored_watch_uses_reopened_detected_preference(bot, tmp_path, monkeyp
         restored.store.close()
 
     asyncio.run(scenario())
+
+
+def test_completion_rechecks_language_after_progress_delivery(bot, monkeypatch):
+    language = ["ru"]
+    monkeypatch.setattr(
+        bot,
+        "qbit_torrents_info_sync",
+        lambda **kw: [torrent(state="uploading", progress=1, amount_left=0)],
+    )
+
+    async def edit(**kwargs):
+        language[0] = "en"
+
+    transport = SimpleNamespace(edit_message_text=edit, send_message=AsyncMock())
+    context = SimpleNamespace(
+        bot=transport, user_id=101, language_for_user=lambda user: language[0]
+    )
+    asyncio.run(bot.watch_torrent_until_done(303, "a" * 40, "Fixture", 1, context))
+    assert transport.send_message.call_args.args[1].startswith("Download complete:")

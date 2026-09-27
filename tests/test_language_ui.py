@@ -125,7 +125,9 @@ def test_group_choice_does_not_change_shared_command_menu(tmp_path):
         event.callback_query.answer = AsyncMock()
         await picker.callback(event, ctx)
         assert service.for_user(101) == "en"
-        ctx.application.bot.set_my_commands.assert_not_called()
+        calls = ctx.application.bot.set_my_commands.call_args_list
+        assert len(calls) == 3
+        assert all(call.kwargs["scope"].chat_id == 101 for call in calls)
 
     asyncio.run(scenario())
     store.close()
@@ -141,6 +143,28 @@ def test_expired_language_card_uses_saved_language_without_foreign_write(tmp_pat
         await picker.callback(event, ctx)
         assert "устарел" in event.callback_query.answer.call_args.args[0]
         assert store.get(202) is None
+
+    asyncio.run(scenario())
+    store.close()
+
+
+def test_group_selection_updates_owners_private_menu(tmp_path):
+    store, service, picker, context = rig(tmp_path)
+    service.set_for_user(101, "ru")
+
+    async def scenario():
+        event = update(Message())
+        event.effective_chat.id = -10001
+        event.effective_chat.type = "group"
+        await picker.open(event, context)
+        card = event.message.replies[-1]
+        event.callback_query = SimpleNamespace(
+            data=card.markup.inline_keyboard[0][0].callback_data, message=card, answer=AsyncMock()
+        )
+        await picker.callback(event, context)
+        calls = context.application.bot.set_my_commands.call_args_list
+        assert len(calls) == 3
+        assert all(c.kwargs["scope"].chat_id == 101 for c in calls)
 
     asyncio.run(scenario())
     store.close()

@@ -1,5 +1,6 @@
 # Installation
 
+qBittorrent **5.x** is required for Pause/Resume; the bundled and tested version is **5.1.2**. Setup checks reject other major versions.
 Install Docker Engine/Desktop with Compose v2. Use a Linux amd64 host for the
 verified target. Download this repository and work from its root directory.
 

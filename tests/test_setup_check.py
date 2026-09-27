@@ -95,3 +95,15 @@ def test_wrong_password_does_not_echo_response(monkeypatch, tmp_path):
     assert not result[0].ok and result[0].message_key == "setup.auth"
     assert "private response" not in repr(result)
     assert len([c for c in calls if c[0] == "POST"]) == 1 and not sleeps
+
+
+def test_unsupported_qbittorrent_version_is_not_ready(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    cfg, _, sleeps = rig(monkeypatch, tmp_path)
+    client = setup_check.requests.Session()
+    client.get = lambda *args, **kw: SimpleNamespace(text="v4.6.7", raise_for_status=lambda: None)
+    monkeypatch.setattr(setup_check.requests, "Session", lambda: client)
+    result = setup_check.run_checks(cfg)[0]
+    assert not result.ok and result.message_key == "setup.version"
+    assert not sleeps
