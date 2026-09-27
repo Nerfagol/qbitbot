@@ -75,6 +75,8 @@ def export_checkout(destination):
         "integration/compose.test.yaml",
         "integration/public_probe.py",
         "integration/fixtures.py",
+        "backup_state.py",
+        "integration/recovery_probe.py",
     ]
     for name in dict.fromkeys(filter(None, names)):
         source = ROOT / name
@@ -171,6 +173,80 @@ def fresh(docker, root, project, image, checks):
     return bot, cfg
 
 
+def recovery(docker, root, project, image, bot, config, checks):
+    probe = root / "integration/recovery_probe.py"
+    docker("cp", str(probe), bot + ":/tmp/recovery_probe.py")
+    docker("exec", bot, "python", "/tmp/recovery_probe.py", "seed")
+    docker(
+        "exec",
+        bot,
+        "python",
+        "backup_state.py",
+        "--watch-db",
+        "/state/watches.sqlite3",
+        "--destination",
+        "/state/snapshot",
+    )
+    docker("stop", "--time", "5", bot)
+    state = config["volumes"]["bot-state"]["name"]
+    # Rebuild the exact original public application code on the same locked runtime.
+    baseline = root / "baseline-build"
+    baseline.mkdir()
+    files = (
+        "tg_torrent_bot.py",
+        "watch_store.py",
+        "monitoring.py",
+        "downloads.py",
+        "search_ui.py",
+        "health.py",
+    )
+    for name in files:
+        data = subprocess.run(
+            ["git", "show", "7267bcd:" + name], cwd=ROOT, capture_output=True, check=True
+        ).stdout
+        (baseline / name).write_bytes(data)
+    (baseline / "Dockerfile").write_text("FROM " + image + "\nCOPY " + " ".join(files) + " /app/\n")
+    old_image = project + ":original-public"
+    docker("build", "-t", old_image, str(baseline), timeout=300)
+
+    def run(name, selected, mode, mounts):
+        identifier = project + "-" + name
+        docker(
+            "create",
+            "--name",
+            identifier,
+            "--label",
+            "com.docker.compose.project=" + project,
+            "--network",
+            "none",
+            *mounts,
+            selected,
+            "python",
+            "/tmp/recovery_probe.py",
+            mode,
+        )
+        docker("cp", str(probe), identifier + ":/tmp/recovery_probe.py")
+        docker("start", "--attach", identifier)
+        assert docker("inspect", "--format", "{{.State.ExitCode}}", identifier).strip() == b"0"
+
+    run("replacement", image, "new", ["-v", state + ":/state"])
+    run("rollback", old_image, "old", ["-v", state + ":/state"])
+    run("upgrade-again", image, "new", ["-v", state + ":/state"])
+    checks.append(
+        "replacement and public-baseline rollback retain pending notice, health card, v1 schema and preferences"
+    )
+    restored = project + "-restored-state"
+    docker("volume", "create", "--label", "com.docker.compose.project=" + project, restored)
+    run(
+        "disaster-restore",
+        image,
+        "restore",
+        ["-v", restored + ":/state", "-v", state + ":/source:ro"],
+    )
+    run("restored-check", image, "new", ["-v", restored + ":/state"])
+    checks.append("online backup integrity and deliberate snapshot restore into a new volume")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--docker", default="docker")
@@ -208,7 +284,7 @@ def main(argv=None):
             export_checkout(root)
             bot, config = fresh(docker, root, project, image, checks)
             if args.scenario in ("recovery", "all"):
-                raise RuntimeError("Recovery scenario is not implemented yet")
+                recovery(docker, root, project, image, bot, config, checks)
         except Exception as error:
             failure = (
                 type(error).__name__ + ": " + str(error)
@@ -222,8 +298,9 @@ def main(argv=None):
                 except Exception:
                     failure = "Scoped resource cleanup failed"
             try:
-                if docker("image", "ls", "-q", image).strip():
-                    docker("image", "rm", image)
+                for owned_image in (project + ":original-public", image):
+                    if docker("image", "ls", "-q", owned_image).strip():
+                        docker("image", "rm", owned_image)
             except Exception:
                 failure = "Scoped image cleanup failed"
     if failure:

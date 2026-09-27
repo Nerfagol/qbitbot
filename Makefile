@@ -2,7 +2,7 @@ PYTHON ?= .venv/bin/python
 RUFF ?= .venv/bin/ruff
 DOCKER ?= docker
 DOCKER_CONTEXT ?=
-MODULES = preferences.py language_ui.py i18n.py settings.py setup_check.py watch_store.py monitoring.py downloads.py search_ui.py health.py
+MODULES = backup_state.py preferences.py language_ui.py i18n.py settings.py setup_check.py watch_store.py monitoring.py downloads.py search_ui.py health.py
 .PHONY: test known-bugs lint format check integration
 test:
 	$(PYTHON) -m pytest

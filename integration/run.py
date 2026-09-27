@@ -209,6 +209,7 @@ def main():
                 "health.py",
                 "settings.py",
                 "setup_check.py",
+                "backup_state.py",
                 "i18n.py",
                 "preferences.py",
                 "language_ui.py",
