@@ -3,7 +3,7 @@
 import asyncio
 from types import SimpleNamespace
 
-from i18n import tr
+from qbitbot.i18n import tr
 
 from telegram import InlineKeyboardMarkup
 from telegram.error import BadRequest, Forbidden, RetryAfter

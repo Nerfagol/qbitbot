@@ -11,7 +11,7 @@ import time
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from i18n import tr, normalize_language
+from qbitbot.i18n import tr, normalize_language
 
 PAGE_SIZE = 8
 VIEW_TTL = 15 * 60

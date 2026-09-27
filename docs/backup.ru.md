@@ -5,13 +5,13 @@
 
 ## Состояние бота
 
-`backup_state.py` использует SQLite online backup, включая подтверждённые данные
+`qbitbot.cli.backup_state` использует SQLite online backup, включая подтверждённые данные
 WAL, и проверяет целостность и SHA-256. Каждая база согласована отдельно; три базы
 не образуют одну общую транзакцию. Для общего спокойного состояния остановите бот:
 
 ```sh
 docker compose stop bot
-docker compose run --rm --no-deps bot python backup_state.py \
+docker compose run --rm --no-deps bot python -m qbitbot.cli.backup_state \
   --watch-db /state/watches.sqlite3 --destination /state/backup-2026-09-27
 mkdir -m 700 backups
 docker compose cp bot:/state/backup-2026-09-27 backups/

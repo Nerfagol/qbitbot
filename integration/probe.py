@@ -19,7 +19,7 @@ import requests
 
 sys.path.insert(0, "/app")
 os.environ.update(json.loads(Path("/tmp/verification-config.json").read_text()))
-spec = importlib.util.spec_from_file_location("bot", "/app/tg_torrent_bot.py")
+spec = importlib.util.spec_from_file_location("bot", "/app/qbitbot/app.py")
 bot = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bot)
 
@@ -137,8 +137,8 @@ class DashboardProbe:
         assert "Изменение подтверждено" in self.text, self.text
 
     async def delete(self, name, t_hash):
-        from monitoring import WatchManager
-        from watch_store import WatchStore
+        from qbitbot.monitoring import WatchManager
+        from qbitbot.watch_store import WatchStore
 
         store = WatchStore(bot.WATCH_DB_PATH)
         store.subscribe(101, 101, t_hash, name)
@@ -177,7 +177,7 @@ def main():
     assert version == "v5.1.2", version
     passed("qBittorrent 5.1.2 authentication and version")
     if mode.startswith("watch-"):
-        from watch_store import WatchStore
+        from qbitbot.watch_store import WatchStore
 
         saved = json.loads(Path("/downloads/sentinel.json").read_text())
         if mode == "watch-seed":
@@ -527,7 +527,7 @@ def main():
         )
 
         async def health_cards():
-            from health import HealthManager, check_jackett, check_qbit
+            from qbitbot.health import HealthManager, check_jackett, check_qbit
 
             transport = SimpleNamespace(edit_message_text=AsyncMock(), pin_chat_message=AsyncMock())
             health_api = SimpleNamespace(
@@ -651,8 +651,8 @@ def main():
         )
 
         async def restore_error_watch():
-            from monitoring import WatchManager
-            from watch_store import WatchStore
+            from qbitbot.monitoring import WatchManager
+            from qbitbot.watch_store import WatchStore
 
             path = Path("/tmp/error-recovery.sqlite3")
             store = WatchStore(path)

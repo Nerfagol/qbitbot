@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from settings import SettingsError, load_env, read_settings
+from qbitbot.settings import SettingsError, load_env, read_settings
 
 
 def valid_env():

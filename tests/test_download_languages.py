@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from downloads import download_status
+from qbitbot.downloads import download_status
 from tests.helpers import Message, context, torrent, update
 from tests.test_downloads import setup, click
 

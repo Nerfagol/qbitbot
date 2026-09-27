@@ -51,7 +51,7 @@ class Library:
 
 
 def setup(bot, monkeypatch):
-    module = importlib.import_module("downloads")
+    module = importlib.import_module("qbitbot.downloads")
     library = Library()
     monkeypatch.setattr(bot, "qbit_torrents_info_sync", library.read)
     monkeypatch.setattr(bot, "qbit_control_sync", library.control)
@@ -353,8 +353,8 @@ async def test_commands_and_callback_wrappers_open_real_dashboard(bot, monkeypat
 
 @async_test
 async def test_confirmed_delete_cancels_saved_watches_across_chats(bot, tmp_path, monkeypatch):
-    from monitoring import WatchManager
-    from watch_store import WatchStore
+    from qbitbot.monitoring import WatchManager
+    from qbitbot.watch_store import WatchStore
 
     dashboard, library, message, ctx, event = setup(bot, monkeypatch)
     store = WatchStore(tmp_path / "watches.sqlite3")

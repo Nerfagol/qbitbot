@@ -1,6 +1,10 @@
 # Source inventory
 
 Independent source export; no donor Git history or deployment data is included.
+Paths below record the original export and additions through v0.3.0. Runtime files
+now live under `qbitbot/`: `tg_torrent_bot.py` became `qbitbot/app.py`, maintenance
+commands moved to `qbitbot/cli/`, and catalogs to `qbitbot/locales/`.
+See [current layout](layout.md); this inventory preserves historical provenance.
 
 | Path | Purpose / status |
 | --- | --- |

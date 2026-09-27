@@ -3,7 +3,7 @@
 from pathlib import Path
 import sqlite3
 
-from i18n import Language, normalize_language
+from qbitbot.i18n import Language, normalize_language
 
 
 class PreferenceStore:

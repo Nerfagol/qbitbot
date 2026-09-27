@@ -3,7 +3,7 @@
 ## Бот не отвечает
 
 Выполните `docker compose ps`, затем
-`docker compose run --rm --no-deps bot python setup_check.py --language ru`.
+`docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check --language ru`.
 Проверьте токен BotFather и числовой Telegram ID в обязательном `ALLOWED_USERS`.
 Один токен должен использовать только один запущенный бот. Имена команд одинаковы
 для обоих языков. `/start` открывает подсказку, `/language` сохраняет выбор языка.

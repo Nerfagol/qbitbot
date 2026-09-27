@@ -2,7 +2,7 @@ import stat
 
 import pytest
 
-from preferences import LanguageService, PreferenceStore
+from qbitbot.preferences import LanguageService, PreferenceStore
 
 
 def test_detection_and_override_survive_restart(tmp_path):

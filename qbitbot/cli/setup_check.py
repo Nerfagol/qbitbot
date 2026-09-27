@@ -12,9 +12,9 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 
-from i18n import tr
+from qbitbot.i18n import tr
 
-from settings import Settings, SettingsError, load_env, read_settings
+from qbitbot.settings import Settings, SettingsError, load_env, read_settings
 
 
 @dataclass(frozen=True)

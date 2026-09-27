@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Organize runtime code and catalogs under `qbitbot/`, with maintenance commands in
+  `qbitbot/cli/`. Start from a source checkout with `python -m qbitbot`; setup and
+  backup commands now use `python -m qbitbot.cli.setup_check` and
+  `python -m qbitbot.cli.backup_state`. Compose starts the new entry point automatically.
+  Bot behavior, environment settings and persistent state formats remain unchanged.
+
 ## 0.3.0 — 2026-09-27
 
 First public release, with independent source history and no deployment configuration.

@@ -4,8 +4,8 @@ from string import Formatter
 
 import pytest
 
-import i18n
-from i18n import normalize_language, plural_form, tr
+from qbitbot import i18n
+from qbitbot.i18n import normalize_language, plural_form, tr
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,7 @@ def test_russian_number_forms(count, want):
 
 
 def test_catalogs_match_and_templates_use_same_fields():
-    root = Path(__file__).resolve().parents[1] / "locales"
+    root = Path(__file__).resolve().parents[1] / "qbitbot" / "locales"
     en = json.loads((root / "en.json").read_text())
     ru = json.loads((root / "ru.json").read_text())
     assert set(en) == set(ru)

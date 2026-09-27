@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from language_ui import LanguagePicker
-from preferences import LanguageService, PreferenceStore
+from qbitbot.language_ui import LanguagePicker
+from qbitbot.preferences import LanguageService, PreferenceStore
 from tests.helpers import Message, context, update
 
 

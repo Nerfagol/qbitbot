@@ -36,7 +36,7 @@ from tests.test_persistence import async_test
 def test_lifecycle_groups_require_confirmed_completion(
     bot, state, progress, left, stalled, expected
 ):
-    from downloads import download_group
+    from qbitbot.downloads import download_group
 
     assert (
         download_group(

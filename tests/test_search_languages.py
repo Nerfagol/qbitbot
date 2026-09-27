@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from search_ui import SearchResults, release_details
+from qbitbot.search_ui import SearchResults, release_details
 from tests.helpers import Message, context, update
 from tests.test_search_ui import button
 

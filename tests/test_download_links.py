@@ -14,7 +14,7 @@ from tests.test_search_ui import button, click, start
 
 @pytest.mark.parametrize("length", [40, 64])
 def test_link_fits_telegram_and_binds_identity_owner_chat_and_secret(length):
-    from downloads import torrent_link, link_hash
+    from qbitbot.downloads import torrent_link, link_hash
 
     info = torrent(hash="a" * length, added_on=123)
     data = torrent_link(info, 101, 303, "test-secret")
@@ -30,7 +30,7 @@ def test_link_fits_telegram_and_binds_identity_owner_chat_and_secret(length):
     "case", ["valid", "missing", "readded", "owner", "chat", "forged", "unauthorized", "outage"]
 )
 async def test_notification_link_opens_only_matching_download(bot, monkeypatch, case):
-    from downloads import torrent_link
+    from qbitbot.downloads import torrent_link
 
     info = torrent(added_on=123)
     data = torrent_link(info, 101, 303, bot.BOT_TOKEN)
@@ -92,7 +92,7 @@ def test_added_feedback_opens_exact_target_and_retains_all_downloads(bot, monkey
 @async_test
 async def test_stuck_watch_links_to_target(bot, monkeypatch):
     from tests.test_download_health import sample_until
-    from downloads import link_hash
+    from qbitbot.downloads import link_hash
 
     info = torrent(state="metaDL", dlspeed=0, added_on=123)
     sample_until(bot.DOWNLOAD_HEALTH, info)

@@ -53,6 +53,7 @@ make integration-public
 Unit tests block networking. Docker checks create and remove only their own isolated
 resources. `make integration-public` requires Compose 2.24.4+ and Git history for its
 original-public-code rollback rehearsal. See [contributor guidance](AGENTS.md),
+[source layout](docs/development/layout.md),
 [localization](docs/development/localization.md) and the [release checklist](docs/release-checklist.md).
 
 ## License

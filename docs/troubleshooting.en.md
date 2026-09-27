@@ -2,7 +2,7 @@
 
 ## The bot does not respond
 
-Run `docker compose ps`, then `docker compose run --rm --no-deps bot python setup_check.py`.
+Run `docker compose ps`, then `docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check`.
 Check the token from BotFather and your numeric Telegram user ID in `ALLOWED_USERS`.
 The allowlist is mandatory. Run only one polling container per token. Commands use
 English names in both languages. Send `/start` or select `/language` to change copy.
@@ -16,7 +16,7 @@ you set a permanent password in its web UI and update `bot.env`. Jackett require
 API key and configured indexers. Keep web interfaces on loopback; use SSH port
 forwarding for a headless host as shown in the setup guide.
 
-For Russian diagnostics, add `--language ru` to `python setup_check.py`. Errors show
+For Russian diagnostics, add `--language ru` to `python -m qbitbot.cli.setup_check`. Errors show
 safe field names/categories. Do not post raw Compose configuration, service logs,
 URLs with API keys, environment files or database backups in issues.
 
