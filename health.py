@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
+
+from i18n import tr, normalize_language
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, Forbidden, TelegramError
 
@@ -106,11 +108,11 @@ class HealthManager:
         async def probe(function):
             try:
                 await asyncio.to_thread(function)
-                return "🟢", "доступен"
+                return "🟢", "ok"
             except requests.Timeout:
-                return "🟡", "не ответил вовремя"
+                return "🟡", "timeout"
             except Exception:
-                return "🔴", "недоступен"
+                return "🔴", "unavailable"
 
         self.snapshot = await asyncio.gather(
             probe(self.api.check_qbit), probe(self.api.check_jackett)
@@ -118,40 +120,74 @@ class HealthManager:
         self.checked_at = time.time()
         self.cache_until = time.monotonic() + CACHE_SECONDS
 
-    def text(self):
-        lines = ["🩺 Состояние системы", "", "🟢 Бот — работает"]
+    def language(self, user_id):
+        return getattr(self.api, "language_for_user", lambda user: "en")(user_id)
+
+    def text(self, user_id):
+        language = self.language(user_id)
+        lines = [tr("health.title", language), "", tr("health.bot", language)]
         for label, (icon, status) in zip(("qBittorrent", "Jackett"), self.snapshot):
-            lines.append(f"{icon} {label} — {status}")
-        lines.extend(["", f"🕒 Проверено: {timestamp(self.checked_at)}", "Обновляется каждый час."])
+            lines.append(f"{icon} {label} — {tr('health.' + status, language)}")
+        lines.extend(
+            [
+                "",
+                tr("health.checked", language, time=timestamp(self.checked_at)),
+                tr("health.hourly", language),
+            ]
+        )
         search = self.api.last_search()
         if search:
             if search.get("failed"):
-                result = "не завершился — попробуй повторить поиск"
+                result = tr("health.search_failed", language)
             elif search.get("total"):
-                result = f"ответили {search['responded']} из {search['total']} источников"
+                result = tr(
+                    "health.search_sources",
+                    language,
+                    responded=search["responded"],
+                    total=search["total"],
+                )
             else:
-                result = "состояние источников неизвестно"
-            lines.extend(["", f"🔎 Последний поиск ({timestamp(search['time'])}): {result}."])
+                result = tr("health.search_unknown", language)
+            lines.extend(
+                [
+                    "",
+                    tr(
+                        "health.search_result",
+                        language,
+                        time=timestamp(search["time"]),
+                        result=result,
+                    ),
+                ]
+            )
         else:
-            lines.extend(["", "⚪ Источники поиска ещё не проверялись после запуска бота."])
+            lines.extend(["", tr("health.search_none", language)])
         lines.extend(
             [
-                "Источники не проверяются ежечасно — их статус берётся из последнего поиска.",
+                tr("health.sources_note", language),
                 "",
-                "Если время проверки не меняется больше часа, данные могли устареть.",
-                "Доступность сервисов не гарантирует скорость или наличие раздачи.",
+                tr("health.stale_note", language),
+                tr("health.availability_note", language),
             ]
         )
         return "\n".join(lines)
 
-    def markup(self, token):
+    def markup(self, token, user_id):
+        language = self.language(user_id)
         return InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("🔄 Проверить", callback_data=f"health:{token}:refresh"),
-                    InlineKeyboardButton("📌 Закрепить", callback_data=f"health:{token}:pin"),
+                    InlineKeyboardButton(
+                        tr("health.refresh", language), callback_data=f"health:{token}:refresh"
+                    ),
+                    InlineKeyboardButton(
+                        tr("health.pin", language), callback_data=f"health:{token}:pin"
+                    ),
                 ],
-                [InlineKeyboardButton("📥 Загрузки", callback_data="nav:downloads")],
+                [
+                    InlineKeyboardButton(
+                        tr("health.downloads", language), callback_data="nav:downloads"
+                    )
+                ],
             ]
         )
 
@@ -160,8 +196,8 @@ class HealthManager:
             await self.telegram.edit_message_text(
                 chat_id=row["chat_id"],
                 message_id=row["message_id"],
-                text=self.text(),
-                reply_markup=self.markup(row["token"]),
+                text=self.text(row["user_id"]),
+                reply_markup=self.markup(row["token"], row["user_id"]),
                 parse_mode=None,
             )
             return True
@@ -190,8 +226,8 @@ class HealthManager:
                 return
             token = secrets.token_hex(8)
             message = await update.message.reply_text(
-                self.text(),
-                reply_markup=self.markup(token),
+                self.text(user),
+                reply_markup=self.markup(token, user),
                 parse_mode=None,
             )
             with self.db:
@@ -213,13 +249,18 @@ class HealthManager:
         return None
 
     async def callback(self, update):
+        language = (
+            self.language(update.effective_user.id)
+            if self.api.allowed(update)
+            else normalize_language(getattr(update.effective_user, "language_code", None))
+        )
         query = update.callback_query
         if not self.api.allowed(update):
-            await query.answer("Нет доступа.", show_alert=True)
+            await query.answer(tr("health.denied", language), show_alert=True)
             return
         if self.callback_row(update) is None:
             await query.answer(
-                "Карточка устарела или принадлежит другому пользователю. Открой /health.",
+                tr("health.expired", language),
                 show_alert=True,
             )
             return
@@ -228,7 +269,7 @@ class HealthManager:
         async with self.lock:
             row = self.callback_row(update)
             if row is None:
-                await query.message.reply_text("Карточка недоступна. Открой /health заново.")
+                await query.message.reply_text(tr("health.missing", language))
                 return
             try:
                 if query.data.endswith(":pin"):
@@ -240,14 +281,12 @@ class HealthManager:
                 else:
                     await self.sample()
                     if not await self.edit(row):
-                        await query.message.reply_text(
-                            "Карточка недоступна. Открой /health заново."
-                        )
+                        await query.message.reply_text(tr("health.missing", language))
             except TelegramError:
                 await query.message.reply_text(
-                    "Не удалось закрепить карточку. Проверь права бота или закрепи её вручную."
+                    tr("health.pin_failed", language)
                     if query.data.endswith(":pin")
-                    else "Не удалось обновить карточку. Попробуй /health позже."
+                    else tr("health.refresh_failed", language)
                 )
 
     async def cycle(self):

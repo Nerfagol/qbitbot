@@ -42,8 +42,7 @@ docker compose up -d
 The check authenticates to the APIs and probes state-directory access without
 starting Telegram polling or adding torrents. If it reports a failure, fix that
 setting first. Do not share `docker compose config` output: it resolves credentials.
-Open `/start` in Telegram, then verify Search, Downloads and Health. Language
-selection is being added for version 0.3; the baseline interface is Russian.
+Open `/start` in Telegram, then verify Search, Downloads and Health. The bot detects English/Russian from Telegram. Use `/language` to save a preference.
 
 Web interfaces bind to localhost by default. For a headless host, forward ports
 through SSH or set `WEB_BIND_ADDRESS` to the host's specific LAN address and secure

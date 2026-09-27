@@ -129,3 +129,18 @@ def test_group_choice_does_not_change_shared_command_menu(tmp_path):
 
     asyncio.run(scenario())
     store.close()
+
+
+def test_expired_language_card_uses_saved_language_without_foreign_write(tmp_path):
+    store, service, picker, ctx = rig(tmp_path)
+    service.set_for_user(101, "ru")
+
+    async def scenario():
+        event = update(Message(), "lang:expired:en")
+        event.callback_query.answer = AsyncMock()
+        await picker.callback(event, ctx)
+        assert "устарел" in event.callback_query.answer.call_args.args[0]
+        assert store.get(202) is None
+
+    asyncio.run(scenario())
+    store.close()

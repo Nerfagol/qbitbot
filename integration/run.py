@@ -209,6 +209,11 @@ def main():
                 "health.py",
                 "settings.py",
                 "setup_check.py",
+                "i18n.py",
+                "preferences.py",
+                "language_ui.py",
+                "locales/en.json",
+                "locales/ru.json",
             ]
         }
         docker("build", "-t", image, "-", stdin=archive(build), timeout=300)
@@ -275,8 +280,9 @@ def main():
         init = """from pathlib import Path
 import shutil, tarfile
 p=Path('/release')
-for name in ('tg_torrent_bot.py','watch_store.py','monitoring.py','downloads.py','search_ui.py','health.py','settings.py','setup_check.py'):
+for name in ('tg_torrent_bot.py','watch_store.py','monitoring.py','downloads.py','search_ui.py','health.py','settings.py','setup_check.py','i18n.py','preferences.py','language_ui.py'):
     shutil.copy(Path('/app')/name,p/name)
+shutil.copytree('/app/locales', p/'locales')
 (p/'bot.env').write_text('BOT_TOKEN=rollback-fixture\\nPTB_USE_AIOHTTP=0\\nALLOWED_USERS=101\\nQBIT_URL=http://qbit.invalid\\nQBIT_USER=test\\nQBIT_PASS=synthetic\\nJACKETT_TORZNAB_URL=http://jackett.invalid/api\\nJACKETT_API_KEY=synthetic\\n')
 (p/'compose.yaml').write_text('services: {bot: {image: retained-baseline}}\\n')
 with tarfile.open('/backup/app.tar','w') as t: t.add('/release',arcname='app')

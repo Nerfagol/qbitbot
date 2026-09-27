@@ -84,7 +84,7 @@ class DashboardProbe:
         self.context = SimpleNamespace(user_data={}, application=SimpleNamespace(bot_data={}))
         self.update = SimpleNamespace(
             message=self,
-            effective_user=SimpleNamespace(id=101),
+            effective_user=SimpleNamespace(id=101, language_code="ru"),
             effective_chat=SimpleNamespace(id=101),
             callback_query=None,
         )
@@ -195,7 +195,14 @@ def main():
                 edit_message_text=AsyncMock(),
                 send_message=AsyncMock(return_value=SimpleNamespace(message_id=66)),
             )
-            app = SimpleNamespace(bot=transport, bot_data={})
+            app = SimpleNamespace(
+                bot=transport,
+                bot_data={
+                    "languages": SimpleNamespace(
+                        for_user=lambda user: "ru", store=SimpleNamespace(close=lambda: None)
+                    )
+                },
+            )
             await bot.monitoring_start(app)
             manager = app.bot_data["monitoring"]
             try:
@@ -529,6 +536,7 @@ def main():
                 check_qbit=lambda: check_qbit(bot.qbit_session, bot.QBIT_URL),
                 check_jackett=lambda: check_jackett(bot.JACKETT_TORZNAB_URL, bot.JACKETT_API_KEY),
                 last_search=lambda: bot.LAST_SEARCH_HEALTH,
+                language_for_user=lambda user: "ru",
             )
             path = Path(bot.WATCH_DB_PATH).with_suffix(".health.sqlite3")
             manager = HealthManager(health_api, transport, path)
@@ -612,7 +620,13 @@ def main():
         asyncio.run(
             asyncio.wait_for(
                 bot.watch_torrent_until_done(
-                    101, file_hash, "uploaded.txt", 1, SimpleNamespace(bot=transport, user_id=101)
+                    101,
+                    file_hash,
+                    "uploaded.txt",
+                    1,
+                    SimpleNamespace(
+                        bot=transport, user_id=101, language_for_user=lambda user: "ru"
+                    ),
                 ),
                 timeout=5,
             )
@@ -649,6 +663,7 @@ def main():
                 edit_message_text=AsyncMock(),
                 send_message=AsyncMock(return_value=SimpleNamespace(message_id=99)),
             )
+            bot.language_for_user = lambda user: "ru"
             manager = WatchManager(bot, transport, WatchStore(path))
             try:
                 await manager.restore()
@@ -679,7 +694,11 @@ def main():
             asyncio.run(
                 asyncio.wait_for(
                     bot.watch_torrent_until_done(
-                        101, file_hash, "uploaded.txt", 2, SimpleNamespace(bot=recovered)
+                        101,
+                        file_hash,
+                        "uploaded.txt",
+                        2,
+                        SimpleNamespace(bot=recovered, language_for_user=lambda user: "ru"),
                     ),
                     timeout=10,
                 )

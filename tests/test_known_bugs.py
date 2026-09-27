@@ -68,7 +68,11 @@ def test_watcher_recovers_from_transient_api_failure(bot, monkeypatch):
     async def watch():
         await asyncio.wait_for(
             bot.watch_torrent_until_done(
-                303, "a" * 40, "Test download", 10, SimpleNamespace(bot=transport)
+                303,
+                "a" * 40,
+                "Test download",
+                10,
+                SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
             ),
             timeout=2,
         )

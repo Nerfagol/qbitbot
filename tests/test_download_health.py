@@ -119,7 +119,13 @@ def test_watcher_edits_one_warning_then_recovers_and_completes(bot, monkeypatch)
     monkeypatch.setattr(bot.asyncio, "sleep", sleep)
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     asyncio.run(
-        bot.watch_torrent_until_done(303, "a" * 40, "Test", 12, SimpleNamespace(bot=transport))
+        bot.watch_torrent_until_done(
+            303,
+            "a" * 40,
+            "Test",
+            12,
+            SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
+        )
     )
     edits = transport.edit_message_text.call_args_list
     warnings = [call for call in edits if "5 минут" in call.kwargs["text"]]
@@ -155,7 +161,13 @@ def test_outage_does_not_count_as_observed_stall(bot, monkeypatch):
     monkeypatch.setattr(bot.asyncio, "sleep", sleep)
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     asyncio.run(
-        bot.watch_torrent_until_done(303, "a" * 40, "Test", 12, SimpleNamespace(bot=transport))
+        bot.watch_torrent_until_done(
+            303,
+            "a" * 40,
+            "Test",
+            12,
+            SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
+        )
     )
     texts = [call.kwargs["text"] for call in transport.edit_message_text.call_args_list]
     assert any("Связь" in text for text in texts)

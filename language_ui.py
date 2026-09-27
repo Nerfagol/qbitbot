@@ -6,7 +6,7 @@ import time
 from telegram import BotCommand, BotCommandScopeChat, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 
-from i18n import tr
+from i18n import tr, normalize_language
 
 COMMANDS = ("search", "downloads", "status", "health", "help", "start", "language")
 
@@ -77,7 +77,13 @@ class LanguagePicker:
         )
         if not valid:
             # Do not create preferences for someone trying another owner's card.
-            await query.answer(tr("language.expired", "en"), show_alert=True)
+            row = self.service.store.get(update.effective_user.id)
+            language = normalize_language(
+                (row["override"] or row["detected"])
+                if row
+                else getattr(update.effective_user, "language_code", None)
+            )
+            await query.answer(tr("language.expired", language), show_alert=True)
             return
         context.user_data.pop("language", None)
         language = parts[2]

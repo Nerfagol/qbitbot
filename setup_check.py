@@ -12,6 +12,8 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 
+from i18n import tr
+
 from settings import Settings, SettingsError, load_env, read_settings
 
 
@@ -100,28 +102,19 @@ def run_checks(settings: Settings) -> list[CheckResult]:
     return results
 
 
-MESSAGES = {
-    "setup.ok": "Ready.",
-    "setup.auth": "Authentication failed. Check the configured credentials.",
-    "setup.timeout": "Timed out after bounded retries. Check service availability.",
-    "setup.unavailable": "Service unavailable. Check its address and network access.",
-    "setup.response": "Unexpected service response. Check the API address.",
-    "setup.storage": "Cannot write state. Check the state directory permissions.",
-}
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    parser.add_argument("--language", choices=("en", "ru"), default="en")
+    args = parser.parse_args(argv)
     try:
         load_env()
         settings = read_settings(os.environ)
     except SettingsError as error:
-        print(str(error))
+        print(tr("setup.configuration", args.language, field=str(error).split(":", 1)[0]))
         return 1
     results = run_checks(settings)
     for result in results:
-        print(f"{result.service}: {MESSAGES[result.message_key]}")
+        print(f"{result.service}: {tr(result.message_key, args.language)}")
     return 0 if all(result.ok for result in results) else 1
 
 

@@ -71,7 +71,13 @@ def test_watcher_updates_state_even_when_percentage_is_unchanged(bot, monkeypatc
     monkeypatch.setattr(bot, "WATCH_INTERVAL_SEC", 0)
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     asyncio.run(
-        bot.watch_torrent_until_done(303, "a" * 40, "Example", 12, SimpleNamespace(bot=transport))
+        bot.watch_torrent_until_done(
+            303,
+            "a" * 40,
+            "Example",
+            12,
+            SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
+        )
     )
     texts = [call.kwargs["text"] for call in transport.edit_message_text.call_args_list]
     assert "⏸ Приостановлено" in texts[0]

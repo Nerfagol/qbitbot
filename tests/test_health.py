@@ -22,6 +22,7 @@ def setup_health(bot, tmp_path):
         check_qbit=lambda: calls.append("qbit"),
         check_jackett=lambda: calls.append("jackett"),
         last_search=lambda: None,
+        language_for_user=lambda user: "ru",
     )
     telegram = SimpleNamespace(
         edit_message_text=AsyncMock(),

@@ -634,13 +634,14 @@ async def watch_torrent_until_done(
     last_text = ""
 
     while True:
+        language = getattr(context, "language_for_user", lambda user: "en")(getattr(context, "user_id", None))
         try:
             info_list = await asyncio.to_thread(qbit_torrents_info_sync, hashes=t_hash, limit=1)
         except (requests.RequestException, RuntimeError, ValueError):
             failures += 1
             DOWNLOAD_HEALTH.forget(t_hash)
             missing_since = None
-            warning = "⚠️ Связь с qBittorrent потеряна. Текущий прогресс неизвестен. Повторяю проверку автоматически…"
+            warning = tr("notice.outage", language)
             if last_text != warning:
                 try:
                     await context.bot.edit_message_text(
@@ -662,10 +663,7 @@ async def watch_torrent_until_done(
             if missing_since is None:
                 missing_since = time.monotonic()
             if time.monotonic() - missing_since > WATCH_MISSING_GRACE_SEC:
-                err_text = (
-                    "⚠️ Торрент больше не найден в загрузках.\n"
-                    f"{str(title)[:240]}\nОткрой /downloads, чтобы проверить список."
-                )
+                err_text = tr("notice.missing", language, title=str(title)[:240])
                 await context.bot.edit_message_text(
                     chat_id=chat_id,
                     message_id=progress_message_id,
@@ -679,8 +677,8 @@ async def watch_torrent_until_done(
         name = info.get("name") or title
         state = info.get("state")
         stalled = DOWNLOAD_HEALTH.observe(info)
-        text = format_download_progress(info, live=True, stalled=stalled, language="ru")
-        markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id) if stalled else None
+        text = format_download_progress(info, live=True, stalled=stalled, language=language)
+        markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id, language=language) if stalled else None
 
         if text != last_text:
             try:
@@ -701,12 +699,11 @@ async def watch_torrent_until_done(
         # Errors may recover after Resume, a recheck or storage repair. Keep watching.
 
         if is_completed(info):
-            markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id, label="📥 Подробнее о загрузке")
+            markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id, label=tr("notice.details", language), language=language)
             await context.bot.send_message(
                 chat_id,
-                f"Скачивание завершено:\n{download_title(info, 500)}\n"
-                f"Размер: {human_size(info.get('total_size'))}\n\n"
-                f"{download_location(info)}",
+                tr("notice.completed", language, title=download_title(info, 500, language=language),
+                   size=human_size(info.get('total_size')), location=download_location(info, language=language)),
                 reply_markup=markup,
             )
             return
@@ -946,19 +943,21 @@ async def application_start(application):
 async def cmd_health(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not allowed(update):
         return
+    language_for_update(update, context)
     manager = context.application.bot_data.get("health")
     if manager:
         await manager.open(update)
     else:
-        await update.message.reply_text("Карточка состояния временно недоступна. Попробуй позже.")
+        await update.message.reply_text(tr("health.not_ready", language_for_update(update, context)))
 
 
 async def on_health(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    language_for_update(update, context)
     manager = context.application.bot_data.get("health")
     if manager:
         await manager.callback(update)
     else:
-        await update.callback_query.answer("Карточка недоступна. Открой /health позже.", show_alert=True)
+        await update.callback_query.answer(tr("health.open_later", language_for_update(update, context)), show_alert=True)
 
 
 def downloads_dashboard(language_for_user=lambda user: "en"):
@@ -1205,11 +1204,11 @@ def main():
             print("✅ Using AiohttpRequest backend (ptbcontrib).")
         except Exception as e:
             raise RuntimeError(
-                "PTB_USE_AIOHTTP=1, но модуль ptbcontrib.aiohttp_request не найден/не импортируется.\n"
-                "Установи зависимости:\n"
+                "PTB_USE_AIOHTTP=1 requires ptbcontrib.aiohttp_request.\n"
+                "Install the optional dependencies:\n"
                 "  pip install aiohttp\n"
                 "  pip install git+https://github.com/python-telegram-bot/ptbcontrib.git@main\n"
-                f"Причина: {e}"
+                f"Error type: {type(e).__name__}"
             )
 
     builder = builder.post_init(application_start).post_stop(monitoring_stop).post_shutdown(monitoring_close)

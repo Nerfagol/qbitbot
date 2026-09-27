@@ -108,7 +108,13 @@ def test_watcher_backoff_is_capped_and_recovers(bot, monkeypatch):
     monkeypatch.setattr(bot, "WATCH_INTERVAL_SEC", 30)
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     asyncio.run(
-        bot.watch_torrent_until_done(303, "a" * 40, "Test", 10, SimpleNamespace(bot=transport))
+        bot.watch_torrent_until_done(
+            303,
+            "a" * 40,
+            "Test",
+            10,
+            SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
+        )
     )
     assert delays == [30, 60, 120, 240, 300, 300, 300, 300]
     assert transport.send_message.call_count == 1
@@ -129,7 +135,13 @@ def test_watcher_remains_cancellable_during_outage(bot, monkeypatch):
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(
-            bot.watch_torrent_until_done(303, "a" * 40, "Test", 10, SimpleNamespace(bot=transport))
+            bot.watch_torrent_until_done(
+                303,
+                "a" * 40,
+                "Test",
+                10,
+                SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
+            )
         )
 
 

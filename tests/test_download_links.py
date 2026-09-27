@@ -105,7 +105,11 @@ async def test_stuck_watch_links_to_target(bot, monkeypatch):
     monkeypatch.setattr(asyncio, "sleep", stop)
     with pytest.raises(asyncio.CancelledError):
         await bot.watch_torrent_until_done(
-            303, info["hash"], "Test", 7, SimpleNamespace(bot=transport, user_id=101)
+            303,
+            info["hash"],
+            "Test",
+            7,
+            SimpleNamespace(bot=transport, user_id=101, language_for_user=lambda user: "ru"),
         )
     markup = transport.edit_message_text.call_args.kwargs["reply_markup"]
     assert link_hash(markup.inline_keyboard[0][0].callback_data) == info["hash"]

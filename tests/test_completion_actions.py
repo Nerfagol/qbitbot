@@ -26,7 +26,11 @@ async def test_completion_has_exact_details_and_location_without_plex(bot, monke
     monkeypatch.setattr(bot, "qbit_torrents_info_sync", lambda **kw: [info])
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     await bot.watch_torrent_until_done(
-        303, info["hash"], "Test", 7, SimpleNamespace(bot=transport, user_id=101)
+        303,
+        info["hash"],
+        "Test",
+        7,
+        SimpleNamespace(bot=transport, user_id=101, language_for_user=lambda user: "ru"),
     )
     call = transport.send_message.call_args
     text = call.args[1]

@@ -126,7 +126,11 @@ def test_real_completion_edits_progress_and_notifies_once(bot, monkeypatch):
     transport = SimpleNamespace(edit_message_text=AsyncMock(), send_message=AsyncMock())
     asyncio.run(
         bot.watch_torrent_until_done(
-            303, "a" * 40, "Test download", 10, SimpleNamespace(bot=transport)
+            303,
+            "a" * 40,
+            "Test download",
+            10,
+            SimpleNamespace(bot=transport, language_for_user=lambda user: "ru"),
         )
     )
     assert "100%" in transport.edit_message_text.call_args.kwargs["text"]

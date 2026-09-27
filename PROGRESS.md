@@ -1,5 +1,12 @@
 # Project Progress
 
+## 2026-09-27 — Bilingual interface verified
+
+- English/Russian menus, search, controls, progress, health cards and setup diagnostics use explicit owner language. Saved preferences survive restart.
+- Pending notices retain their original text/buttons after language changes. Watch schema remains v1.
+- Verification: 518 offline tests and lint/format/compile/dependency checks; rebuilt image, real isolated API/restart/rollback checks and scoped cleanup passed.
+- Next: public Compose fresh-install/recovery verification, documentation/privacy audit and publication. Live Telegram acceptance for this public version has not been performed.
+
 ## 2026-09-27 — Public packaging verified
 
 - Added strict settings, safe setup checks, pinned three-service and bot-only Compose files, and EN/RU setup guides.

@@ -24,6 +24,7 @@ def modules():
 
 
 def manager(bot, tmp_path, telegram=None):
+    bot.language_for_user = getattr(bot, "language_for_user", lambda user: "ru")
     storage, monitoring = modules()
     store = storage.WatchStore(tmp_path / "state" / "watches.sqlite3")
     telegram = telegram or SimpleNamespace(
