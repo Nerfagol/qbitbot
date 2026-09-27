@@ -13,3 +13,5 @@
 !i18n.py
 !locales/
 !locales/*.json
+!preferences.py
+!language_ui.py

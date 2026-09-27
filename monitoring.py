@@ -150,7 +150,13 @@ class WatchManager:
                         key[1],
                         row["title"],
                         row["message_id"],
-                        SimpleNamespace(bot=delivery, user_id=row["user_id"]),
+                        SimpleNamespace(
+                            bot=delivery,
+                            user_id=row["user_id"],
+                            language_for_user=getattr(
+                                self.api, "language_for_user", lambda user: "en"
+                            ),
+                        ),
                     )
                     if status in ("missing", "error"):
                         self.store.set_status(*key, status)

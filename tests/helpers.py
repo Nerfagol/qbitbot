@@ -38,7 +38,7 @@ class Callback:
 def update(message, data=None, user_id=101):
     return SimpleNamespace(
         message=message,
-        effective_user=SimpleNamespace(id=user_id),
+        effective_user=SimpleNamespace(id=user_id, language_code="ru"),
         effective_chat=SimpleNamespace(id=303),
         callback_query=Callback(message, data) if data else None,
     )

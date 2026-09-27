@@ -14,7 +14,7 @@ def test_start_has_short_guide_and_navigation_buttons(bot):
     assert "загруз" in sent["text"].lower()
     assert "сохранить файлы" not in sent["text"].lower()
     actions = {b.callback_data for row in sent["reply_markup"].inline_keyboard for b in row}
-    assert actions == {"nav:search", "nav:downloads", "nav:health", "nav:help"}
+    assert actions == {"nav:search", "nav:downloads", "nav:health", "nav:help", "nav:language"}
 
 
 def test_registers_commands_and_native_menu(bot):
@@ -28,6 +28,7 @@ def test_registers_commands_and_native_menu(bot):
         "status",
         "health",
         "help",
+        "language",
     }
     assert transport.set_chat_menu_button.call_args.kwargs["menu_button"].type == "commands"
 

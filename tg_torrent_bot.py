@@ -12,6 +12,9 @@ import io
 import hmac
 from types import SimpleNamespace
 from pathlib import Path
+from i18n import tr, normalize_language
+from preferences import LanguageService, PreferenceStore
+from language_ui import LanguagePicker, command_list, set_private_commands
 from health import HealthManager, check_jackett, check_qbit
 from watch_store import WatchStore
 from downloads import download_location, title as download_title, identity, torrent_link, link_hash, DownloadHealth, DownloadsDashboard, download_progress, download_status, progress_percent
@@ -839,55 +842,59 @@ def format_torrent_line(t: Dict) -> str:
 
 
 # ----------------- telegram handlers -----------------
-def navigation_keyboard():
+def language_service(context):
+    data = context.application.bot_data
+    if "languages" not in data:
+        data["languages"] = LanguageService(PreferenceStore(Path(WATCH_DB_PATH).with_suffix(".preferences.sqlite3")))
+    return data["languages"]
+
+
+def language_for_update(update, context):
+    if not allowed(update):
+        return "en"
+    return language_service(context).for_user(update.effective_user.id, getattr(update.effective_user, "language_code", None))
+
+
+def navigation_keyboard(language="en"):
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔎 Поиск", callback_data="nav:search"),
-         InlineKeyboardButton("📥 Загрузки", callback_data="nav:downloads")],
-        [InlineKeyboardButton("🩺 Состояние", callback_data="nav:health"),
-         InlineKeyboardButton("❓ Помощь", callback_data="nav:help")],
+        [InlineKeyboardButton(tr("nav.search", language), callback_data="nav:search"),
+         InlineKeyboardButton(tr("nav.downloads", language), callback_data="nav:downloads")],
+        [InlineKeyboardButton(tr("nav.health", language), callback_data="nav:health"),
+         InlineKeyboardButton(tr("nav.help", language), callback_data="nav:help")],
+        [InlineKeyboardButton("🌐 Language / Язык", callback_data="nav:language")],
     ])
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not allowed(update):
         return
-    await update.message.reply_text(
-        "Привет! Помогу найти торрент и следить за загрузкой.\n\n"
-        "1️⃣ Отправь название — например, Interstellar 2014.\n"
-        "2️⃣ Открой результат, проверь размер и сиды, затем нажми «Скачать».\n"
-        "3️⃣ Открой «Загрузки», чтобы проверить прогресс, поставить на паузу или удалить торрент.\n\n"
-        "🔔 Когда скачивание завершится, пришлю уведомление.\n"
-        "Удаление торрента и файлов требует подтверждения.\n\n"
-        "Нужные команды всегда доступны через кнопку «Меню» рядом с полем ввода.",
-        reply_markup=navigation_keyboard(),
-    )
+    language = language_for_update(update, context)
+    await update.message.reply_text(tr("help.start", language), reply_markup=navigation_keyboard(language), parse_mode=None)
 
 
 async def cmd_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not allowed(update):
         return
-    await update.message.reply_text(
-        "🔎 Отправь название фильма, сериала или другой запрос.\n"
-        "Например: Interstellar 2014\n\n"
-        "Покажу результаты по 5 на странице. Выбери результат, затем нажми «Скачать».",
-    )
+    await update.message.reply_text(tr("help.search", language_for_update(update, context)), parse_mode=None)
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not allowed(update):
         return
-    await update.message.reply_text(
-        "🔎 /search — как начать поиск; можно сразу отправить название.\n"
-        "📥 /downloads — прогресс, пауза, продолжение и удаление.\n"
-        "📊 /status — краткая сводка загрузок.\n"
-        "🩺 /health — состояние бота и сервисов, обновление каждый час.\n"
-        "👋 /start — инструкция и быстрые кнопки.\n\n"
-        "Удаление торрента и файлов требует подтверждения.\n"
-        "Поиск: страницы, сортировка по сидам и размеру, просмотр перед скачиванием.\n"
-        "Если кнопка устарела, повтори поиск или открой /downloads заново.\n"
-        "За добавленным торрентом буду следить и после перезапуска бота.",
-        reply_markup=navigation_keyboard(),
-    )
+    language = language_for_update(update, context)
+    await update.message.reply_text(tr("help.help", language), reply_markup=navigation_keyboard(language), parse_mode=None)
+
+
+async def cmd_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if allowed(update):
+        await LanguagePicker(language_service(context), allowed).open(update, context)
+
+
+async def on_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if allowed(update):
+        await LanguagePicker(language_service(context), allowed).callback(update, context)
+    else:
+        await update.callback_query.answer()
 
 
 async def on_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -895,7 +902,7 @@ async def on_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     if not allowed(update):
         return
-    handler = {"nav:search": cmd_search, "nav:downloads": cmd_downloads, "nav:help": cmd_help, "nav:health": cmd_health}.get(query.data)
+    handler = {"nav:search": cmd_search, "nav:downloads": cmd_downloads, "nav:help": cmd_help, "nav:health": cmd_health, "nav:language": cmd_language}.get(query.data)
     if handler:
         # Commands reply to the originating message; callback updates have no .message.
         event = SimpleNamespace(message=query.message, effective_user=update.effective_user,
@@ -904,18 +911,18 @@ async def on_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def configure_menu(application):
-    await application.bot.set_my_commands([
-        BotCommand("search", "Поиск торрентов"),
-        BotCommand("downloads", "Загрузки: прогресс и управление"),
-        BotCommand("status", "Краткая сводка загрузок"),
-        BotCommand("health", "Состояние бота и сервисов"),
-        BotCommand("help", "Помощь"),
-        BotCommand("start", "Начать: краткая инструкция"),
-    ])
+    for language, code in (("en", ""), ("en", "en"), ("ru", "ru")):
+        await application.bot.set_my_commands(command_list(language), language_code=code)
     await application.bot.set_chat_menu_button(menu_button=MenuButtonCommands())
+    service = getattr(application, "bot_data", {}).get("languages")
+    if service:
+        for row in service.store.overrides():
+            if row["user_id"] in ALLOWED_USERS:
+                await set_private_commands(application.bot, row["user_id"], row["override"])
 
 
 async def application_start(application):
+    application.bot_data["languages"] = LanguageService(PreferenceStore(Path(WATCH_DB_PATH).with_suffix(".preferences.sqlite3")))
     try:
         await configure_menu(application)
     except TelegramError as error:
@@ -928,6 +935,7 @@ async def application_start(application):
             check_qbit=lambda: check_qbit(qbit_session, QBIT_URL),
             check_jackett=lambda: check_jackett(JACKETT_TORZNAB_URL, JACKETT_API_KEY),
             last_search=lambda: LAST_SEARCH_HEALTH,
+            language_for_user=application.bot_data["languages"].for_user,
         ), application.bot, Path(WATCH_DB_PATH).with_suffix(".health.sqlite3"))
         application.bot_data["health"] = manager
         manager.start()
@@ -953,9 +961,9 @@ async def on_health(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.answer("Карточка недоступна. Открой /health позже.", show_alert=True)
 
 
-def downloads_dashboard():
+def downloads_dashboard(language_for_user=lambda user: "en"):
     return DownloadsDashboard(SimpleNamespace(
-        allowed=allowed, DOWNLOAD_HEALTH=DOWNLOAD_HEALTH,
+        allowed=allowed, DOWNLOAD_HEALTH=DOWNLOAD_HEALTH, language_for_user=language_for_user,
         qbit_torrents_info_sync=qbit_torrents_info_sync,
         qbit_control_sync=qbit_control_sync, human_eta=human_eta,
         human_size=human_size, human_speed=human_speed, is_completed=is_completed,
@@ -963,11 +971,13 @@ def downloads_dashboard():
 
 
 async def cmd_downloads(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await downloads_dashboard().open(update, context)
+    language_for_update(update, context)
+    await downloads_dashboard(language_service(context).for_user).open(update, context)
 
 
 async def on_downloads(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await downloads_dashboard().callback(update, context)
+    language_for_update(update, context)
+    await downloads_dashboard(language_service(context).for_user).callback(update, context)
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1005,8 +1015,9 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines))
 
 
-def search_browser():
+def search_browser(language_for_user=lambda user: "en"):
     return SearchBrowser(SimpleNamespace(
+        language_for_user=language_for_user,
         allowed=allowed, search=jackett_search_sync, limit=RESULTS_LIMIT,
         ttl=SEARCH_TTL_SEC, human_size=human_size, infohash=magnet_infohash_hex,
         add_selected=add_selected, open_downloads=cmd_downloads,
@@ -1040,7 +1051,8 @@ async def dispatch_pick(update, context):
 
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await search_browser().search(update, context)
+    language_for_update(update, context)
+    await search_browser(language_service(context).for_user).search(update, context)
 
 
 def torrent_navigation(info, user_id, chat_id, *, label="📥 Открыть эту загрузку"):
@@ -1079,7 +1091,8 @@ async def on_torrent_link(update, context):
 
 
 async def on_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await search_browser().callback(update, context)
+    language_for_update(update, context)
+    await search_browser(language_service(context).for_user).callback(update, context)
 
 
 async def add_selected(update, context, item):
@@ -1118,6 +1131,7 @@ async def monitoring_start(application):
     api = SimpleNamespace(
         ALLOWED_USERS=ALLOWED_USERS, WATCH_INTERVAL_SEC=WATCH_INTERVAL_SEC,
         watch_torrent_until_done=watch_torrent_until_done,
+        language_for_user=application.bot_data.get("languages").for_user if application.bot_data.get("languages") else (lambda user: "en"),
     )
     manager = WatchManager(api, application.bot, WatchStore(WATCH_DB_PATH))
     application.bot_data["monitoring"] = manager
@@ -1146,6 +1160,10 @@ async def monitoring_close(application):
     manager = application.bot_data.pop("monitoring", None)
     if manager:
         await manager.close()
+
+    service = application.bot_data.pop("languages", None)
+    if service:
+        service.store.close()
 
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -1191,6 +1209,7 @@ def main():
 
     builder = builder.post_init(application_start).post_stop(monitoring_stop).post_shutdown(monitoring_close)
     app = builder.build()
+    app.add_handler(CommandHandler("language", cmd_language))
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("search", cmd_search))
@@ -1198,6 +1217,7 @@ def main():
     app.add_handler(CommandHandler("health", cmd_health))
     app.add_handler(CommandHandler("downloads", cmd_downloads))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, dispatch_search))
+    app.add_handler(CallbackQueryHandler(on_language, pattern=r"^lang:"))
     app.add_handler(CallbackQueryHandler(on_navigation, pattern=r"^nav:"))
     app.add_handler(CallbackQueryHandler(on_downloads, pattern=r"^dl:"))
     app.add_handler(CallbackQueryHandler(on_health, pattern=r"^health:"))

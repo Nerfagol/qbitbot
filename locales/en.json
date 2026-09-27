@@ -6,5 +6,19 @@
   },
   "language.prompt": "🌐 Choose your language",
   "language.saved": "Language saved: English.",
-  "language.expired": "This selection has expired. Open /language again."
+  "language.expired": "This selection has expired. Open /language again.",
+  "menu.search": "Search torrents",
+  "menu.downloads": "Downloads: progress and controls",
+  "menu.status": "Download summary",
+  "menu.health": "Bot and service health",
+  "menu.help": "Help",
+  "menu.start": "Start: quick guide",
+  "menu.language": "Language / Язык",
+  "nav.search": "🔎 Search",
+  "nav.downloads": "📥 Downloads",
+  "nav.health": "🩺 Health",
+  "nav.help": "❓ Help",
+  "help.start": "Hello! I can help you find torrents and track downloads.\n\n1️⃣ Send a title or search query.\n2️⃣ Open a result, check its size and sources, then press Download.\n3️⃣ Open Downloads to see progress, pause, resume or delete.\n\n🔔 I will notify you when a download finishes. Deleting the torrent and its files requires confirmation.\n\nCommands are available from the Menu button beside the message field.",
+  "help.search": "🔎 Send a film or series title, or another search query.\n\nResults appear five per page. Select a number, review the release, then press Download.",
+  "help.help": "🔎 /search — search instructions; you can also send a title.\n📥 /downloads — progress, pause, resume and deletion.\n📊 /status — download summary.\n🩺 /health — bot and service checks, updated hourly.\n🌐 /language — English / Русский.\n👋 /start — quick guide.\n\nDeleting torrents and files requires confirmation. Search supports sorting, quality/size filters and previews. If a button expires, search again or reopen /downloads. Download monitoring resumes after bot restarts."
 }
