@@ -5,12 +5,17 @@
 Python 3.12 Telegram bot using Jackett search and qBittorrent downloads. The root
 `tg_torrent_bot.py` owns handlers/API integration; `search_ui.py`, `downloads.py`,
 `health.py`, `monitoring.py` and `watch_store.py` own rendering, controls and durable state.
+`locales/` holds matched English/Russian catalogs; `preferences.py` owns the separate
+language database. Pass language explicitly and preserve queued notice payloads.
 `tests/` uses synthetic data. `integration/` runs disposable container checks.
 
 ## Commands and conventions
 
 Create `.venv` and install `requirements-dev.lock`. Use `make check` for tests,
-lint/format checks, compilation and dependencies; `make integration` requires Docker.
+lint/format checks, compilation and dependencies. `make compose-check`, `make integration`
+and `make integration-public` require Docker; the last also requires Compose 2.24.4+
+and full public Git history for rollback. `backup_state.py` creates verified private
+SQLite snapshots. Setup and recovery guides are available in English and Russian.
 Use four-space indentation, snake_case names and async Telegram handlers; run blocking
 HTTP through `asyncio.to_thread`. Preserve the root application's CRLF and avoid
 unrelated legacy formatting. Run `make format` for other Python modules and tests.

@@ -199,6 +199,8 @@ def main():
             n: (ROOT / n).read_bytes()
             for n in [
                 "Dockerfile",
+                "LICENSE",
+                "THIRD_PARTY_NOTICES.md",
                 ".dockerignore",
                 "requirements.lock",
                 "tg_torrent_bot.py",

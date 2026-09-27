@@ -23,3 +23,10 @@ Preferences live in a separate `.preferences.sqlite3` sibling of the watch DB.
 Detected language and explicit overrides are persisted separately. Resolve the owner
 when rendering; never translate a queued notice again during delivery retries.
 See `docs/development/localization.md` for rendering boundaries.
+
+## Recovery
+
+`backup_state.py` snapshots SQLite through its online API and rejects existing
+destinations. Each DB is individually consistent; stop the bot for a quiet point
+across all three. Ordinary code rollback retains current state. Snapshot restore
+is separate and may replay notices. See bilingual backup guides for name mapping.

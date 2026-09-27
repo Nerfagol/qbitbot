@@ -1,0 +1,4 @@
+title = "qbitbot public source audit"
+[extend]
+useDefault = true
+# No broad fixture or path exclusions. Synthetic findings must be reviewed individually.

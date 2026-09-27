@@ -12,3 +12,4 @@ COPY tg_torrent_bot.py watch_store.py monitoring.py downloads.py search_ui.py he
 
 CMD ["python", "/app/tg_torrent_bot.py"]
 COPY locales /app/locales
+COPY LICENSE THIRD_PARTY_NOTICES.md /app/

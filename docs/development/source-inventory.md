@@ -51,3 +51,13 @@ verification tasks; no personal acceptance configuration is exported.
 
 `integration/fixtures.py` retains only the pure `bencode` and `sample` generators
 needed by metadata-identity tests. No manual setup/service code is included.
+
+## Public implementation additions
+
+`settings.py` and `setup_check.py` validate configuration and authenticated service
+readiness. `i18n.py`, `preferences.py`, `language_ui.py` and `locales/` provide explicit
+EN/RU rendering and separate preference persistence. `backup_state.py` snapshots bot
+databases. Public Compose entry points, examples, bilingual guides, CI and synthetic
+previews were authored here. `integration/compose_check.py`, `public_stack.py`,
+`public_probe.py`, `recovery_probe.py` and `compose.test.yaml` replace private setup
+acceptance with isolated public-repository checks. Added tests cover these boundaries.
