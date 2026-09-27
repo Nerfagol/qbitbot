@@ -1,5 +1,12 @@
 # Project Progress
 
+## 2026-09-27 — Public v0.3.0 released
+
+- Published [repository](https://github.com/Nerfagol/qbitbot) and [v0.3.0](https://github.com/Nerfagol/qbitbot/releases/tag/v0.3.0). Annotated tag targets `18e940b1db491b7a87874585a65e48930dc9b965`; downloaded GitHub archive matches every audited source file.
+- Release-commit CI passed: [539-test/check workflow](https://github.com/Nerfagol/qbitbot/actions/runs/36342508084), [container workflow](https://github.com/Nerfagol/qbitbot/actions/runs/36342508054). Container checks include both languages, both Compose modes, real isolated APIs, outages, restart, backup, rollback and new-volume restore.
+- Source/history/private-marker/image-layer/release-archive audits passed; independent review findings were fixed with regressions. No unresolved release blockers or deferred review findings.
+- Next: optional real Telegram acceptance with a new dedicated test bot; other CPU architectures remain unverified. No private deployment configuration or history was published.
+
 ## 2026-09-27 — Version 0.3.0 prepared
 
 - Published the independently audited source at https://github.com/Nerfagol/qbitbot; remote tree/root history match the public checkout.

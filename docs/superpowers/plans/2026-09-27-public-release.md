@@ -55,9 +55,9 @@ tested units. A failed milestone remains incomplete; do not skip into publicatio
 - [x] Confirm all execution tools operate in the new public folder. Do not create
   a linked worktree from the private donor; the independent checkout already supplies isolation.
 - [x] Complete packaging tasks 1–3 and record retained test coverage.
-- [ ] Complete bilingual tasks 1–5 and record owner/restart compatibility checks.
-- [ ] Complete release-verification tasks 1–3 and audit all public history/artifacts.
-- [ ] Complete publication task 4; record remote CI, version tag and release links.
+- [x] Complete bilingual tasks 1–5 and record owner/restart compatibility checks.
+- [x] Complete release-verification tasks 1–3 and audit all public history/artifacts.
+- [x] Complete publication task 4; record remote CI, version tag and release links.
 
 ## Self-review
 

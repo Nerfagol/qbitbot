@@ -30,3 +30,9 @@ See `docs/development/localization.md` for rendering boundaries.
 destinations. Each DB is individually consistent; stop the bot for a quiet point
 across all three. Ordinary code rollback retains current state. Snapshot restore
 is separate and may replay notices. See bilingual backup guides for name mapping.
+
+## Public release baseline
+
+`v0.3.0` is the first public release; qBittorrent 5.x is required for controls
+(the bundled tested version is 5.1.2). Release CI accepts Linux amd64 and uses only
+synthetic Telegram transport. Real Telegram acceptance remains a separate check.
