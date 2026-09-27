@@ -1,7 +1,7 @@
 # Public qbitbot release design
 
 Date: 2026-09-27
-Status: proposed design; implementation has not started.
+Status: approved by the user on 2026-09-27; implementation has not started.
 Target: version 0.3, after verification; this document does not declare a release.
 
 ## Purpose and agreed scope
@@ -38,8 +38,8 @@ Existing private deployments and their accepted version are independent of this 
   narrowly scoped scanner exceptions rather than broad exclusions.
 - Create the GitHub repository and upload only after this publication check passes.
   Publication is authorized by the user; no private snapshot is uploaded as staging.
-- The user confirmed that the original bot was written from scratch. Propose MIT
-  for original project code; this license choice is part of design review. Preserve
+- The user confirmed that the original bot was written from scratch. Use MIT
+  for original project code, as approved during design review. Preserve
   required notices and inventory third-party dependencies/images separately.
 
 ## Architecture and packaging
@@ -155,6 +155,6 @@ compatible state; backup/restore examples must never silently erase volumes.
 ## Provenance and design review
 
 The user confirmed on 2026-09-27 that the bot was written from scratch rather than
-copied from another project. MIT is the proposed license for original code.
-The written design, including that license choice, awaits user review before
-implementation planning. Third-party notices still require an inventory.
+copied from another project. MIT is the approved license for original code.
+The user approved this written design on 2026-09-27 and requested implementation
+planning. Third-party notices still require an inventory.
