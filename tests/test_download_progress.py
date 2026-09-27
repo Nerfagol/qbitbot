@@ -11,7 +11,7 @@ GIB = 1024**3
 
 def test_progress_shows_status_bar_received_bytes_speed_and_eta(bot):
     text = bot.format_download_progress(
-        torrent(total_size=2 * GIB, amount_left=GIB, dlspeed=1024**2, eta=90)
+        torrent(total_size=2 * GIB, amount_left=GIB, dlspeed=1024**2, eta=90), language="ru"
     )
     assert "⬇️ Скачивается" in text and "50%" in text
     assert "▰" in text and "▱" in text
@@ -34,7 +34,7 @@ def test_progress_shows_status_bar_received_bytes_speed_and_eta(bot):
     ],
 )
 def test_non_downloading_states_do_not_show_stale_remaining_time(bot, state, label):
-    text = bot.format_download_progress(torrent(state=state, eta=90, dlspeed=1000))
+    text = bot.format_download_progress(torrent(state=state, eta=90, dlspeed=1000), language="ru")
     assert label in text
     assert "1 мин" not in text and "90s" not in text
     assert "Скачивание завершено" not in text
@@ -44,17 +44,17 @@ def test_non_downloading_states_do_not_show_stale_remaining_time(bot, state, lab
 
 def test_selected_bytes_and_unknown_size_are_not_invented(bot):
     info = torrent(total_size=10 * GIB, size=2 * GIB, amount_left=GIB)
-    assert "1.0GB из 2.0GB" in bot.format_download_progress(info)
-    text = bot.format_download_progress(torrent(total_size=0, size=0, eta=8640000))
+    assert "1.0GB из 2.0GB" in bot.format_download_progress(info, language="ru")
+    text = bot.format_download_progress(torrent(total_size=0, size=0, eta=8640000), language="ru")
     assert "Размер уточняется" in text and "100d" not in text
 
 
 def test_checking_at_100_percent_is_not_finished(bot):
     info = torrent(state="checkingUP", progress=1, amount_left=0)
-    text = bot.format_download_progress(info)
+    text = bot.format_download_progress(info, language="ru")
     assert "Проверка файлов" in text and "Скачивание завершено" not in text
     info["state"] = "uploading"
-    text = bot.format_download_progress(info)
+    text = bot.format_download_progress(info, language="ru")
     assert "✅ Скачивание завершено" in text and "100%" in text
     assert "Осталось" not in text
 
@@ -82,20 +82,26 @@ def test_watcher_updates_state_even_when_percentage_is_unchanged(bot, monkeypatc
 
 
 def test_completed_but_paused_distinguishes_download_from_seeding(bot):
-    text = bot.format_download_progress(torrent(state="stoppedUP", progress=1, amount_left=0))
+    text = bot.format_download_progress(
+        torrent(state="stoppedUP", progress=1, amount_left=0), language="ru"
+    )
     assert "✅ Скачивание завершено" in text
     assert "Раздача приостановлена" in text
     assert "Осталось" not in text
 
 
 def test_new_download_displays_zero_bytes_and_zero_speed(bot):
-    text = bot.format_download_progress(torrent(progress=0, amount_left=1024, dlspeed=0))
+    text = bot.format_download_progress(
+        torrent(progress=0, amount_left=1024, dlspeed=0), language="ru"
+    )
     assert "Получено: 0B из 1.0KB" in text
     assert "Скорость: 0B/с" in text
     assert "Осталось: пока неизвестно" in text
 
 
 def test_explicit_zero_selected_size_never_claims_full_torrent_downloaded(bot):
-    text = bot.format_download_progress(torrent(size=0, total_size=1024, amount_left=0, progress=0))
+    text = bot.format_download_progress(
+        torrent(size=0, total_size=1024, amount_left=0, progress=0), language="ru"
+    )
     assert "Размер уточняется" in text
     assert "1.0KB из 1.0KB" not in text

@@ -88,10 +88,10 @@
 
 **Interfaces:** Add keyword-only `language: Language = 'en'` to `waiting_guidance`, `download_status`, `remaining_time`, `download_progress`, `download_location` and root `format_download_progress`; retain other arguments. Dashboard methods resolve language from their owner on each render. `torrent_navigation(..., label=None, language='en')` selects a translated default label; callback content remains unchanged.
 
-- [ ] Add failing EN/RU assertions for numbered list (eight entries), groups/counts, details, pause/resume, named delete-with-files confirmation, empty library, stale views and API errors. Cover metadata/checking/paused/queued/error/completed states and unknown ETA. Run targeted language tests and confirm relevant copy failures.
-- [ ] Translate display strings/units and `/status`; retain state classification, strict completion, selected-size accounting, progress bar and UTC snapshot semantics. Stable group keys stay separate from translated labels. Keep file/path values verbatim.
-- [ ] Test language switching between selecting a torrent and confirming deletion: guard/target identity must still match and one mutation occurs. Test another owner in the same group cannot act. Check long Unicode names, counts at plural boundaries, vanished torrents and recoverable errors in both languages.
-- [ ] Run all download tests, completion-action tests and `make check`; commit `feat: localize downloads and progress controls`.
+- [x] Add failing EN/RU assertions for numbered list (eight entries), groups/counts, details, pause/resume, named delete-with-files confirmation, empty library, stale views and API errors. Cover metadata/checking/paused/queued/error/completed states and unknown ETA. Run targeted language tests and confirm relevant copy failures.
+- [x] Translate display strings/units and `/status`; retain state classification, strict completion, selected-size accounting, progress bar and UTC snapshot semantics. Stable group keys stay separate from translated labels. Keep file/path values verbatim.
+- [x] Test language switching between selecting a torrent and confirming deletion: guard/target identity must still match and one mutation occurs. Test another owner in the same group cannot act. Check long Unicode names, counts at plural boundaries, vanished torrents and recoverable errors in both languages.
+- [x] Run all download tests, completion-action tests and `make check`; commit `feat: localize downloads and progress controls`.
 
 ## Task 5: Background cards, completion notices and diagnostic language
 

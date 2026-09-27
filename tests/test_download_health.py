@@ -94,11 +94,13 @@ def test_gap_and_explicit_failure_reset_observation(bot):
     ],
 )
 def test_warning_reports_connected_peers_without_guessing_network_cause(bot, counts, expected):
-    text = bot.format_download_progress(torrent(state="metaDL", **counts), stalled=True)
+    text = bot.format_download_progress(
+        torrent(state="metaDL", **counts), stalled=True, language="ru"
+    )
     assert "5 минут" in text and expected in text
     assert "интернет не работает" not in text
     assert "0%" not in text
-    text = bot.format_download_progress(torrent(dlspeed=0, **counts), stalled=True)
+    text = bot.format_download_progress(torrent(dlspeed=0, **counts), stalled=True, language="ru")
     assert "Нет прогресса скачивания" in text
 
 

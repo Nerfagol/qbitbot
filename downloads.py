@@ -11,6 +11,8 @@ import time
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+from i18n import tr, normalize_language
+
 PAGE_SIZE = 8
 VIEW_TTL = 15 * 60
 CONFIRM_TTL = 120
@@ -34,20 +36,23 @@ RUNNING = {
 }
 
 
-def title(info, limit=180):
+def title(info, limit=180, *, language="en"):
     # Plain text, bounded even for attacker-controlled torrent names.
-    return " ".join(str(info.get("name") or "Без названия").split())[:limit]
+    return " ".join(str(info.get("name") or tr("download.untitled", language)).split())[:limit]
 
 
 META = {"metaDL", "forcedMetaDL"}
 CHECKING = {"checkingDL", "checkingUP", "checkingResumeData"}
 ACTIVE_DOWNLOAD = {"downloading", "forcedDL"}
-GROUPS = {
-    "attention": "⚠️ Требует внимания",
-    "active": "⬇️ В процессе",
-    "paused": "⏸ На паузе",
-    "completed": "✅ Завершено",
-}
+
+
+def group_labels(language):
+    return {
+        "attention": tr("download.group.attention", language),
+        "active": tr("download.group.active", language),
+        "paused": tr("download.group.paused", language),
+        "completed": tr("download.group.completed", language),
+    }
 
 
 def download_group(info, api, *, stalled=False):
@@ -109,77 +114,81 @@ class DownloadHealth:
         return now - since >= 300
 
 
-def waiting_guidance(info):
+def waiting_guidance(info, *, language="en"):
     counts = [info.get("num_seeds"), info.get("num_leechs")]
     if all(isinstance(value, int) and value >= 0 for value in counts):
         peers = sum(counts)
-        fact = f"Подключённых источников: {peers}." if peers else "Нет подключённых источников."
+        fact = (
+            tr("download.peers.connected", language, v0=peers)
+            if peers
+            else tr("download.peers.none", language)
+        )
     else:
-        fact = "Число подключённых источников неизвестно."
+        fact = tr("download.peers.unknown", language)
     reason = (
-        "Информация о файлах не получена за 5 минут наблюдения."
+        tr("download.stalled.metadata", language)
         if info.get("state") in META
-        else "Нет прогресса скачивания как минимум 5 минут."
+        else tr("download.stalled.transfer", language)
     )
-    return (
-        f"⚠️ {reason}\n{fact}\n"
-        "Можно подождать или найти другую раздачу. "
-        "В загрузках доступны «Обновить», «Пауза» и «Найти другую раздачу»."
-    )
+    return tr("download.stalled.guidance", language, v0=reason, v1=fact)
 
 
 def progress_percent(info):
     return max(0, min(100, int(float(info.get("progress") or 0) * 100)))
 
 
-def download_status(info, completed=False):
+def download_status(info, completed=False, *, language="en"):
     state = info.get("state")
     if state in CHECKING:
-        return "🔍 Проверка файлов"
+        return tr("download.state.checking", language)
     if state == "error":
-        return "❌ Ошибка загрузки"
+        return tr("download.state.error", language)
     if state == "missingFiles":
-        return "❌ Файлы отсутствуют"
+        return tr("download.state.missing", language)
     if completed:
-        return "✅ Скачивание завершено" + (
-            " · ⏸ Раздача приостановлена" if state in PAUSED else ""
+        return tr("download.state.complete", language) + (
+            tr("download.state.sharing_paused", language) if state in PAUSED else ""
         )
     if state in PAUSED:
-        return "⏸ Приостановлено"
+        return tr("download.state.paused", language)
     if state in META:
-        return "🧲 Получение информации о файлах"
+        return tr("download.state.metadata", language)
     if state == "stalledDL":
-        return "⏳ Ожидание источников"
+        return tr("download.state.waiting", language)
     if state in {"queuedDL", "queuedUP"}:
-        return "🕓 В очереди"
+        return tr("download.state.queued", language)
     if state in ACTIVE_DOWNLOAD:
-        return "⬇️ Скачивается"
+        return tr("download.state.downloading", language)
     if state in {"uploading", "stalledUP", "forcedUP"}:
-        return "⏳ Уточнение завершения"
-    return {"moving": "📁 Перемещение файлов", "allocating": "💾 Подготовка места"}.get(
-        state, "❔ Состояние уточняется"
-    )
+        return tr("download.state.confirming", language)
+    return {
+        "moving": tr("download.state.moving", language),
+        "allocating": tr("download.state.allocating", language),
+    }.get(state, tr("download.state.unknown", language))
 
 
-def remaining_time(seconds):
+def remaining_time(seconds, *, language="en"):
     if not isinstance(seconds, (int, float)) or not 0 < seconds < 8640000:
-        return "пока неизвестно"
+        return tr("download.eta.unknown", language)
     minutes, seconds = divmod(int(seconds), 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
     if days:
-        return f"{days} дн {hours} ч"
+        return tr("download.eta.days", language, v0=days, v1=hours)
     if hours:
-        return f"{hours} ч {minutes} мин"
+        return tr("download.eta.hours", language, v0=hours, v1=minutes)
     if minutes:
-        return f"{minutes} мин {seconds} сек"
-    return f"{seconds} сек"
+        return tr("download.eta.minutes", language, v0=minutes, v1=seconds)
+    return tr("download.eta.seconds", language, v0=seconds)
 
 
-def download_progress(info, api, *, live=False, stalled=False):
+def download_progress(info, api, *, live=False, stalled=False, language="en"):
     state = info.get("state")
     complete = api.is_completed(info)
-    lines = [f"📥 {title(info, 240)}", download_status(info, complete)]
+    lines = [
+        f"📥 {title(info, 240, language=language)}",
+        download_status(info, complete, language=language),
+    ]
     pct = progress_percent(info)
     if state not in META:
         filled = pct // 10
@@ -194,38 +203,54 @@ def download_progress(info, api, *, live=False, stalled=False):
             else:
                 received, prefix = int(total * pct / 100), "≈ "
             lines.append(
-                f"💾 Получено: {prefix}{api.human_size(received) or '0B'} из {api.human_size(total)}"
+                tr(
+                    "download.received",
+                    language,
+                    v0=prefix,
+                    v1=api.human_size(received) or "0B",
+                    v2=api.human_size(total),
+                )
             )
         else:
-            lines.append("💾 Размер уточняется")
+            lines.append(tr("download.size_unknown", language))
     if not complete and state in ACTIVE_DOWNLOAD:
         speed = max(0, info.get("dlspeed") or 0)
-        speed_text = api.human_speed(speed).replace("/s", "/с") if speed else "0B/с"
-        lines.append(f"⬇ Скорость: {speed_text}")
-        eta = remaining_time(info.get("eta")) if speed > 0 else "пока неизвестно"
-        lines.append(f"⏱ Осталось: {eta}")
+        speed_text = (
+            api.human_speed(speed).replace("/s", tr("download.per_second", language))
+            if speed
+            else tr("download.zero_speed", language)
+        )
+        lines.append(tr("download.speed", language, v0=speed_text))
+        eta = (
+            remaining_time(info.get("eta"), language=language)
+            if speed > 0
+            else tr("download.eta.unknown", language)
+        )
+        lines.append(tr("download.remaining", language, v0=eta))
     hints = {
-        "stalledDL": "Жду подключения источников. Скачивание продолжится автоматически.",
-        "queuedDL": "Скачивание начнётся, когда освободится место в очереди.",
-        "error": "Открой загрузки и проверь место на диске и доступ к папке.",
-        "missingFiles": "Файлы могли быть перемещены или удалены. Проверь папку загрузки.",
+        "stalledDL": tr("download.hint.waiting", language),
+        "queuedDL": tr("download.hint.queued", language),
+        "error": tr("download.hint.error", language),
+        "missingFiles": tr("download.hint.missing", language),
     }
     if not complete:
         if stalled and state in META | ACTIVE_DOWNLOAD | {"stalledDL"}:
-            lines.append(waiting_guidance(info))
+            lines.append(waiting_guidance(info, language=language))
         elif state in PAUSED:
-            lines.append("Для продолжения нажми «Продолжить» в загрузках.")
+            lines.append(tr("download.hint.paused", language))
         elif state in META:
-            lines.append("Размер и прогресс появятся после получения информации от источников.")
+            lines.append(tr("download.hint.metadata", language))
         elif state in CHECKING:
-            lines.append("Проверяю уже полученные файлы. Это ещё не подтверждение готовности.")
+            lines.append(tr("download.hint.checking", language))
         elif state in hints:
             lines.append(hints[state])
     if live and not complete and state not in {"error", "missingFiles"}:
-        lines.append("🔄 Автообновление при изменениях · управление: /downloads")
+        lines.append(tr("download.auto_update", language))
     elif not live:
         lines.append(
-            "🕒 Данные на " + time.strftime("%H:%M:%S UTC", time.gmtime()) + " · «Обновить»"
+            tr("download.snapshot", language)
+            + time.strftime("%H:%M:%S UTC", time.gmtime())
+            + tr("download.refresh_hint", language)
         )
     return "\n".join(lines)
 
@@ -252,19 +277,26 @@ def link_hash(data):
     return base64.urlsafe_b64decode(match[1] + "=" * (-len(match[1]) % 4)).hex()
 
 
-def download_location(info):
+def download_location(info, *, language="en"):
     path = info.get("content_path") or info.get("save_path")
     if not isinstance(path, str) or not path.strip():
-        return "📁 Файлы сохранены на устройстве с qBittorrent. Путь пока неизвестен."
+        return tr("download.location.unknown", language)
     # These are qBittorrent paths; never pretend a container path is a local phone/PC path.
-    bounded = path[:600] + ("… (путь сокращён)" if len(path) > 600 else "")
-    return f"📁 Расположение в qBittorrent:\n{bounded}"
+    bounded = path[:600] + (tr("download.location.shortened", language) if len(path) > 600 else "")
+    return tr("download.location.path", language, v0=bounded)
 
 
 class DownloadsDashboard:
     def __init__(self, api):
         self.api = api
         self.now = time.monotonic
+
+    def language(self, update):
+        user = update.effective_user
+        fallback = normalize_language(getattr(user, "language_code", None))
+        if not user or not self.api.allowed(update):
+            return fallback
+        return getattr(self.api, "language_for_user", lambda user_id: fallback)(user.id)
 
     async def open(self, update, context):
         if not self.api.allowed(update):
@@ -273,23 +305,28 @@ class DownloadsDashboard:
         await self.list_view(update, context, 0, initial=True)
 
     async def open_target(self, update, context, target):
+        language = self.language(update)
         if not self.api.allowed(update):
             return
         try:
             info = await self.read_target(target)
             if info is None or identity(info) != target:
                 await update.message.reply_text(
-                    "Загрузка исчезла или изменилась. Открой список загрузок заново.",
+                    tr("download.target_changed", language),
                     reply_markup=InlineKeyboardMarkup(
-                        [[InlineKeyboardButton("📥 Все загрузки", callback_data="nav:downloads")]]
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    tr("download.all", language), callback_data="nav:downloads"
+                                )
+                            ]
+                        ]
                     ),
                 )
                 return
             await self.detail(update, context, info, 0, initial=True)
         except Exception:
-            await update.message.reply_text(
-                "Не удалось открыть загрузку. Попробуй /downloads позже."
-            )
+            await update.message.reply_text(tr("download.open_failed", language))
 
     async def render(self, update, context, text, buttons, *, initial=False, ttl=VIEW_TTL):
         token = secrets.token_hex(8)
@@ -318,6 +355,7 @@ class DownloadsDashboard:
         view["message"] = message.message_id
 
     async def list_view(self, update, context, page, *, initial=False, note=""):
+        language = self.language(update)
         try:
             infos = await asyncio.to_thread(self.api.qbit_torrents_info_sync, limit=None)
             waiting = self.api.DOWNLOAD_HEALTH.observe_library(infos)
@@ -325,7 +363,7 @@ class DownloadsDashboard:
                 info["hash"]: download_group(info, self.api, stalled=waiting[info["hash"]])
                 for info in infos
             }
-            order = {group: rank for rank, group in enumerate(GROUPS)}
+            order = {group: rank for rank, group in enumerate(group_labels(language))}
             infos.sort(
                 key=lambda info: (
                     order[groups[info["hash"]]],
@@ -338,16 +376,19 @@ class DownloadsDashboard:
             await self.render(
                 update,
                 context,
-                "Не удалось получить загрузки. Попробуй обновить позже.",
-                [[("Обновить", ("list", page))]],
+                tr("download.list_failed", language),
+                [[(tr("download.refresh", language), ("list", page))]],
                 initial=initial,
             )
             return
         pages = max(1, (len(infos) + PAGE_SIZE - 1) // PAGE_SIZE)
         page = max(0, min(page, pages - 1))
-        lines = [note, f"📥 Загрузки — {len(infos)} • страница {page + 1}/{pages}"]
-        counts = {group: sum(value == group for value in groups.values()) for group in GROUPS}
-        labels = [f"{label}: {counts[group]}" for group, label in GROUPS.items()]
+        lines = [note, tr("download.heading", language, v0=len(infos), v1=page + 1, v2=pages)]
+        counts = {
+            group: sum(value == group for value in groups.values())
+            for group in group_labels(language)
+        }
+        labels = [f"{label}: {counts[group]}" for group, label in group_labels(language).items()]
         lines.extend([" · ".join(labels[:2]), " · ".join(labels[2:])])
         choices = []
         previous_group = None
@@ -356,47 +397,59 @@ class DownloadsDashboard:
         ):
             group = groups[info["hash"]]
             if group != previous_group:
-                lines.append("\n" + GROUPS[group])
+                lines.append("\n" + group_labels(language)[group])
                 previous_group = group
             pct = progress_percent(info)
-            state = download_status(info, self.api.is_completed(info))
+            state = download_status(info, self.api.is_completed(info), language=language)
             if waiting[info["hash"]]:
                 state += (
-                    " · ожидание ≥5 мин" if info.get("state") in META else " · нет прогресса ≥5 мин"
+                    tr("download.waiting_marker", language)
+                    if info.get("state") in META
+                    else tr("download.stalled_marker", language)
                 )
             progress = "" if info.get("state") in META else f"{pct}% • "
-            lines.append(f"\n{number}. {title(info, 120)}\n{progress}{state}")
+            lines.append(f"\n{number}. {title(info, 120, language=language)}\n{progress}{state}")
             choices.append((str(number), ("detail", identity(info), page)))
         buttons = [choices[start : start + 4] for start in range(0, len(choices), 4)]
         if choices:
-            lines.append("\nВыбери номер загрузки ↓")
+            lines.append(tr("download.select_number", language))
         if not infos:
-            lines.append("Торрентов пока нет.")
+            lines.append(tr("download.empty", language))
         nav = []
         if page:
-            nav.append(("← Назад", ("list", page - 1)))
+            nav.append((tr("download.back", language), ("list", page - 1)))
         if page + 1 < pages:
-            nav.append(("Далее →", ("list", page + 1)))
+            nav.append((tr("download.next", language), ("list", page + 1)))
         if nav:
             buttons.append(nav)
-        buttons.append([("Обновить", ("list", page))])
+        buttons.append([(tr("download.refresh", language), ("list", page))])
         await self.render(update, context, "\n".join(filter(None, lines)), buttons, initial=initial)
 
     async def detail(self, update, context, info, page, note="", *, initial=False):
+        language = self.language(update)
         state = info.get("state")
         stalled = self.api.DOWNLOAD_HEALTH.observe(info)
-        text = (f"{note}\n" + download_progress(info, self.api, stalled=stalled)).strip()
+        text = (
+            f"{note}\n" + download_progress(info, self.api, stalled=stalled, language=language)
+        ).strip()
         target = identity(info)
-        action, label = ("resume", "▶ Продолжить") if state in PAUSED else ("pause", "⏸ Пауза")
+        action, label = (
+            ("resume", tr("download.resume", language))
+            if state in PAUSED
+            else ("pause", tr("download.pause", language))
+        )
         buttons = [
-            [(label, (action, target, page)), ("Обновить", ("detail", target, page))],
-            [("🗑 Удалить торрент и файлы", ("ask_delete", target, page))],
-            [("← Загрузки", ("list", page))],
+            [
+                (label, (action, target, page)),
+                (tr("download.refresh", language), ("detail", target, page)),
+            ],
+            [(tr("download.delete", language), ("ask_delete", target, page))],
+            [(tr("download.back_list", language), ("list", page))],
         ]
         if not self.api.is_completed(info):
-            buttons.insert(1, [("🔎 Найти другую раздачу", ("search", target, page))])
+            buttons.insert(1, [(tr("download.find_another", language), ("search", target, page))])
         else:
-            text += "\n\n" + download_location(info)
+            text += "\n\n" + download_location(info, language=language)
         await self.render(update, context, text, buttons, initial=initial)
 
     async def read_target(self, target):
@@ -409,9 +462,10 @@ class DownloadsDashboard:
         return info
 
     async def callback(self, update, context):
+        language = self.language(update)
         query = update.callback_query
         if not self.api.allowed(update):
-            await query.answer("Нет доступа.", show_alert=True)
+            await query.answer(tr("download.denied", language), show_alert=True)
             return
         await query.answer()
         view = context.user_data.get("downloads", {})
@@ -423,9 +477,7 @@ class DownloadsDashboard:
             or query.data not in view.get("actions", {})
         ):
             # Do not overwrite another user's dashboard.
-            await query.message.reply_text(
-                "Кнопка устарела или принадлежит другому окну. Открой /downloads."
-            )
+            await query.message.reply_text(tr("download.stale", language))
             return
         action = view["actions"][query.data]
         view["actions"] = {}  # Consume once, before any I/O or mutation.
@@ -438,9 +490,7 @@ class DownloadsDashboard:
             info = await self.read_target(target)
             if info is None or identity(info) != target:
                 self.api.DOWNLOAD_HEALTH.forget(target[0])
-                await self.list_view(
-                    update, context, page, note="Торрент исчез или изменился. Выбери его заново."
-                )
+                await self.list_view(update, context, page, note=tr("download.changed", language))
                 return
             if kind == "detail":
                 await self.detail(update, context, info, page)
@@ -448,38 +498,38 @@ class DownloadsDashboard:
                 await self.render(
                     update,
                     context,
-                    "🔎 Отправь название и, если знаешь, год — покажу другие варианты.\n"
-                    "Текущая загрузка остаётся без изменений.\n\n"
-                    f"Сейчас выбрано: {title(info)}",
-                    [[("← К загрузке", ("detail", target, page))]],
+                    tr("download.alternative", language, v0=title(info, language=language)),
+                    [[(tr("download.back_detail", language), ("detail", target, page))]],
                 )
             elif kind == "ask_delete":
                 await self.render(
                     update,
                     context,
-                    f"🗑 Удалить торрент и файлы?\n{title(info)}\n\n"
-                    "Файлы будут удалены. Это нельзя отменить из бота.",
+                    tr("download.confirm_question", language, v0=title(info, language=language)),
                     [
-                        [("🗑 Подтвердить удаление", ("delete", target, page))],
-                        [("Отмена", ("detail", target, page))],
+                        [(tr("download.confirm_delete", language), ("delete", target, page))],
+                        [(tr("download.cancel", language), ("detail", target, page))],
                     ],
                     ttl=CONFIRM_TTL,
                 )
             elif kind in ("pause", "resume", "delete"):
                 await self.mutate(update, context, kind, target, page)
             else:
-                await self.detail(update, context, info, page, note="Операция устарела.")
+                await self.detail(
+                    update, context, info, page, note=tr("download.operation_stale", language)
+                )
         except Exception:
             self.api.DOWNLOAD_HEALTH.forget(target[0])
             # The server may have applied a timed-out mutation. Never replay it.
             await self.render(
                 update,
                 context,
-                "Не удалось подтвердить результат. Обнови загрузки перед повторной попыткой.",
-                [[("Обновить загрузки", ("list", page))]],
+                tr("download.uncertain", language),
+                [[(tr("download.refresh_all", language), ("list", page))]],
             )
 
     async def mutate(self, update, context, action, target, page):
+        language = self.language(update)
         if action not in ("pause", "resume", "delete"):
             raise ValueError("Unsupported dashboard action")
         await asyncio.to_thread(self.api.qbit_control_sync, action, target[0])
@@ -499,7 +549,7 @@ class DownloadsDashboard:
             manager = context.application.bot_data.get("monitoring")
             if manager:
                 await manager.removed(target[0])
-            note = "Торрент убран. qBittorrent принял удаление файлов."
+            note = tr("download.deleted", language)
             await self.list_view(update, context, page, note=note)
         elif info and identity(info) == target:
             await self.detail(
@@ -507,14 +557,14 @@ class DownloadsDashboard:
                 context,
                 info,
                 page,
-                note="Изменение подтверждено."
+                note=tr("download.confirmed", language)
                 if confirmed
-                else "Изменение пока не подтверждено. Обнови статус.",
+                else tr("download.not_confirmed", language),
             )
         else:
             await self.list_view(
                 update,
                 context,
                 page,
-                note="Изменение не подтверждено: торрент исчез или изменился.",
+                note=tr("download.changed_unconfirmed", language),
             )

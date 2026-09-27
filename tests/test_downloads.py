@@ -55,13 +55,14 @@ def setup(bot, monkeypatch):
     library = Library()
     monkeypatch.setattr(bot, "qbit_torrents_info_sync", library.read)
     monkeypatch.setattr(bot, "qbit_control_sync", library.control)
+    monkeypatch.setattr(bot, "language_for_user", lambda user: "ru", raising=False)
     dashboard = module.DownloadsDashboard(bot)
     message = Message()
     ctx = SimpleNamespace(user_data={}, application=SimpleNamespace(bot_data={}))
     event = SimpleNamespace(
         message=message,
         effective_chat=SimpleNamespace(id=303),
-        effective_user=SimpleNamespace(id=101),
+        effective_user=SimpleNamespace(id=101, language_code="ru"),
         callback_query=None,
     )
     return dashboard, library, message, ctx, event

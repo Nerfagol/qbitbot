@@ -113,10 +113,10 @@ def human_eta(sec: Optional[int]) -> str:
     return f"{s}s"
 
 
-def format_download_progress(info, *, live=False, stalled=False):
+def format_download_progress(info, *, live=False, stalled=False, language="en"):
     return download_progress(info, SimpleNamespace(
         is_completed=is_completed, human_size=human_size, human_speed=human_speed,
-    ), live=live, stalled=stalled)
+    ), live=live, stalled=stalled, language=language)
 
 
 # ---- qBittorrent API (sync, called via asyncio.to_thread) ----
@@ -679,7 +679,7 @@ async def watch_torrent_until_done(
         name = info.get("name") or title
         state = info.get("state")
         stalled = DOWNLOAD_HEALTH.observe(info)
-        text = format_download_progress(info, live=True, stalled=stalled)
+        text = format_download_progress(info, live=True, stalled=stalled, language="ru")
         markup = torrent_navigation(info, getattr(context, "user_id", None), chat_id) if stalled else None
 
         if text != last_text:
@@ -834,9 +834,9 @@ def jackett_search_sync(query: str, limit: int = RESULTS_LIMIT) -> List[Dict]:
     return results
 
 
-def format_torrent_line(t: Dict) -> str:
+def format_torrent_line(t: Dict, *, language="en") -> str:
     name = str(t.get("name") or t.get("hash", "")[:8])[:120]
-    state = download_status(t, is_completed(t))
+    state = download_status(t, is_completed(t), language=language)
     progress = "" if t.get("state") in {"metaDL", "forcedMetaDL"} else f"{progress_percent(t)}% · "
     return f"• {name} — {progress}{state}"
 
@@ -983,22 +983,23 @@ async def on_downloads(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not allowed(update):
         return
+    language = language_for_update(update, context)
 
-    await update.message.reply_text("📊 Проверяю статус в qBittorrent…")
+    await update.message.reply_text(tr("status.checking", language))
     try:
         downloading = await asyncio.to_thread(qbit_torrents_info_sync, filter_="downloading", limit=10)
         stalled = await asyncio.to_thread(qbit_torrents_info_sync, filter_="stalled", limit=10)
     except Exception as e:
-        await update.message.reply_text("Не удалось получить статус qBittorrent. Попробуй позже.")
+        await update.message.reply_text(tr("status.failed", language))
         return
 
     lines = []
     if downloading:
-        lines.append("Скачиваются:")
-        lines.extend([format_torrent_line(t) for t in downloading])
+        lines.append(tr("status.downloading", language))
+        lines.extend([format_torrent_line(t, language=language) for t in downloading])
     if stalled:
-        lines.append("\nБез активной передачи:")
-        lines.extend([format_torrent_line(t) for t in stalled])
+        lines.append(tr("status.waiting", language))
+        lines.extend([format_torrent_line(t, language=language) for t in stalled])
 
     if not lines:
         # покажем последние несколько
@@ -1007,10 +1008,10 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             recent = []
         if recent:
-            lines.append("Последние:")
-            lines.extend([format_torrent_line(t) for t in recent])
+            lines.append(tr("status.recent", language))
+            lines.extend([format_torrent_line(t, language=language) for t in recent])
         else:
-            lines.append("Сейчас ничего не вижу в qBittorrent.")
+            lines.append(tr("status.empty", language))
 
     await update.message.reply_text("\n".join(lines))
 
@@ -1021,7 +1022,7 @@ def search_browser(language_for_user=lambda user: "en"):
         allowed=allowed, search=jackett_search_sync, limit=RESULTS_LIMIT,
         ttl=SEARCH_TTL_SEC, human_size=human_size, infohash=magnet_infohash_hex,
         add_selected=add_selected, open_downloads=cmd_downloads,
-        open_target=lambda event, ctx, target: downloads_dashboard().open_target(event, ctx, target),
+        open_target=lambda event, ctx, target: downloads_dashboard(language_for_user).open_target(event, ctx, target),
     ))
 
 
@@ -1057,14 +1058,15 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await search_browser(language_service(context).for_user).search(update, context)
 
 
-def torrent_navigation(info, user_id, chat_id, *, label="📥 Открыть эту загрузку"):
+def torrent_navigation(info, user_id, chat_id, *, label=None, language="en"):
+    label = label or tr("search.open_download", language)
     buttons = []
     if user_id is not None:
         try:
             buttons.append([InlineKeyboardButton(label, callback_data=torrent_link(info, user_id, chat_id, BOT_TOKEN))])
         except ValueError:
             pass
-    buttons.append([InlineKeyboardButton("📥 Все загрузки", callback_data="nav:downloads")])
+    buttons.append([InlineKeyboardButton(tr("search.all_downloads", language), callback_data="nav:downloads")])
     return InlineKeyboardMarkup(buttons)
 
 
@@ -1073,6 +1075,7 @@ async def on_torrent_link(update, context):
     await query.answer()
     if not allowed(update):
         return
+    language = language_for_update(update, context)
     try:
         t_hash = link_hash(query.data)
         rows = await asyncio.to_thread(qbit_torrents_info_sync, hashes=t_hash, limit=1)
@@ -1083,13 +1086,13 @@ async def on_torrent_link(update, context):
             raise ValueError("Stale torrent link")
     except Exception:
         await query.message.reply_text(
-            "Не удалось открыть эту загрузку: она могла измениться, ссылка устарела или сервис недоступен.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📥 Все загрузки", callback_data="nav:downloads")]]),
+            tr("download.link_failed", language),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(tr("search.all_downloads", language), callback_data="nav:downloads")]]),
         )
         return
     event = SimpleNamespace(message=query.message, effective_user=update.effective_user, effective_chat=update.effective_chat)
     # Read-only navigation creates fresh owner/chat/message-bound controls.
-    await downloads_dashboard().detail(event, context, info, 0, initial=True)
+    await downloads_dashboard(language_service(context).for_user).detail(event, context, info, 0, initial=True)
 
 
 async def on_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):

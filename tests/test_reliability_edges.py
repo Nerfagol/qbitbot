@@ -87,7 +87,7 @@ def test_zero_unknown_size_is_not_complete(bot):
 
 
 def test_status_does_not_render_unknown_eta_as_duration(bot):
-    text = bot.format_torrent_line(torrent(eta=8640000))
+    text = bot.format_torrent_line(torrent(eta=8640000), language="ru")
     assert "100d" not in text and "ETA" not in text
 
 
