@@ -19,6 +19,15 @@ removes the torrent **and its files**, after confirmation. Jackett indexers requ
 manual setup; no tracker accounts or credentials are supplied. Direct Telegram file
 uploads and media-app integration are outside this release.
 
+## NAS support
+
+**Tested on QNAP with Container Station and Docker Compose (Linux amd64 / x86_64).**
+Public v0.3.0 passed live Telegram acceptance on this platform. Run the bundled
+stack for a new installation, or use bot-only mode with existing qBittorrent and
+Jackett services. See the [English](docs/setup.en.md#nas-installation) or
+[Russian](docs/setup.ru.md#установка-на-nas) NAS setup notes.
+Other NAS platforms and ARM architectures have not been verified.
+
 ## Preview
 
 Synthetic examples rendered from the bot's message formatters; these are not live chats.
@@ -32,7 +41,6 @@ Synthetic examples rendered from the bot's message formatters; these are not liv
 
 [Troubleshooting](docs/troubleshooting.en.md) · [Устранение неполадок](docs/troubleshooting.ru.md)
 
-Tested platform: Linux amd64 containers, including a NAS deployment of v0.3.0.
 Live Telegram acceptance was confirmed by the operator on 2026-09-27; see the
 [acceptance record](docs/acceptance-v0.3.0.md) for scope and remaining limitations.
 Automated checks use generated torrents, local APIs and a fake Telegram transport.

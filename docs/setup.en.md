@@ -4,6 +4,22 @@ qBittorrent **5.x** is required for Pause/Resume; the bundled and tested version
 Install Docker Engine/Desktop with Compose v2. Use a Linux amd64 host for the
 verified target. Download this repository and work from its root directory.
 
+## NAS installation
+
+Public v0.3.0 was tested on a **QNAP NAS with Container Station**, using Docker
+Compose on Linux amd64 (x86_64). Other NAS platforms and ARM are unverified.
+
+- Use the bundled stack below for a new setup, or bot-only mode if qBittorrent and
+  Jackett already run on your NAS.
+- For the bundled stack, set `DOWNLOADS_DIR` to your chosen writable NAS share and
+  set `PUID`/`PGID` for the account that owns it. Choose ports that existing apps do
+  not already use.
+- For existing services, check connectivity from inside the bot container. If the
+  NAS host address is unreachable, connect the bot to the service's Docker network
+  and use its service name. This was the working route for Jackett during acceptance.
+- Keep configuration and state volumes when restarting/upgrading. Follow the
+  [backup guide](backup.en.md) before replacing an installation.
+
 ## Bundled bot, qBittorrent and Jackett
 
 ```sh

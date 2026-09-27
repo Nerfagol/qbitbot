@@ -1,7 +1,7 @@
 # v0.3.0 live acceptance
 
 Recorded 2026-09-27 for public tag `v0.3.0`, commit
-`18e940b1db491b7a87874585a65e48930dc9b965`, running on a Linux amd64 NAS.
+`18e940b1db491b7a87874585a65e48930dc9b965`, running on a QNAP NAS with Container Station and Docker Compose (Linux amd64 / x86_64).
 The test used a dedicated Telegram bot, separate qBittorrent and separate state
 and download storage. No private configuration is included in this repository.
 
