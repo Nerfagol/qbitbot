@@ -207,6 +207,8 @@ def main():
                 "downloads.py",
                 "search_ui.py",
                 "health.py",
+                "settings.py",
+                "setup_check.py",
             ]
         }
         docker("build", "-t", image, "-", stdin=archive(build), timeout=300)
@@ -214,7 +216,7 @@ def main():
         summary["bot_image_id"] = output("image", "inspect", "--format", "{{.Id}}", image)
         passed("bot container build with pinned runtime dependencies")
         smoke = ephemeral("--network", "none", image, check=False)
-        assert smoke.returncode != 0 and b"BOT_TOKEN is empty" in smoke.stderr
+        assert smoke.returncode != 0 and b"ALLOWED_USERS:" in smoke.stderr
         passed("default entry point imports successfully and rejects missing credentials")
         digest = ephemeral_output(
             "--network",
@@ -273,7 +275,7 @@ def main():
         init = """from pathlib import Path
 import shutil, tarfile
 p=Path('/release')
-for name in ('tg_torrent_bot.py','watch_store.py','monitoring.py','downloads.py','search_ui.py','health.py'):
+for name in ('tg_torrent_bot.py','watch_store.py','monitoring.py','downloads.py','search_ui.py','health.py','settings.py','setup_check.py'):
     shutil.copy(Path('/app')/name,p/name)
 (p/'bot.env').write_text('BOT_TOKEN=rollback-fixture\\nPTB_USE_AIOHTTP=0\\n')
 (p/'compose.yaml').write_text('services: {bot: {image: retained-baseline}}\\n')

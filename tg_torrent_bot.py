@@ -31,50 +31,30 @@ from telegram.ext import (
     filters,
 )
 
-# ----------------- tiny .env loader (no extra deps) -----------------
-def load_env(path: str = "bot.env") -> None:
-    if not os.path.exists(path):
-        return
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
-
+# Environment files are optional; injected environment values take precedence.
+from settings import load_env, read_settings
 
 load_env()
-
-# ----------------- config -----------------
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
-
-ALLOWED_USERS = set()
-raw_users = os.environ.get("ALLOWED_USERS", "").strip()
-for part in raw_users.split(","):
-    part = part.strip()
-    if part.isdigit():
-        ALLOWED_USERS.add(int(part))
-
-JACKETT_TORZNAB_URL = os.environ.get("JACKETT_TORZNAB_URL", "").strip()
-JACKETT_API_KEY = os.environ.get("JACKETT_API_KEY", "").strip()
-JACKETT_SEARCH_TIMEOUT_SEC = int(os.environ.get("JACKETT_SEARCH_TIMEOUT_SEC", "25"))
-
-QBIT_URL = os.environ.get("QBIT_URL", "").strip().rstrip("/")
-QBIT_USER = os.environ.get("QBIT_USER", "").strip()
-QBIT_PASS = os.environ.get("QBIT_PASS", "").strip()
-
-QBIT_SAVEPATH = os.environ.get("QBIT_SAVEPATH", "").strip() or None
-QBIT_CATEGORY = os.environ.get("QBIT_CATEGORY", "").strip() or None
+_SETTINGS = read_settings(os.environ)
+BOT_TOKEN = _SETTINGS.bot_token
+ALLOWED_USERS = set(_SETTINGS.allowed_users)
+JACKETT_TORZNAB_URL = _SETTINGS.jackett_url
+JACKETT_API_KEY = _SETTINGS.jackett_key
+JACKETT_SEARCH_TIMEOUT_SEC = _SETTINGS.search_timeout
+QBIT_URL = _SETTINGS.qbit_url
+QBIT_USER = _SETTINGS.qbit_user
+QBIT_PASS = _SETTINGS.qbit_pass
+QBIT_SAVEPATH = _SETTINGS.savepath
+QBIT_CATEGORY = _SETTINGS.category
 
 RESULTS_LIMIT = 50
 SEARCH_TTL_SEC = 15 * 60
 
 # qBittorrent polling
-WATCH_DB_PATH = os.environ.get("WATCH_DB_PATH", "state/watches.sqlite3")
-WATCH_INTERVAL_SEC = int(os.environ.get("WATCH_INTERVAL_SEC", "30"))
-WATCH_MISSING_GRACE_SEC = int(os.environ.get("WATCH_MISSING_GRACE_SEC", "600"))
-WATCH_PROGRESS_STEP = int(os.environ.get("WATCH_PROGRESS_STEP", "10"))  # notify every N%
+WATCH_DB_PATH = str(_SETTINGS.watch_db_path)
+WATCH_INTERVAL_SEC = _SETTINGS.watch_interval
+WATCH_MISSING_GRACE_SEC = _SETTINGS.missing_grace
+WATCH_PROGRESS_STEP = 10  # notify every N%
 
 DOWNLOAD_HEALTH = DownloadHealth(max_gap=max(90, 2 * WATCH_INTERVAL_SEC))
 
@@ -82,8 +62,8 @@ DOWNLOAD_HEALTH = DownloadHealth(max_gap=max(90, 2 * WATCH_INTERVAL_SEC))
 DIAG_REDACT = os.environ.get("DIAG_REDACT", "1").lower() not in ("0","false","no")
 
 # HTTP .torrent fallback download
-TORRENT_FETCH_TIMEOUT_SEC = int(os.environ.get("TORRENT_FETCH_TIMEOUT_SEC", "25"))
-TORRENT_FETCH_MAX_BYTES = int(os.environ.get("TORRENT_FETCH_MAX_BYTES", str(8 * 1024 * 1024)))
+TORRENT_FETCH_TIMEOUT_SEC = _SETTINGS.torrent_timeout
+TORRENT_FETCH_MAX_BYTES = _SETTINGS.torrent_max_bytes
 TORRENT_FETCH_USER_AGENT = os.environ.get(
     "TORRENT_FETCH_USER_AGENT",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

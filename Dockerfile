@@ -8,6 +8,6 @@ ENV PYTHONUNBUFFERED=1 \
 
 COPY requirements.lock /app/requirements.lock
 RUN pip install --no-cache-dir -r /app/requirements.lock
-COPY tg_torrent_bot.py watch_store.py monitoring.py downloads.py search_ui.py health.py /app/
+COPY tg_torrent_bot.py watch_store.py monitoring.py downloads.py search_ui.py health.py settings.py setup_check.py /app/
 
 CMD ["python", "/app/tg_torrent_bot.py"]

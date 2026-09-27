@@ -60,7 +60,7 @@
 
 **Interfaces:** `Settings` is a frozen dataclass with fields `bot_token: str`, `allowed_users: frozenset[int]`, `qbit_url: str`, `qbit_user: str`, `qbit_pass: str`, `jackett_url: str`, `jackett_key: str`, `watch_db_path: Path`, `watch_interval: int`, `missing_grace: int`, `search_timeout: int`, `torrent_timeout: int`, `torrent_max_bytes: int`, `savepath: str | None`, `category: str | None`. `read_settings(env: Mapping[str, str]) -> Settings`; `SettingsError` contains safe field/rule names only. `CheckResult(service: str, ok: bool, message_key: str)` is a frozen dataclass. `run_checks(settings: Settings) -> list[CheckResult]`; `setup_check.main(argv: Sequence[str] | None = None) -> int`.
 
-- [ ] Add failing tests: `test_allowlist_rejects_empty_or_partially_invalid` rejects `''`, `'101,oops'`, `'0'`, `'-1'`; positive IDs and duplicate elimination pass. `test_credentials_preserved` checks exact special-character strings. `test_numeric_and_url_errors_redacted` checks invalid/nonpositive intervals, malformed URLs and absent required credentials without values in exceptions. Permit only HTTP(S) service URLs.
+- [x] Add failing tests: `test_allowlist_rejects_empty_or_partially_invalid` rejects `''`, `'101,oops'`, `'0'`, `'-1'`; positive IDs and duplicate elimination pass. `test_credentials_preserved` checks exact special-character strings. `test_numeric_and_url_errors_redacted` checks invalid/nonpositive intervals, malformed URLs and absent required credentials without values in exceptions. Permit only HTTP(S) service URLs.
 
   Representative assertions (all other required fields supplied by a synthetic `valid_env` fixture):
   ```python
@@ -70,11 +70,11 @@
   secret = "test $literal #value 'quoted'"
   assert read_settings({**valid_env, 'QBIT_PASS': secret}).qbit_pass == secret
   ```
-- [ ] Run `.venv/bin/python -m pytest tests/test_settings.py tests/test_setup_check.py -q`; expected failures are missing new interfaces or missing validation, not accidental network calls.
-- [ ] Implement pure parsing with existing defaults: watch interval 30 seconds, missing grace 600 seconds, search timeout 25 seconds, torrent timeout 25 seconds and limit 8388608 bytes. Preserve existing env names and root constants/adapters; optional category/savepath remain optional. Configuration validation runs before a Telegram poller starts. Do not make import perform network calls.
-- [ ] Test then implement setup checks for authenticated qBittorrent version, Jackett capabilities and state directory access; use temporary files removed in `finally`, never write into an existing database. Each HTTP check gets at most three attempts, connect/read timeouts 5/10 seconds, 2-second delays; authentication errors do not retry. Exit 0 only if all checks pass, otherwise 1. No Telegram sends/polling or torrent mutations.
-- [ ] Pin `test_probe_leaves_existing_database_unchanged`, `test_permission_error_is_actionable`, `test_http_timeout_is_bounded`, `test_wrong_password_does_not_echo_response` and `test_no_api_mutations` with fake boundaries. Use mocked permissions rather than assuming tests run as a non-root user.
-- [ ] Run targeted tests and `make check`; expected all pass. Commit: `feat: validate setup and report safe connection diagnostics`.
+- [x] Run `.venv/bin/python -m pytest tests/test_settings.py tests/test_setup_check.py -q`; expected failures are missing new interfaces or missing validation, not accidental network calls.
+- [x] Implement pure parsing with existing defaults: watch interval 30 seconds, missing grace 600 seconds, search timeout 25 seconds, torrent timeout 25 seconds and limit 8388608 bytes. Preserve existing env names and root constants/adapters; optional category/savepath remain optional. Configuration validation runs before a Telegram poller starts. Do not make import perform network calls.
+- [x] Test then implement setup checks for authenticated qBittorrent version, Jackett capabilities and state directory access; use temporary files removed in `finally`, never write into an existing database. Each HTTP check gets at most three attempts, connect/read timeouts 5/10 seconds, 2-second delays; authentication errors do not retry. Exit 0 only if all checks pass, otherwise 1. No Telegram sends/polling or torrent mutations.
+- [x] Pin `test_probe_leaves_existing_database_unchanged`, `test_permission_error_is_actionable`, `test_http_timeout_is_bounded`, `test_wrong_password_does_not_echo_response` and `test_no_api_mutations` with fake boundaries. Use mocked permissions rather than assuming tests run as a non-root user.
+- [x] Run targeted tests and `make check`; expected all pass. Commit: `feat: validate setup and report safe connection diagnostics`.
 
 ## Task 3: Bundled and existing-service Compose installations
 
