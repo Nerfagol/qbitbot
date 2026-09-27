@@ -18,3 +18,7 @@ check: test lint
 	$(PYTHON) -m pip --no-cache-dir check
 integration:
 	$(PYTHON) integration/run.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),)
+
+.PHONY: compose-check
+compose-check:
+	$(PYTHON) integration/compose_check.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),)

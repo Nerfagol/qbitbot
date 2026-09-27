@@ -51,10 +51,10 @@ tested units. A failed milestone remains incomplete; do not skip into publicatio
 
 ## Execution checklist
 
-- [ ] User reviews this plan and selects native or subagent-driven execution.
-- [ ] Confirm all execution tools operate in the new public folder. Do not create
+- [x] User reviewed the plan and selected native execution.
+- [x] Confirm all execution tools operate in the new public folder. Do not create
   a linked worktree from the private donor; the independent checkout already supplies isolation.
-- [ ] Complete packaging tasks 1–3 and record retained test coverage.
+- [x] Complete packaging tasks 1–3 and record retained test coverage.
 - [ ] Complete bilingual tasks 1–5 and record owner/restart compatibility checks.
 - [ ] Complete release-verification tasks 1–3 and audit all public history/artifacts.
 - [ ] Complete publication task 4; record remote CI, version tag and release links.
@@ -80,4 +80,4 @@ Native execution in the separate public folder is recommended: language propagat
 touches shared rendering/lifecycle interfaces, so sequential implementation keeps
 those changes coherent. Complete an independent review after implementation and
 before publication. Subagent-driven execution is also supported if the user prefers
-per-task independent implementation/review. Selection awaits user review of this plan.
+per-task independent implementation/review. The user selected native execution on 2026-09-27.

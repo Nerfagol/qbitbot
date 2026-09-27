@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    env_file: [bot.env]
+    environment:
+      WATCH_DB_PATH: /state/watches.sqlite3
+      PTB_USE_AIOHTTP: "0"
+      PYTHONUNBUFFERED: "1"
+    volumes: [bot-state:/state]
+    restart: unless-stopped
+volumes:
+  bot-state:

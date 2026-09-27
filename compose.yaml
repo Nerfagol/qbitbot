@@ -1,0 +1,61 @@
+services:
+  bot:
+    build: .
+    env_file: [bot.env]
+    environment:
+      QBIT_URL: http://qbittorrent:${QBIT_WEBUI_PORT:-8080}
+      JACKETT_TORZNAB_URL: http://jackett:9117/api/v2.0/indexers/all/results/torznab/api
+      QBIT_SAVEPATH: /downloads
+      WATCH_DB_PATH: /state/watches.sqlite3
+      PTB_USE_AIOHTTP: "0"
+      PYTHONUNBUFFERED: "1"
+    volumes: [bot-state:/state]
+    depends_on:
+      qbittorrent: {condition: service_healthy}
+      jackett: {condition: service_healthy}
+    restart: unless-stopped
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent@sha256:7034f73a3c6fa4ea40fd67df462939d1665d765231b572523921c98c2db5362e
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+      WEBUI_PORT: ${QBIT_WEBUI_PORT:-8080}
+      TORRENTING_PORT: ${TORRENT_PORT:-6881}
+    volumes:
+      - qbit-config:/config
+      - type: bind
+        source: ${DOWNLOADS_DIR:-./downloads}
+        target: /downloads
+    ports:
+      - ${WEB_BIND_ADDRESS:-127.0.0.1}:${QBIT_WEBUI_PORT:-8080}:${QBIT_WEBUI_PORT:-8080}
+      - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/tcp
+      - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/udp
+    healthcheck:
+      test: [CMD-SHELL, 'curl --fail --silent --output /dev/null --max-time 4 http://127.0.0.1:$$WEBUI_PORT/']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+  jackett:
+    image: lscr.io/linuxserver/jackett@sha256:c10a9a66fe0b2dba71b0b78b38797b0b218bf9d565af7e66c5dfbfa83c6dbe45
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+      AUTO_UPDATE: "false"
+    volumes: [jackett-config:/config]
+    ports:
+      - ${WEB_BIND_ADDRESS:-127.0.0.1}:${JACKETT_WEBUI_PORT:-9117}:9117
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --output, /dev/null, --max-time, "4", http://127.0.0.1:9117/UI/Dashboard]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+volumes:
+  bot-state:
+  qbit-config:
+  jackett-config:

@@ -3,6 +3,10 @@
 Self-hosted Telegram search and download controls for Jackett and qBittorrent.
 Version 0.3 is under development; installation packaging and bilingual UI are in progress.
 
+## Installation
+
+[English setup](docs/setup.en.md) · [Установка на русском](docs/setup.ru.md)
+
 ## Development
 
 Use Python 3.12. Create `.venv`, install `requirements-dev.lock`, then run `make check`.
