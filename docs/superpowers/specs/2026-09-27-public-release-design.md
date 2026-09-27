@@ -38,9 +38,9 @@ Existing private deployments and their accepted version are independent of this 
   narrowly scoped scanner exceptions rather than broad exclusions.
 - Create the GitHub repository and upload only after this publication check passes.
   Publication is authorized by the user; no private snapshot is uploaded as staging.
-- Resolve original-source provenance and redistribution permissions before choosing
-  a project license or publishing code. No license is inferred from possession.
-  Preserve required notices and inventory third-party dependencies/images.
+- The user confirmed that the original bot was written from scratch. Propose MIT
+  for original project code; this license choice is part of design review. Preserve
+  required notices and inventory third-party dependencies/images separately.
 
 ## Architecture and packaging
 
@@ -152,8 +152,9 @@ compatible state; backup/restore examples must never silently erase volumes.
 3. Verify clean installation, restart/upgrade recovery and release artifacts; complete
    provenance/license and privacy review; publish the new repository and version 0.3.
 
-## Design decisions awaiting user input
+## Provenance and design review
 
-Original bot authorship/provenance has been requested from the user. Public code
-publication and final license selection depend on that answer. Local inspection,
-design and implementation can proceed without assuming redistribution rights.
+The user confirmed on 2026-09-27 that the bot was written from scratch rather than
+copied from another project. MIT is the proposed license for original code.
+The written design, including that license choice, awaits user review before
+implementation planning. Third-party notices still require an inventory.
