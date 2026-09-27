@@ -63,3 +63,8 @@ file with a `.gz` name was scanned as plain text rather than skipped. Final laye
 scan had no errors or unresolved findings. PNGs contain only IHDR/IDAT/IEND chunks.
 Private-marker comparison found no matches in public history and no forbidden file
 classes; no Git alternates or donor refs exist. Re-run after release changes.
+
+After independent review, compatibility/cleanup/language regressions increased the
+suite to 539 passing tests. Affected Docker scenarios and rebuilt image-layer/source
+audits passed again. Initial public GitHub check/container workflows both passed.
+The release tag remains gated on green CI for its exact version commit.

@@ -1,5 +1,13 @@
 # Project Progress
 
+## 2026-09-27 — Version 0.3.0 prepared
+
+- Published the independently audited source at https://github.com/Nerfagol/qbitbot; remote tree/root history match the public checkout.
+- Independent review fixes cover qBittorrent version compatibility, timeout cleanup ownership and saved-language edge cases. All 539 offline tests and affected Docker checks passed; renewed source/history/image audits are clean.
+- Initial public CI passed: [check](https://github.com/Nerfagol/qbitbot/actions/runs/36342282037) and [containers](https://github.com/Nerfagol/qbitbot/actions/runs/36342282034).
+- Prepared VERSION/CHANGELOG for 0.3.0. Next: require CI on this release commit, then tag and publish https://github.com/Nerfagol/qbitbot/releases/tag/v0.3.0.
+- Live Telegram acceptance for the public version remains unperformed; Linux amd64 is the accepted container platform.
+
 ## 2026-09-27 — Public install and recovery acceptance
 
 - Both Compose modes passed from an empty exported checkout with fresh isolated volumes. Both languages exercised real handlers, search/add and download controls. Real qBittorrent/Jackett readiness, outage/recovery and cleanup passed.
