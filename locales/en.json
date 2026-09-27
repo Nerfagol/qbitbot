@@ -1,0 +1,10 @@
+{
+  "search.query": "Search: {query}",
+  "units.items": {
+    "one": "{count} item",
+    "other": "{count} items"
+  },
+  "language.prompt": "🌐 Choose your language",
+  "language.saved": "Language saved: English.",
+  "language.expired": "This selection has expired. Open /language again."
+}

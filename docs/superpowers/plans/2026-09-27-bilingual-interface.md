@@ -44,7 +44,7 @@
 
 **Interfaces:** `Language = Literal['en', 'ru']`; `normalize_language(code: str | None) -> Language`; `plural_form(language: Language, count: int) -> str`; `tr(key: str, language: Language, *, count: int | None = None, **values: object) -> str`. Catalog leaves are strings or plural dictionaries (`one/other` for English, `one/few/many` for Russian). Counts are nonnegative integers.
 
-- [ ] Add failing assertions: `normalize_language('ru-RU') == 'ru'`, `normalize_language(None) == 'en'`, `normalize_language('de') == 'en'`; plural forms for 0, 1, 2, 5, 11, 12, 14, 21, 22, 25, 101, 111. Assert both catalogs have matching message keys and format-field sets. Run `pytest tests/test_i18n.py -q`; expect missing-module/interface failures.
+- [x] Add failing assertions: `normalize_language('ru-RU') == 'ru'`, `normalize_language(None) == 'en'`, `normalize_language('de') == 'en'`; plural forms for 0, 1, 2, 5, 11, 12, 14, 21, 22, 25, 101, 111. Assert both catalogs have matching message keys and format-field sets. Run `pytest tests/test_i18n.py -q`; expect missing-module/interface failures.
 
   ```python
   assert [plural_form('ru', n) for n in (1, 2, 5, 11, 21, 22, 111)] == [
@@ -53,10 +53,10 @@
   assert normalize_language('ru-RU') == 'ru'
   assert normalize_language(None) == normalize_language('de') == 'en'
   ```
-- [ ] Implement pure catalog loading/formatting without process-global active language. A missing Russian key falls back to English; an unknown key missing in both catalogs raises `KeyError`. Test malformed placeholders explicitly; CI rejects incomplete catalogs despite runtime fallback. Locale selection never changes input values.
-- [ ] Add complete namespace inventory from existing renderers: `menu`, `help`, `language`, `search`, `release`, `download`, `progress`, `health`, `notice`, `error`, `setup`, `units`. Populate existing copy as each owning task migrates it. Preserve practical labels/emoji and avoid machine-translating release titles.
-- [ ] Test formatting with braces, HTML-like tags, ampersands and emoji in user strings; use plain-text messages (`parse_mode=None`) where existing flows do. Do not re-interpret inserted values as format strings. Add modules/catalogs to the allowlisted image context.
-- [ ] Run `pytest tests/test_i18n.py -q` and `make check`; commit `feat: add English and Russian translation catalogs`.
+- [x] Implement pure catalog loading/formatting without process-global active language. A missing Russian key falls back to English; an unknown key missing in both catalogs raises `KeyError`. Test malformed placeholders explicitly; CI rejects incomplete catalogs despite runtime fallback. Locale selection never changes input values.
+- [x] Add complete namespace inventory from existing renderers: `menu`, `help`, `language`, `search`, `release`, `download`, `progress`, `health`, `notice`, `error`, `setup`, `units`. Populate existing copy as each owning task migrates it. Preserve practical labels/emoji and avoid machine-translating release titles.
+- [x] Test formatting with braces, HTML-like tags, ampersands and emoji in user strings; use plain-text messages (`parse_mode=None`) where existing flows do. Do not re-interpret inserted values as format strings. Add modules/catalogs to the allowlisted image context.
+- [x] Run `pytest tests/test_i18n.py -q` and `make check`; commit `feat: add English and Russian translation catalogs`.
 
 ## Task 2: Persistent preference and language chooser
 

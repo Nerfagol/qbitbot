@@ -10,3 +10,6 @@
 !health.py
 !settings.py
 !setup_check.py
+!i18n.py
+!locales/
+!locales/*.json

@@ -1,0 +1,11 @@
+{
+  "search.query": "Поиск: {query}",
+  "units.items": {
+    "one": "{count} вариант",
+    "few": "{count} варианта",
+    "many": "{count} вариантов"
+  },
+  "language.prompt": "🌐 Выбери язык",
+  "language.saved": "Язык сохранён: русский.",
+  "language.expired": "Этот выбор устарел. Открой /language снова."
+}
