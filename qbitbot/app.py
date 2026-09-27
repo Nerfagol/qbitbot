@@ -12,14 +12,14 @@ import io
 import hmac
 from types import SimpleNamespace
 from pathlib import Path
-from i18n import tr, normalize_language
-from preferences import LanguageService, PreferenceStore
-from language_ui import LanguagePicker, command_list, set_private_commands
-from health import HealthManager, check_jackett, check_qbit
-from watch_store import WatchStore
-from downloads import download_location, title as download_title, identity, torrent_link, link_hash, DownloadHealth, DownloadsDashboard, download_progress, download_status, progress_percent
-from search_ui import SearchBrowser, SearchResults
-from monitoring import WatchManager, WatchStopped, SearchJobs
+from qbitbot.i18n import tr, normalize_language
+from qbitbot.preferences import LanguageService, PreferenceStore
+from qbitbot.language_ui import LanguagePicker, command_list, set_private_commands
+from qbitbot.health import HealthManager, check_jackett, check_qbit
+from qbitbot.watch_store import WatchStore
+from qbitbot.downloads import download_location, title as download_title, identity, torrent_link, link_hash, DownloadHealth, DownloadsDashboard, download_progress, download_status, progress_percent
+from qbitbot.search_ui import SearchBrowser, SearchResults
+from qbitbot.monitoring import WatchManager, WatchStopped, SearchJobs
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote, urljoin
 from typing import List, Dict, Optional, Tuple, Set
 
@@ -35,7 +35,7 @@ from telegram.ext import (
 )
 
 # Environment files are optional; injected environment values take precedence.
-from settings import load_env, read_settings
+from qbitbot.settings import load_env, read_settings
 
 load_env()
 _SETTINGS = read_settings(os.environ)

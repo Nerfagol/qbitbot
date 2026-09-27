@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from preferences import LanguageService, PreferenceStore
+from qbitbot.preferences import LanguageService, PreferenceStore
 from tests.helpers import Message, torrent, update
 from tests.test_health import setup_health, callback, action
 from tests.test_persistence import manager
@@ -91,7 +91,7 @@ def test_pending_russian_payload_survives_preference_change_and_reopen(bot, tmp_
 
 
 def test_setup_diagnostics_language_and_secret_safety(monkeypatch, capsys):
-    import setup_check
+    from qbitbot.cli import setup_check
 
     monkeypatch.setattr(setup_check, "load_env", lambda: None)
     monkeypatch.setattr(setup_check, "read_settings", lambda env: object())

@@ -26,7 +26,7 @@ See `docs/development/localization.md` for rendering boundaries.
 
 ## Recovery
 
-`backup_state.py` snapshots SQLite through its online API and rejects existing
+`qbitbot.cli.backup_state` snapshots SQLite through its online API and rejects existing
 destinations. Each DB is individually consistent; stop the bot for a quiet point
 across all three. Ordinary code rollback retains current state. Snapshot restore
 is separate and may replay notices. See bilingual backup guides for name mapping.
@@ -36,3 +36,12 @@ is separate and may replay notices. See bilingual backup guides for name mapping
 `v0.3.0` is the first public release; qBittorrent 5.x is required for controls
 (the bundled tested version is 5.1.2). Release CI accepts Linux amd64 and uses only
 synthetic Telegram transport. Real Telegram acceptance remains a separate check.
+
+## Source layout and rollback fixtures
+
+Runtime and catalogs live together in `qbitbot/`; see the layout guide for commands.
+`bot.env` and relative state paths still resolve from the working directory, not the
+package directory. The Docker working directory remains `/app` with state in `/state`.
+The public recovery harness deliberately loads top-level `watch_store` only for its
+historical `7267bcd` reader; current code uses `qbitbot.watch_store`. Keep that distinction
+when editing rollback tests.

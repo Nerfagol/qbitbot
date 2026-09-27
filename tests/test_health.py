@@ -13,7 +13,7 @@ from tests.test_persistence import async_test
 
 
 def setup_health(bot, tmp_path):
-    from health import HealthManager
+    from qbitbot.health import HealthManager
 
     calls = []
     api = SimpleNamespace(
@@ -193,7 +193,7 @@ async def test_transient_edit_failure_retries_next_cycle_and_revoked_user_is_rem
 
 @async_test
 async def test_hourly_loop_interval_and_shutdown(bot, tmp_path, monkeypatch):
-    import health
+    from qbitbot import health
 
     manager, _, _ = setup_health(bot, tmp_path)
     delays = []
@@ -214,7 +214,7 @@ async def test_hourly_loop_interval_and_shutdown(bot, tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("body", ['<error code="100" description="SECRET"/>', "<html/>", "<rss/>"])
 def test_jackett_probe_rejects_false_success_without_search(monkeypatch, body):
-    from health import check_jackett
+    from qbitbot.health import check_jackett
 
     calls = []
     monkeypatch.setattr(
@@ -230,7 +230,7 @@ def test_jackett_probe_rejects_false_success_without_search(monkeypatch, body):
 
 
 def test_jackett_capabilities_probe_accepts_valid_response(monkeypatch):
-    from health import check_jackett
+    from qbitbot.health import check_jackett
 
     monkeypatch.setattr(
         requests,
@@ -270,7 +270,7 @@ async def test_command_navigation_and_lifecycle_restore_health_manager(bot, tmp_
 
 
 def test_search_records_only_safe_coverage_and_failure(bot, monkeypatch):
-    from search_ui import SearchResults
+    from qbitbot.search_ui import SearchResults
 
     monkeypatch.setattr(bot, "_jackett_search_sync", lambda *a: SearchResults(statuses=[2, 1]))
     bot.jackett_search_sync("private title")

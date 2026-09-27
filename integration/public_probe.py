@@ -10,10 +10,10 @@ from unittest.mock import AsyncMock
 from urllib.parse import urlsplit
 
 sys.path.insert(0, "/app")
-import tg_torrent_bot as bot  # noqa: E402
+from qbitbot import app as bot  # noqa: E402
 from fixtures import sample  # noqa: E402
-from health import check_jackett  # noqa: E402
-from setup_check import run_checks  # noqa: E402
+from qbitbot.health import check_jackett  # noqa: E402
+from qbitbot.cli.setup_check import run_checks  # noqa: E402
 
 
 class Card:

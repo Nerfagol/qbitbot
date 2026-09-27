@@ -2,8 +2,8 @@ import tempfile
 
 import requests
 
-import setup_check
-from settings import read_settings
+from qbitbot.cli import setup_check
+from qbitbot.settings import read_settings
 from tests.test_settings import valid_env
 
 

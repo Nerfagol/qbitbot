@@ -8,7 +8,10 @@ import sqlite3
 import sys
 
 sys.path.insert(0, "/app")
-from watch_store import WatchStore  # noqa: E402
+if len(sys.argv) > 1 and sys.argv[1] == "old":
+    from watch_store import WatchStore
+else:
+    from qbitbot.watch_store import WatchStore
 
 WATCH = Path("/state/watches.sqlite3")
 KEY = (101, "c" * 40)
@@ -29,7 +32,7 @@ def check():
 
 def main(mode):
     if mode == "seed":
-        from preferences import LanguageService, PreferenceStore
+        from qbitbot.preferences import LanguageService, PreferenceStore
 
         service = LanguageService(PreferenceStore(WATCH.with_suffix(".preferences.sqlite3")))
         service.set_for_user(101, "ru")
@@ -54,7 +57,7 @@ def main(mode):
         # Intentionally imports only the original public watch reader.
         check()
     else:
-        from preferences import LanguageService, PreferenceStore
+        from qbitbot.preferences import LanguageService, PreferenceStore
 
         check()
         service = LanguageService(PreferenceStore(WATCH.with_suffix(".preferences.sqlite3")))

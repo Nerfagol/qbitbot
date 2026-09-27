@@ -20,7 +20,9 @@ def async_test(fn):
 
 
 def modules():
-    return importlib.import_module("watch_store"), importlib.import_module("monitoring")
+    return importlib.import_module("qbitbot.watch_store"), importlib.import_module(
+        "qbitbot.monitoring"
+    )
 
 
 def manager(bot, tmp_path, telegram=None):

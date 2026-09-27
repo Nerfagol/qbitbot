@@ -1,5 +1,19 @@
 # Project Progress
 
+## 2026-09-27 — Runtime package and file organization
+
+- Moved all 12 root Python modules into `qbitbot/`; maintenance commands live in
+  `qbitbot/cli/`, catalogs in `qbitbot/locales/`. Docker starts `python -m qbitbot`.
+- Updated imports, tests, build context, container probes and bilingual CLI guides.
+  Added placement rules in `AGENTS.md` and `docs/development/layout.md`.
+- Runtime bodies differ only in import paths; CRLF, configuration/state locations,
+  schema compatibility and historical rollback-reader coverage are preserved.
+- Verification: 543 offline tests; lint/format/compile/dependency checks; Compose,
+  real isolated API/restart/rollback, fresh EN/RU stacks, backup/restore and scoped
+  cleanup all passed. Independent read-only review found no actionable issues.
+- Current state: ready for integration on `refactor/project-layout`; no blockers.
+  Next: review/merge the layout change. Existing v0.3.0 tag is unchanged.
+
 ## 2026-09-27 — Public v0.3.0 released
 
 - Published [repository](https://github.com/Nerfagol/qbitbot) and [v0.3.0](https://github.com/Nerfagol/qbitbot/releases/tag/v0.3.0). Annotated tag targets `18e940b1db491b7a87874585a65e48930dc9b965`; downloaded GitHub archive matches every audited source file.

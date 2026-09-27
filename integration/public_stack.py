@@ -70,14 +70,7 @@ def export_checkout(destination):
         .stdout.decode()
         .split("\0")
     )
-    # New harness files are deliberately included before their first commit.
-    names += [
-        "integration/compose.test.yaml",
-        "integration/public_probe.py",
-        "integration/fixtures.py",
-        "backup_state.py",
-        "integration/recovery_probe.py",
-    ]
+    # Stage new source files before running this tracked-source export.
     for name in dict.fromkeys(filter(None, names)):
         source = ROOT / name
         if source.is_symlink() or Path(name).is_absolute() or ".." in Path(name).parts:
@@ -138,7 +131,7 @@ def fresh(docker, root, project, image, checks):
         "".join(k + "='" + v.replace("'", "\\'") + "'\n" for k, v in values.items())
     )
     (root / "bot.env").chmod(0o600)
-    compose("run", "--rm", "--no-deps", "bot", "python", "setup_check.py")
+    compose("run", "--rm", "--no-deps", "bot", "python", "-m", "qbitbot.cli.setup_check")
     compose("up", "-d", "--no-deps", "bot")
     bot = compose("ps", "-q", "bot").decode().strip()
     for name in ("public_probe.py", "fixtures.py"):
@@ -150,7 +143,7 @@ def fresh(docker, root, project, image, checks):
     docker("exec", bot, "python", "/tmp/public_probe.py", "outage", timeout=60)
     docker("start", jackett)
     compose("up", "-d", "--wait", "--wait-timeout", "150", "jackett")
-    docker("exec", bot, "python", "setup_check.py", "--language", "ru", timeout=60)
+    docker("exec", bot, "python", "-m", "qbitbot.cli.setup_check", "--language", "ru", timeout=60)
     checks.append("dependency outage and recovery without bot rebuild")
     network = cfg["networks"]["default"]["name"]
     only = {
@@ -167,7 +160,7 @@ def fresh(docker, root, project, image, checks):
     only_cfg = json.loads(compose("config", "--format", "json", only=True))
     assert set(only_cfg["services"]) == {"bot"}
     validate_isolation(only_cfg, owned_network=network)
-    compose("run", "--rm", "--no-deps", "bot", "python", "setup_check.py", only=True)
+    compose("run", "--rm", "--no-deps", "bot", "python", "-m", "qbitbot.cli.setup_check", only=True)
     compose("up", "-d", "--no-build", only=True)
     checks.append("bot-only Compose with explicit existing-service endpoints")
     return bot, cfg
@@ -181,7 +174,8 @@ def recovery(docker, root, project, image, bot, config, checks):
         "exec",
         bot,
         "python",
-        "backup_state.py",
+        "-m",
+        "qbitbot.cli.backup_state",
         "--watch-db",
         "/state/watches.sqlite3",
         "--destination",

@@ -36,7 +36,7 @@ docker compose up -d qbittorrent jackett
 
 ```sh
 docker compose build bot
-docker compose run --rm --no-deps bot python setup_check.py
+docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check
 docker compose up -d
 ```
 
@@ -58,7 +58,7 @@ means that container, not your host. `QBIT_SAVEPATH` is a path inside qBittorren
 
 ```sh
 docker compose -f compose.bot-only.yaml build
-docker compose -f compose.bot-only.yaml run --rm bot python setup_check.py
+docker compose -f compose.bot-only.yaml run --rm bot python -m qbitbot.cli.setup_check
 docker compose -f compose.bot-only.yaml up -d
 ```
 

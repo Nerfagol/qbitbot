@@ -6,7 +6,7 @@ import time
 from telegram import BotCommand, BotCommandScopeChat, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 
-from i18n import tr, normalize_language
+from qbitbot.i18n import tr, normalize_language
 
 COMMANDS = ("search", "downloads", "status", "health", "help", "start", "language")
 

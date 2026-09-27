@@ -108,7 +108,7 @@ def test_filter_resets_page_preserves_sort_and_filtered_numbering(bot, monkeypat
 
 @pytest.mark.parametrize("mode", ["original", "recommended", "quality", "seeds", "small", "large"])
 def test_every_sort_and_recommended_reservations_respect_filters(bot, monkeypatch, mode):
-    from search_ui import quality
+    from qbitbot.search_ui import quality
 
     _, ctx, _ = start(bot, monkeypatch, choices())
     session = ctx.user_data["search"]

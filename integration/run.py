@@ -256,20 +256,11 @@ def main():
                 "THIRD_PARTY_NOTICES.md",
                 ".dockerignore",
                 "requirements.lock",
-                "tg_torrent_bot.py",
-                "watch_store.py",
-                "monitoring.py",
-                "downloads.py",
-                "search_ui.py",
-                "health.py",
-                "settings.py",
-                "setup_check.py",
-                "backup_state.py",
-                "i18n.py",
-                "preferences.py",
-                "language_ui.py",
-                "locales/en.json",
-                "locales/ru.json",
+                *(
+                    path.relative_to(ROOT).as_posix()
+                    for pattern in ("*.py", "cli/*.py", "locales/*.json")
+                    for path in sorted((ROOT / "qbitbot").glob(pattern))
+                ),
             ]
         }
         create_tracked(
@@ -296,9 +287,9 @@ def main():
             image,
             "python",
             "-c",
-            "import hashlib; print(hashlib.sha256(open('/app/tg_torrent_bot.py','rb').read()).hexdigest())",
+            "import hashlib; print(hashlib.sha256(open('/app/qbitbot/app.py','rb').read()).hexdigest())",
         )
-        assert digest == hashlib.sha256((ROOT / "tg_torrent_bot.py").read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((ROOT / "qbitbot/app.py").read_bytes()).hexdigest()
         passed("built source checksum matches current local source")
         docker("pull", QBIT_IMAGE, timeout=300)
         summary["qbit_image"] = QBIT_IMAGE
@@ -347,9 +338,7 @@ def main():
         init = """from pathlib import Path
 import shutil, tarfile
 p=Path('/release')
-for name in ('tg_torrent_bot.py','watch_store.py','monitoring.py','downloads.py','search_ui.py','health.py','settings.py','setup_check.py','i18n.py','preferences.py','language_ui.py'):
-    shutil.copy(Path('/app')/name,p/name)
-shutil.copytree('/app/locales', p/'locales')
+shutil.copytree('/app/qbitbot', p/'qbitbot')
 (p/'bot.env').write_text('BOT_TOKEN=rollback-fixture\\nPTB_USE_AIOHTTP=0\\nALLOWED_USERS=101\\nQBIT_URL=http://qbit.invalid\\nQBIT_USER=test\\nQBIT_PASS=synthetic\\nJACKETT_TORZNAB_URL=http://jackett.invalid/api\\nJACKETT_API_KEY=synthetic\\n')
 (p/'compose.yaml').write_text('services: {bot: {image: retained-baseline}}\\n')
 with tarfile.open('/backup/app.tar','w') as t: t.add('/release',arcname='app')
@@ -367,9 +356,10 @@ Path('/backup/app.tar').chmod(0o600)
             "-c",
             init,
         )
-        check = """import hashlib,tg_torrent_bot as b
+        check = """import hashlib
+from qbitbot import app as b
 assert b.BOT_TOKEN=='rollback-fixture'
-print(hashlib.sha256(open('/app/tg_torrent_bot.py','rb').read()).hexdigest())
+print(hashlib.sha256(open('/app/qbitbot/app.py','rb').read()).hexdigest())
 """
         original = ephemeral_output(
             "--network", "none", "-v", app + ":/app", image, "python", "-c", check
@@ -400,7 +390,7 @@ print(hashlib.sha256(open('/app/tg_torrent_bot.py','rb').read()).hexdigest())
             candidate,
             "python",
             "-c",
-            "from pathlib import Path; Path('/app/tg_torrent_bot.py').write_text('INVALID PYTHON !'); Path('/app/compose.yaml').write_text('broken candidate')",
+            "from pathlib import Path; Path('/app/qbitbot/app.py').write_text('INVALID PYTHON !'); Path('/app/compose.yaml').write_text('broken candidate')",
         )
         broken = ephemeral(
             "--network",

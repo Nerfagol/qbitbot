@@ -2,22 +2,32 @@
 
 ## Project and structure
 
-Python 3.12 Telegram bot using Jackett search and qBittorrent downloads. The root
-`tg_torrent_bot.py` owns handlers/API integration; `search_ui.py`, `downloads.py`,
-`health.py`, `monitoring.py` and `watch_store.py` own rendering, controls and durable state.
-`locales/` holds matched English/Russian catalogs; `preferences.py` owns the separate
-language database. Pass language explicitly and preserve queued notice payloads.
-`tests/` uses synthetic data. `integration/` runs disposable container checks.
+Python 3.12 Telegram bot using Jackett search and qBittorrent downloads.
+
+- `qbitbot/`: runtime package; `app.py` owns handlers/API integration. Search,
+  downloads, health, monitoring and storage retain their separate modules.
+- `qbitbot/cli/`: maintenance commands; run with `python -m qbitbot.cli.<name>`.
+- `qbitbot/locales/`: matched English/Russian catalogs; pass language explicitly
+  and preserve queued notice payloads. `preferences.py` owns the language database.
+- `tests/`: offline tests with synthetic data; `integration/`: disposable Docker checks.
+- `docs/`: user/developer guides, assets and historical plans.
+
+Keep executable Python out of the repository root. Reserve the root for build/tool
+configuration, dependency locks, Compose files and project/contributor documentation.
+Use `qbitbot.*` imports; keep package initializers free of startup/configuration effects.
+Add modules alongside their owning feature; create subpackages only for a cohesive
+responsibility. See `docs/development/layout.md` for entry points and placement rules.
 
 ## Commands and conventions
 
 Create `.venv` and install `requirements-dev.lock`. Use `make check` for tests,
 lint/format checks, compilation and dependencies. `make compose-check`, `make integration`
 and `make integration-public` require Docker; the last also requires Compose 2.24.4+
-and full public Git history for rollback. `backup_state.py` creates verified private
-SQLite snapshots. Setup and recovery guides are available in English and Russian.
+and full public Git history for rollback. Stage new files before the public-stack
+check, which exports tracked source. `python -m qbitbot.cli.backup_state` creates
+verified private SQLite snapshots. Setup and recovery guides are available in English and Russian.
 Use four-space indentation, snake_case names and async Telegram handlers; run blocking
-HTTP through `asyncio.to_thread`. Preserve the root application's CRLF and avoid
+HTTP through `asyncio.to_thread`. Preserve `qbitbot/app.py` CRLF and avoid
 unrelated legacy formatting. Run `make format` for other Python modules and tests.
 
 ## Constraints

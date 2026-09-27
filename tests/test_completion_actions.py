@@ -13,7 +13,7 @@ from tests.test_persistence import async_test, manager
 
 @async_test
 async def test_completion_has_exact_details_and_location_without_plex(bot, monkeypatch):
-    from downloads import link_hash
+    from qbitbot.downloads import link_hash
 
     info = torrent(
         state="stalledUP",
@@ -89,7 +89,7 @@ async def test_completion_buttons_survive_pending_delivery_and_restart_without_q
 
 
 def test_optional_notice_metadata_preserves_v1_watch_table_and_legacy_pending(tmp_path):
-    from watch_store import WatchStore
+    from qbitbot.watch_store import WatchStore
     import sqlite3
 
     path = tmp_path / "legacy.sqlite3"
@@ -117,7 +117,7 @@ def test_optional_notice_metadata_preserves_v1_watch_table_and_legacy_pending(tm
 
 
 def test_legacy_writer_cannot_attach_old_buttons_to_a_new_notice(tmp_path):
-    from watch_store import WatchStore
+    from qbitbot.watch_store import WatchStore
 
     store = WatchStore(tmp_path / "watches.sqlite3")
     try:

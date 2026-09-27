@@ -299,7 +299,7 @@ def test_numbered_selection_on_later_page_and_sort_menu(bot, monkeypatch):
     ],
 )
 def test_quality_labels_require_release_tokens(title, label):
-    from search_ui import quality
+    from qbitbot.search_ui import quality
 
     assert quality(title)[1] == label
 
@@ -315,6 +315,6 @@ def test_quality_labels_require_release_tokens(title, label):
     ],
 )
 def test_transport_stream_extension_does_not_mean_camera_recording(title, label):
-    from search_ui import quality
+    from qbitbot.search_ui import quality
 
     assert quality(title)[1] == label

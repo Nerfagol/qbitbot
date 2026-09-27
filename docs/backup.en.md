@@ -5,14 +5,14 @@ restrict access, and keep another encrypted copy off the application host.
 
 ## Bot state
 
-The image includes `backup_state.py`. It uses SQLite online backup, including
+The image includes `qbitbot.cli.backup_state`. It uses SQLite online backup, including
 committed WAL data, and verifies each file's integrity and SHA-256 checksum.
 Each database is individually consistent; the three snapshots are not one atomic
 transaction. Stop the bot first if you need a quiet point across all three.
 
 ```sh
 docker compose stop bot
-docker compose run --rm --no-deps bot python backup_state.py \
+docker compose run --rm --no-deps bot python -m qbitbot.cli.backup_state \
   --watch-db /state/watches.sqlite3 --destination /state/backup-2026-09-27
 mkdir -m 700 backups
 docker compose cp bot:/state/backup-2026-09-27 backups/

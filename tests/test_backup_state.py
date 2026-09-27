@@ -6,7 +6,7 @@ import sqlite3
 
 import pytest
 
-from backup_state import backup_databases
+from qbitbot.cli.backup_state import backup_databases
 
 
 def database(path, value):

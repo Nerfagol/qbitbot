@@ -11,7 +11,7 @@ import requests
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 
-from i18n import tr
+from qbitbot.i18n import tr
 
 PAGE_SIZE = 5
 ENOUGH_SOURCES = 25
