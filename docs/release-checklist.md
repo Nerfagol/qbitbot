@@ -50,3 +50,16 @@ commit. Prepare `VERSION`/`CHANGELOG`, rerun local checks and audits, push, then
 for **both** workflows to pass on the release commit before creating `v0.3.0`.
 Publish the reviewed source/release notes only. Record commit, tag and CI links in
 the handoff; never describe pending CI or unperformed live acceptance as passed.
+
+## Local audit evidence, 2026-09-27
+
+Fresh independent clone: all 531 offline tests and all three Docker command groups
+passed. Source/history/staged scans found no secrets. Image application files match
+the explicit runtime/catalog/license allowlist. Every regular layer file was scanned;
+the only two initial findings were the upstream Python **public** GPG signing
+fingerprint repeated in image metadata, verified against the official Python image
+Dockerfile and narrowly allowlisted for the artifact scan only. A dpkg text metadata
+file with a `.gz` name was scanned as plain text rather than skipped. Final layer
+scan had no errors or unresolved findings. PNGs contain only IHDR/IDAT/IEND chunks.
+Private-marker comparison found no matches in public history and no forbidden file
+classes; no Git alternates or donor refs exist. Re-run after release changes.
