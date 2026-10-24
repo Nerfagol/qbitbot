@@ -1,20 +1,17 @@
 """Public module entry points must work without importing the bot accidentally."""
 
-from pathlib import Path
 import subprocess
 import sys
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-
 
 def run_python(tmp_path, *args):
     # No personal configuration, token, or inherited Python path reaches the child.
     return subprocess.run(
-        [sys.executable, *args],
+        [sys.executable, "-I", *args],
         cwd=tmp_path,
-        env={"PYTHONPATH": str(ROOT)},
+        env={},
         capture_output=True,
         text=True,
         timeout=10,

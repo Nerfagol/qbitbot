@@ -258,10 +258,13 @@ def main():
                 "docs/licenses/THIRD_PARTY_NOTICES.md",
                 ".dockerignore",
                 "requirements/runtime.lock",
+                "requirements/build.lock",
+                "pyproject.toml",
+                "README.md",
                 *(
                     path.relative_to(ROOT).as_posix()
                     for pattern in ("*.py", "cli/*.py", "locales/*.json")
-                    for path in sorted((ROOT / "qbitbot").glob(pattern))
+                    for path in sorted((ROOT / "src/qbitbot").glob(pattern))
                 ),
             ]
         }
@@ -305,6 +308,16 @@ def main():
         private_state = volume("permissions")
         verify_runtime = """import os, sqlite3, ssl
 from pathlib import Path
+import importlib.util, importlib.metadata
+import qbitbot
+from qbitbot.i18n import tr
+assert Path(qbitbot.__file__).is_relative_to('/usr/local/lib')
+assert qbitbot.__version__ == importlib.metadata.version('qbitbot')
+assert tr('nav.search', 'en') != tr('nav.search', 'ru')
+assert 'qbitbot.app' not in __import__('sys').modules
+assert importlib.util.find_spec('setuptools') is None
+assert importlib.util.find_spec('pip') is None
+assert not Path('/app/qbitbot').exists()
 assert os.getuid()==os.getgid()==1000
 assert Path('/state').stat().st_uid==1000
 with sqlite3.connect('/state/smoke.sqlite3') as conn:
@@ -321,7 +334,7 @@ assert 'CapEff:\\t0000000000000000' in status and 'NoNewPrivs:\\t1' in status
 """
         ephemeral(*hardened, "-v", private_state + ":/state", image, "python", "-c", verify_runtime)
         passed(
-            "nonroot musl/SSL/SQLite runtime, read-only root, tmpfs, no capabilities and no privilege escalation"
+            "installed wheel/locales/version, absent build tools, nonroot SSL/SQLite/read-only/caps/NNP runtime"
         )
         old_state = volume("old-permissions")
         seed_permissions = """from pathlib import Path
@@ -379,9 +392,9 @@ for path in [p,*p.rglob('*')]:
             image,
             "python",
             "-c",
-            "import hashlib; print(hashlib.sha256(open('/app/qbitbot/app.py','rb').read()).hexdigest())",
+            "import hashlib,importlib.util; p=importlib.util.find_spec('qbitbot.app').origin; print(hashlib.sha256(open(p,'rb').read()).hexdigest())",
         )
-        assert digest == hashlib.sha256((ROOT / "qbitbot/app.py").read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((ROOT / "src/qbitbot/app.py").read_bytes()).hexdigest()
         passed("built source checksum matches current local source")
         create_tracked(
             docker,
@@ -444,7 +457,8 @@ for path in [p,*p.rglob('*')]:
         init = """from pathlib import Path
 import shutil, tarfile
 p=Path('/release')
-shutil.copytree('/app/qbitbot', p/'qbitbot')
+import qbitbot
+shutil.copytree(Path(qbitbot.__file__).parent, p/'qbitbot')
 (p/'bot.env').write_text('BOT_TOKEN=rollback-fixture\\nPTB_USE_AIOHTTP=0\\nALLOWED_USERS=101\\nQBIT_URL=http://qbit.invalid\\nQBIT_USER=test\\nQBIT_PASS=synthetic\\nJACKETT_TORZNAB_URL=http://jackett.invalid/api\\nJACKETT_API_KEY=synthetic\\n')
 (p/'compose.yaml').write_text('services: {bot: {image: retained-baseline}}\\n')
 with tarfile.open('/backup/app.tar','w') as t: t.add('/release',arcname='app')

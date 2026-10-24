@@ -3,7 +3,7 @@
 Keep files with the responsibility that owns them:
 
 ```text
-qbitbot/                    Runtime package (source imports stay unchanged)
+src/qbitbot/                Installable runtime package (imports remain qbitbot.*)
   cli/                      Setup, backup and state-permission commands
   locales/                  English/Russian resources beside runtime code
 tests/                      Offline behavior and regression cases
@@ -22,13 +22,13 @@ docs/
   licenses/                 Third-party notices
   archive/                  Dated audits, acceptance and historical designs
 compose.yaml                Default bundled entry point
-pyproject.toml              Shared Ruff/pytest settings
+pyproject.toml              Project metadata and shared tool settings
 ```
 
 ## Placement rules
 
-- Put production Python in `qbitbot/`; import it through `qbitbot.*`.
-- Keep CLI entry points in `qbitbot/cli/`, with argument parsing in `main()` and a
+- Put production Python in `src/qbitbot/`; import it through `qbitbot.*`.
+- Keep CLI entry points in `src/qbitbot/cli/`, with argument parsing in `main()` and a
   `__name__` guard. Package imports must not start polling or load configuration.
 - Keep feature modules flat until a responsibility needs several closely related
   modules. Avoid generic `utils/` folders and duplicate compatibility wrappers.
@@ -37,7 +37,7 @@ pyproject.toml              Shared Ruff/pytest settings
 - Keep packaged resources next to runtime code and resolve them relative to the
   module. Runtime state and secrets belong outside the source package.
 - Keep root entry points small: README, CHANGELOG, LICENSE, AGENTS, Makefile,
-  pyproject.toml, VERSION and the default compose.yaml. Tool discovery dotfiles and
+  pyproject.toml and the default compose.yaml. Tool discovery dotfiles and
   .env.example stay at root. All Dockerfiles use repository-root build context.
 - Keep dependency locks in requirements/, optional Compose files in deploy/,
   templates in config/ and detailed license notices in docs/licenses/. Keep durable
@@ -46,7 +46,7 @@ pyproject.toml              Shared Ruff/pytest settings
 
 ## Running from source
 
-After installing `requirements/dev.lock` into `.venv`, run from the repository root:
+Create `.venv`, run `make install-dev`, then run from the repository root:
 
 ```sh
 .venv/bin/python -m qbitbot
@@ -61,12 +61,13 @@ Docker uses the same module entry point from `/app`; Compose volume mappings are
 For example, container diagnostics use
 `docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check`.
 These commands replace the root script paths in v0.3.0; use that tag's own guides
-when operating the older image. No installed wheel or console-script command is required.
+when operating the older image. An editable installation is required for source development; Docker uses a regular
+wheel installation. Python module commands remain unchanged.
 
 ## Verifying changes
 
 `make check` includes compilation of every runtime module. Ruff excludes only the
-legacy `qbitbot/app.py`, whose CRLF and formatting are preserved. Docker checks build
+legacy `src/qbitbot/app.py`, whose CRLF and formatting are preserved. Docker checks build
 with the allowlisted package sources and catalogs. Stage newly added files before
 `make integration-public`: its clean checkout export deliberately includes tracked
 source only. Historical plans and source inventories keep their original paths;
@@ -76,5 +77,5 @@ the recovery harness still tests the original public code from Git history.
 
 See [deployment migration notes](../../deploy/README.md). Root-relative settings,
 Compose project/volume identity and Docker build-context allowlists are compatibility
-requirements. Runtime packaging, src layout and client extraction are a separate
-phase; this migration does not change application imports or startup.
+requirements. The src/package migration preserves module commands and application behavior.
+Client extraction is a separate future refactor. See [packaging](packaging.md).

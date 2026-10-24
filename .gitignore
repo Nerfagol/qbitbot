@@ -18,3 +18,7 @@ backups/
 *.log
 .verification/
 .superpowers/
+
+build/
+dist/
+*.egg-info/

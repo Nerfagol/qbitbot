@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Install the bot as a wheel from src/qbitbot/, with standard project metadata,
+  explicit locale/license inclusion and version ownership in pyproject.toml.
+  Add offline wheel/sdist/private-file checks and editable development setup;
+  keep the build backend outside the final runtime image.
+
 - Consolidate image recipes/optional Compose files under deploy/, templates under
   config/, dependency locks under requirements/, and historical/agent/license docs
   under their owning folders. Preserve root Compose behavior; bot-only commands

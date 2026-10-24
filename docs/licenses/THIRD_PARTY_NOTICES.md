@@ -53,3 +53,9 @@ preview images contain only synthetic fixture text and no third-party screenshot
 - Optional [FlareSolverr3.5.2](https://github.com/FlareSolverr/FlareSolverr/tree/v3.5.2) uses MIT;
   its notice is retained in `deploy/docker/flaresolverr/LICENSE` and the derived image.
   Browser and OS packages retain their upstream licenses.
+
+## Package build backend
+
+Setuptools 68.1.2 uses MIT and is pinned in requirements/build.lock.
+It constructs the wheel in a separate build stage and is absent from the final
+runtime image. Its metadata is available from [PyPI](https://pypi.org/project/setuptools/68.1.2/).

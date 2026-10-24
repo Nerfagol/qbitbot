@@ -2,7 +2,7 @@ PYTHON ?= .venv/bin/python
 RUFF ?= .venv/bin/ruff
 DOCKER ?= docker
 DOCKER_CONTEXT ?=
-MODULES = qbitbot
+MODULES = src/qbitbot
 .PHONY: test known-bugs lint format check integration
 test:
 	$(PYTHON) -m pytest
@@ -26,3 +26,10 @@ compose-check:
 .PHONY: integration-public
 integration-public:
 	$(PYTHON) integration/public_stack.py --docker $(DOCKER) $(if $(DOCKER_CONTEXT),--context $(DOCKER_CONTEXT),) --scenario all
+
+.PHONY: install-dev wheel
+install-dev:
+	$(PYTHON) -m pip install -r requirements/dev.lock
+	$(PYTHON) -m pip install --no-deps --no-build-isolation -e .
+wheel:
+	$(PYTHON) -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .

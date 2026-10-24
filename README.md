@@ -66,7 +66,8 @@ state/configuration volumes. Before reusing an existing bot volume, follow the
 [offline ownership migration guide](docs/deployment/container-hardening.md).
 
 No prebuilt registry image is published. Compose builds the bot and patched service
-images from the reviewed Dockerfiles in `deploy/docker/`. See
+images from the reviewed Dockerfiles in `deploy/docker/`. The bot runtime installs
+a built wheel; its code and both locale catalogs live in `src/qbitbot/`. See
 [layout upgrade notes](deploy/README.md#upgrade-from-the-former-root-layout) when
 updating an older checkout.
 
@@ -101,7 +102,7 @@ Use Python 3.12:
 
 ```sh
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements/dev.lock
+make install-dev
 make check
 make compose-check
 make integration
@@ -113,6 +114,9 @@ resources. `make integration-public` requires Compose 2.24.4+ and Git history fo
 original-public-code rollback rehearsal. See [contributor guidance](AGENTS.md),
 [source layout](docs/development/layout.md),
 [localization](docs/development/localization.md) and the [release checklist](docs/development/releases.md).
+
+Build a distributable wheel with `make wheel`. See [packaging](docs/development/packaging.md)
+for version ownership, artifact checks and installation outside the checkout.
 
 ## License
 

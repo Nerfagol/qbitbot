@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-SOURCE = Path(__file__).resolve().parents[1] / "qbitbot" / "app.py"
+SOURCE = Path(__file__).resolve().parents[1] / "src" / "qbitbot" / "app.py"
 
 
 class NetworkForbidden(RuntimeError):

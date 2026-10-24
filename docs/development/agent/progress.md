@@ -1,5 +1,29 @@
 # Project Progress
 
+## 2026-10-24 — Committed phase1 and verified installable src package
+
+- User requested the phase1 checkpoint and packaging next. Committed reviewed
+  layout as e9413e9 (not pushed), then moved runtime into src/qbitbot and added
+  standard metadata/explicit package+locale selection with build-only setuptools.
+- pyproject owns unchanged version0.3.0 and reviewed direct requirements; removed
+  duplicate VERSION. Runtime closure unchanged; backend pin matches build/dev locks.
+  Module commands remain; local development now installs editable source.
+- Artifact tests first failed on missing metadata, then verified wheel/sdist
+  rebuild/runtime payload, metadata/license/catalog inclusion, private canary
+  exclusion and regular installed import outside checkout. Dependency-name check
+  normalizes equivalent underscore/hyphen forms. Full625 checks passed.
+- Docker now builds a wheel in a separate stage and installs it with runtime pins;
+  installed-image probes prove catalogs/version, absent pip/backend and unchanged
+  UID1000/read-only/caps/NNP/resource restrictions. Probes use installed imports;
+  historical reader/source-rollback fixtures keep their intentional overrides.
+- Verified actual filtered context, real API/thread/search/add/controls/restart/
+  rollback, fresh EN/RU/bot-only/outage/backup/restore and scoped cleanup. Fresh
+  runtime Trivy and updated dev/build pip-audit:zero records/no ignores. Independent
+  code review found no blockers. Docs and source/lock integrity checks passed.
+- Packaging changes staged only for source-export checks, uncommitted/unpushed.
+  No NAS/production operation, Telegram token/poller or existing torrent changes.
+  Next separate task: client extraction; no implicit runtime architecture rewrite.
+
 ## 2026-10-24 — Applied deployment/documentation layout consolidation
 
 - Owner approved the first structure-review phase. Reduced visible root files15→8:

@@ -42,7 +42,7 @@ source revisions. Crash-time notification duplicates remain an expected limitati
 
 ## Source layout and rollback fixtures
 
-Runtime and catalogs live together in `qbitbot/`; see the layout guide for commands.
+Runtime and catalogs live together in `src/qbitbot/`; see the layout guide for commands.
 `bot.env` and relative state paths still resolve from the working directory, not the
 package directory. The Docker working directory remains `/app` with state in `/state`.
 The public recovery harness deliberately loads top-level `watch_store` only for its
@@ -105,8 +105,8 @@ configuration templates in config/ and reviewed locks in requirements/.
 ## Structural review
 
 The2026-10-24 report in docs/archive/reviews/structure-2026-10-24.md led to the
-owner-approved deployment/documentation consolidation. Runtime package/src/client
-refactoring is a separate future phase. Preserve Compose project/volume
+owner-approved deployment/documentation consolidation. The package/src migration is applied locally; client extraction remains a
+separate future phase. Preserve Compose project/volume
 identity, root-relative inputs, restricted build contexts and rollback fixtures.
 
 ## Applied deployment/documentation layout
@@ -118,9 +118,25 @@ Use repository-root build contexts and `--project-directory .` for standalone
 bot-only Compose; preserve checkout or explicit project name and existing volumes.
 All3 migrated Compose configurations were compared against old resolved settings;
 only intended Dockerfile path differences remain. See deploy/README.md for upgrades.
-Python runtime/source layout remains qbitbot/; src/client refactoring is not applied.
+Runtime source now lives under src/qbitbot with wheel installation; client
+extraction is not applied. The8-root count above describes phase1; packaging
+retires VERSION, leaving7 visible root files.
 
 Dockerignore parent exceptions can admit descendants: re-exclude children before
 allowing exact runtime inputs. compose-check exercises actual directory filtering
 with synthetic private/required files. Raw stdin tar contexts bypass Docker CLI
 filtering; integration archives must retain their explicit input allowlist.
+
+## Installed package migration (local, 2026-10-24)
+
+Phase1 is committed as e9413e9; no push in this task. Packaging remains local.
+pyproject.toml is the single version source (still0.3.0) and declares the existing
+exact direct requirements/Python3.12 series. src/qbitbot preserves runtime bytes
+apart from the inert installed __version__ export. VERSION was removed.
+Setuptools84.2.1 is pinned in metadata/build.lock/dev.lock and lives only in the
+package build stage. Docker installs a wheel; no /app source or pip/setuptools.
+Development requires make install-dev; existing python -m module commands remain.
+Do not reintroduce checkout PYTHONPATH; historical rollback has explicit exceptions.
+625 offline/artifact checks, Compose/context, real API/restart/rollback and fresh
+EN/RU/bot-only/backup/recovery passed. New runtime Trivy and updated dev/build pip-audit
+report zero known findings. Client extraction remains a separate future task.

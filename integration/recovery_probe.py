@@ -7,8 +7,9 @@ import shutil
 import sqlite3
 import sys
 
-sys.path.insert(0, "/app")
 if len(sys.argv) > 1 and sys.argv[1] == "old":
+    # Only the captured historical reader uses top-level /app modules.
+    sys.path.insert(0, "/app")
     from watch_store import WatchStore
 else:
     from qbitbot.watch_store import WatchStore

@@ -1,15 +1,18 @@
 # Reviewed dependency locks
 
-- runtime.lock is the complete pinned application dependency closure.
-- dev.lock contains the same runtime pins plus test/development tools.
+- runtime.lock is the full pinned application dependency closure.
+- dev.lock adds test/development tools and the build backend to those runtime pins.
+- build.lock pins the backend used only during wheel construction. Its pin matches
+  pyproject.toml and dev.lock; the final runtime image excludes it.
 
-Use Python3.12 and install with `python -m pip install -r requirements/dev.lock`
-inside your development virtual environment. The bot image installs runtime.lock.
-The lock contents were preserved during the repository layout move.
+Use Python3.12, create .venv, then run `make install-dev`. This installs the reviewed
+lock and a local editable package without resolving new runtime versions. Refresh
+that installation after metadata changes. The bot image installs runtime.lock plus
+a built wheel; its module commands remain unchanged.
 
-For an intentional dependency update, resolve the runtime closure in a clean
-Python3.12 environment, then resolve the development closure with those runtime
-pins and the reviewed development tools. Keep shared packages at identical
-versions. Review lock diffs, run pip check and pip-audit, make check, and the
-Docker/API/recovery checks before accepting new pins. Dependency sources/package
-manager migration are separate work; this layout change introduces neither.
+pyproject.toml declares the direct application pins, supported Python and version.
+Runtime pins are unchanged by this packaging migration. For intentional dependency
+updates, resolve a clean Python3.12 runtime closure, then development tools with
+those same pins. Review diffs and run pip check, pip-audit, make check and Docker/
+API/recovery checks. Packaging tests enforce shared pin consistency. No package
+manager migration is required.

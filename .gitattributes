@@ -1,2 +1,2 @@
 # Preserve the imported application's CRLF without flagging CR as trailing space.
-qbitbot/app.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+src/qbitbot/app.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

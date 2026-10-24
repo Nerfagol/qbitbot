@@ -9,6 +9,8 @@ private Git refs, diagnostic reports or database snapshots into a release.
 - `make compose-check`: actual Compose parsing, blank bootstrap, literal credentials, paths and ports.
 - `make integration`: generated torrent/API, notification restart and application rollback.
 - `make integration-public`: fresh exported checkout, real qBittorrent/Jackett, both languages, bot-only mode, service outage, three-database backup and new-volume recovery.
+- `make wheel`: build the installable distribution; offline tests rebuild its sdist,
+  inspect metadata/resources and reject generated private-file canaries.
 - Repeat CI-equivalent commands from a fresh clone. Preserve Git history for public-baseline rollback.
 - Inspect the generated preview pixels and metadata; record real Telegram acceptance separately.
 
@@ -46,7 +48,7 @@ public history for rollback tests. No logs, environments or workspaces are uploa
 as artifacts. See upstream [checkout](https://github.com/actions/checkout) and
 [setup-python](https://github.com/actions/setup-python) documentation.
 
-For an existing repository, prepare a new version in `VERSION` and `CHANGELOG.md`
+For an existing repository, prepare a new `[project].version` in `pyproject.toml` and update `CHANGELOG.md`
 and rerun the checks and privacy audit on the intended release commit. Push only
 reviewed changes, then wait for **check**, **containers** and **security** workflows
 to pass on that exact commit before creating a new version tag. Existing release

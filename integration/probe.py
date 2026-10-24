@@ -2,7 +2,7 @@
 
 import asyncio
 import hashlib
-import importlib.util
+import importlib
 import json
 import os
 import re
@@ -17,11 +17,8 @@ from urllib.parse import parse_qs, urlsplit
 
 import requests
 
-sys.path.insert(0, "/app")
 os.environ.update(json.loads(Path("/tmp/verification-config.json").read_text()))
-spec = importlib.util.spec_from_file_location("bot", "/app/qbitbot/app.py")
-bot = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(bot)
+bot = importlib.import_module("qbitbot.app")
 
 
 def passed(name):

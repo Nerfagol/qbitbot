@@ -15,4 +15,5 @@ jobs:
           python-version: '3.12.15'
       - run: python -m venv .venv
       - run: .venv/bin/python -m pip install -r requirements/dev.lock
+      - run: .venv/bin/python -m pip install --no-index --no-deps --no-build-isolation -e .
       - run: make check
