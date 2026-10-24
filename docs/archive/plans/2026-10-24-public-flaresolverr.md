@@ -1,5 +1,8 @@
 # Public FlareSolverr packaging plan
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 Goal: make the already tested hardened optional FlareSolverr installation
 reproducible from public source, with no private configuration or deployment data.
 

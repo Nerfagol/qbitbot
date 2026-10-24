@@ -1,5 +1,8 @@
 # Local security hardening, 2026-10-24
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 This supersedes the unresolved local-candidate findings in the
 [earlier maintenance audit](security-2026-10-24.md). Scope is the public deployment
 candidate on Linux amd64/Docker Desktop. No NAS release, state volume, torrent,
@@ -18,7 +21,7 @@ filesystem, bounded temporary scratch space, all capabilities dropped,
 no-new-privileges, 256 MiB RAM, one CPU and 128 processes. Only `/state` is durable
 writable bot storage. Fresh volumes inherit ownership; existing volumes need the
 explicit offline, backed-up migration in
-[container hardening and state migration](container-hardening.md). Startup never
+[container hardening and state migration](../../deployment/container-hardening.md). Startup never
 recursively changes ownership. Symlinks, hardlinks, nested mounts and special
 files are rejected before migration. The migration is for a trusted volume with
 all writers stopped; it cannot defend against concurrent filesystem replacement.
@@ -97,14 +100,14 @@ Dockerfile HEALTHCHECK absence remains a low-priority generic finding (DS-0026);
 service healthchecks live in Compose. No dummy bot check was added to hide it:
 Telegram polling liveness needs a separate, meaningful health design.
 
-Image identities are recorded in [Container inputs](images.md). The original
+Image identities are recorded in [Container inputs](../../deployment/images.md). The original
 maintenance report remains historical evidence, not the current security status.
 
 ## Subsequent optional browser support
 
 The optional fourth image, its strict TLS patches, isolated Compose overlay,
 public-source rebuild/synthetic browser verification and dated zero-record scan
-are documented in [FlareSolverr setup/security](flaresolverr.md). The current full
+are documented in [FlareSolverr setup/security](../../deployment/flaresolverr.md). The current full
 application suite passes621 tests. A subsequent authorized Linux-amd64 deployment
 also passed service readiness and indexer search checks; private configuration and
 raw evidence are intentionally excluded from this repository. Earlier scope text

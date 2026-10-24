@@ -1,5 +1,8 @@
 # Security maintenance plan
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 Scope: update the audited Python dependency pins and Python 3.12 container base;
 verify locally with Docker Desktop. No NAS deployment, service restarts, production
 credentials or torrent mutations. Existing application behavior/state is preserved.

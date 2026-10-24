@@ -28,7 +28,12 @@ def check(docker="docker", context=None):
         env.pop(key, None)
     with tempfile.TemporaryDirectory(prefix="qbitbot-config-") as directory:
         root = Path(directory)
-        for name in ("compose.yaml", "compose.bot-only.yaml", "compose.flaresolverr.yaml"):
+        for name in (
+            "compose.yaml",
+            "deploy/compose.bot-only.yaml",
+            "deploy/compose.flaresolverr.yaml",
+        ):
+            (root / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, root / name)
         (root / ".env").write_text("QBIT_WEBUI_PORT=18080\nDOWNLOADS_DIR=./downloads with spaces\n")
         for blank in (True, False):
@@ -38,7 +43,11 @@ def check(docker="docker", context=None):
                 else "BOT_TOKEN=123456:SYNTHETIC\nALLOWED_USERS=101\nQBIT_PASS='a $literal #value \\'quote\\''\nQBIT_URL=http://external.invalid:8080\nJACKETT_TORZNAB_URL=http://external.invalid:9117/api\n"
             )
             (root / "bot.env").write_text(values)
-            for name in ("compose.yaml", "compose.bot-only.yaml", "compose.flaresolverr.yaml"):
+            for name in (
+                "compose.yaml",
+                "deploy/compose.bot-only.yaml",
+                "deploy/compose.flaresolverr.yaml",
+            ):
                 result = subprocess.run(
                     command
                     + [
@@ -47,10 +56,19 @@ def check(docker="docker", context=None):
                         str(root),
                         "-f",
                         str(
-                            root / ("compose.yaml" if name == "compose.flaresolverr.yaml" else name)
+                            root
+                            / (
+                                "compose.yaml"
+                                if name == "deploy/compose.flaresolverr.yaml"
+                                else name
+                            )
                         ),
                     ]
-                    + (["-f", str(root / name)] if name == "compose.flaresolverr.yaml" else [])
+                    + (
+                        ["-f", str(root / name)]
+                        if name == "deploy/compose.flaresolverr.yaml"
+                        else []
+                    )
                     + [
                         "config",
                         "--format",
@@ -63,7 +81,15 @@ def check(docker="docker", context=None):
                 if result.returncode:
                     raise RuntimeError("Compose configuration validation failed; output withheld")
                 cfg = json.loads(result.stdout)
+                project = root.name.lower()
+                assert cfg["name"] == project
+                assert cfg["volumes"]["bot-state"]["name"] == project + "_bot-state"
                 bot = cfg["services"]["bot"]
+                assert (
+                    bot["build"]["context"].replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+                    == root.name
+                )
+                assert bot["build"]["dockerfile"] == "deploy/docker/bot.Dockerfile"
                 assert bot["user"] == "1000:1000"
                 assert bot["read_only"] is True
                 assert bot["cap_drop"] == ["ALL"]
@@ -76,9 +102,9 @@ def check(docker="docker", context=None):
                         "a $literal #value 'quote'",
                         "a $$literal #value 'quote'",
                     )
-                if name != "compose.bot-only.yaml":
+                if name != "deploy/compose.bot-only.yaml":
                     expected = {"bot", "qbittorrent", "jackett"}
-                    if name == "compose.flaresolverr.yaml":
+                    if name == "deploy/compose.flaresolverr.yaml":
                         expected.add("flaresolverr")
                         solver = cfg["services"]["flaresolverr"]
                         assert not solver.get("ports")
@@ -107,6 +133,79 @@ def check(docker="docker", context=None):
                     assert not bot.get("depends_on")
                     if not blank:
                         assert bot["environment"]["QBIT_URL"] == "http://external.invalid:8080"
+        # Exercise Docker's real directory-context filtering, not just a hand-picked
+        # tar archive (stdin archives bypass the CLI's .dockerignore processing).
+        allowed = [
+            "qbitbot/__init__.py",
+            "qbitbot/cli/__init__.py",
+            "qbitbot/locales/en.json",
+            "requirements/runtime.lock",
+            "docs/licenses/THIRD_PARTY_NOTICES.md",
+            "deploy/docker/flaresolverr/LICENSE",
+            "deploy/docker/flaresolverr/strict_tls.py",
+        ]
+        forbidden = [
+            "bot.env",
+            ".env",
+            "config/bot.env.example",
+            "requirements/dev.lock",
+            "qbitbot/private.env",
+            "qbitbot/cli/private.env",
+            "qbitbot/locales/private.env",
+            "docs/development/agent/memory.md",
+            "docs/archive/private-canary.txt",
+            "deploy/private.env",
+            "deploy/docker/flaresolverr/private.env",
+            ".git/private-canary",
+            "state/private-canary",
+            "backups/private-canary",
+        ]
+        (root / ".dockerignore").write_bytes((ROOT / ".dockerignore").read_bytes())
+        for path in allowed + forbidden:
+            target = root / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            # Preserve the existing synthetic env files for the delivery check below.
+            if not target.exists():
+                target.write_text("synthetic context canary\n")
+        proof = (
+            "from pathlib import Path; root=Path('/context'); "
+            f"assert all((root/p).is_file() for p in {allowed!r}); "
+            f"assert all(not (root/p).exists() for p in {forbidden!r})"
+        )
+        canary = "qbitbot-context-" + uuid.uuid4().hex[:12]
+        recipe = root / "deploy/docker/context-check.Dockerfile"
+        recipe.parent.mkdir(parents=True, exist_ok=True)
+        recipe.write_text(
+            "FROM python:3.12.15-alpine3.24@sha256:b658b05ce9c4eb97ec6fc19424818a1f31993659c2b505a532f470e83807815d\n"
+            + "COPY . /context\nRUN "
+            + json.dumps(["python", "-c", proof])
+            + "\n"
+        )
+        try:
+            result = subprocess.run(
+                command
+                + [
+                    "build",
+                    "--network",
+                    "none",
+                    "--label",
+                    "qbitbot.verification=" + canary,
+                    "-t",
+                    canary,
+                    "-f",
+                    "deploy/docker/context-check.Dockerfile",
+                    ".",
+                ],
+                cwd=root,
+                env=env,
+                capture_output=True,
+                timeout=120,
+            )
+            if result.returncode:
+                raise RuntimeError("Docker directory-context allowlist verification failed")
+        finally:
+            subprocess.run(command + ["image", "rm", canary], capture_output=True, timeout=30)
+
         # Compose JSON can escape dollar signs. Verify the delivered bytes as well.
         name = "qbitbot-env-" + uuid.uuid4().hex[:12]
         probe = {
@@ -154,7 +253,9 @@ def check(docker="docker", context=None):
                 raise RuntimeError("Synthetic environment delivery check failed")
         finally:
             subprocess.run(command + ["rm", "-f", name], capture_output=True, timeout=30)
-    print("PASS bundled/bot-only/solver Compose: synthetic config, bindings and solver isolation")
+    print(
+        "PASS bundled/bot-only/solver Compose: synthetic config, bindings, solver isolation and Docker context exclusions"
+    )
 
 
 if __name__ == "__main__":

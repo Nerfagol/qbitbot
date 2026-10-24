@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PTB_USE_AIOHTTP=0 \
     WATCH_DB_PATH=/state/watches.sqlite3
 
-COPY requirements.lock /app/requirements.lock
+COPY requirements/runtime.lock /app/requirements.lock
 # The installer is build-only; exclude pip and its vendored libraries from runtime.
 RUN python -m pip install --no-cache-dir pip==26.2.2 \
     && python -m pip install --no-cache-dir -r /app/requirements.lock \
@@ -18,4 +18,4 @@ COPY qbitbot /app/qbitbot
 USER 1000:1000
 
 CMD ["python", "-m", "qbitbot"]
-COPY LICENSE THIRD_PARTY_NOTICES.md /app/
+COPY LICENSE docs/licenses/THIRD_PARTY_NOTICES.md /app/

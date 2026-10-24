@@ -22,7 +22,7 @@ docker compose up -d bot
 `watches.sqlite3`, доступные `health.sqlite3` и `preferences.sqlite3`, а также
 `manifest.json`. Отсутствие необязательных баз отмечается явно. База наблюдений
 должна уже существовать. Файлы загрузок и пароли сервисов в эту копию не входят.
-Для режима только бота добавляйте `-f compose.bot-only.yaml` к командам Compose.
+Для режима только бота добавляйте `--project-directory . -f deploy/compose.bot-only.yaml` к командам Compose.
 
 ## Настройки сервисов и файлы
 

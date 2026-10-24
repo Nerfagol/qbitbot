@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.12.15'
       - run: python -m venv .venv
-      - run: .venv/bin/python -m pip install -r requirements-dev.lock
+      - run: .venv/bin/python -m pip install -r requirements/dev.lock
       - run: docker version && docker compose version
       - run: make compose-check
       - run: make integration

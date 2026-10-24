@@ -28,7 +28,7 @@ def test_stack_separates_services_and_state():
 
 
 def test_bot_only_never_starts_bundled_dependencies():
-    cfg = config("compose.bot-only.yaml")
+    cfg = config("deploy/compose.bot-only.yaml")
     assert set(cfg["services"]) == {"bot"}
     bot = cfg["services"]["bot"]
     assert not bot.get("depends_on")
@@ -58,7 +58,7 @@ def test_web_interfaces_default_to_loopback_and_peer_ports_match():
 
 
 def test_both_bot_modes_enforce_unprivileged_resource_bounded_runtime():
-    for name in ("compose.yaml", "compose.bot-only.yaml"):
+    for name in ("compose.yaml", "deploy/compose.bot-only.yaml"):
         bot = config(name)["services"]["bot"]
         assert bot["user"] == "1000:1000"
         assert bot["read_only"] is True

@@ -4,7 +4,7 @@ Search torrents and manage qBittorrent downloads from Telegram, in English or Ru
 Run the bot, qBittorrent and Jackett together with Docker Compose, or connect the bot
 to services you already operate.
 
-[English setup](docs/setup.en.md) · [Установка на русском](docs/setup.ru.md)
+[English setup](docs/setup.en.md) · [Установка на русском](docs/setup.ru.md) · [Documentation](docs/README.md)
 
 ## What it does
 
@@ -66,7 +66,9 @@ state/configuration volumes. Before reusing an existing bot volume, follow the
 [offline ownership migration guide](docs/deployment/container-hardening.md).
 
 No prebuilt registry image is published. Compose builds the bot and patched service
-images from the reviewed Dockerfiles.
+images from the reviewed Dockerfiles in `deploy/docker/`. See
+[layout upgrade notes](deploy/README.md#upgrade-from-the-former-root-layout) when
+updating an older checkout.
 
 ## Security and verification
 
@@ -83,13 +85,13 @@ run two bot instances with the same Telegram token.
 
 Automated verification includes offline tests, disposable API/recovery checks and
 weekly dependency/image security scans. The dated
-[security review](docs/deployment/security-hardening-2026-10-24.md) records the
+[security review](docs/archive/security/security-hardening-2026-10-24.md) records the
 2026-10-24 scan results and remaining limits; scans need repeating as advisories
 and packages change. Check [GitHub Actions](https://github.com/Nerfagol/qbitbot/actions)
 for the status of a particular commit.
 
 The operator confirmed live Telegram acceptance of **v0.3.0** on 2026-09-27;
-see its [acceptance record](docs/acceptance-v0.3.0.md). Later security and setup
+see its [acceptance record](docs/archive/acceptance-v0.3.0.md). Later security and setup
 changes are documented in the [changelog](CHANGELOG.md); that historical record
 does not certify every later revision or platform.
 
@@ -99,7 +101,7 @@ Use Python 3.12:
 
 ```sh
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.lock
+.venv/bin/python -m pip install -r requirements/dev.lock
 make check
 make compose-check
 make integration
@@ -110,9 +112,9 @@ Unit tests block networking. Docker checks create and remove only their own isol
 resources. `make integration-public` requires Compose 2.24.4+ and Git history for its
 original-public-code rollback rehearsal. See [contributor guidance](AGENTS.md),
 [source layout](docs/development/layout.md),
-[localization](docs/development/localization.md) and the [release checklist](docs/release-checklist.md).
+[localization](docs/development/localization.md) and the [release checklist](docs/development/releases.md).
 
 ## License
 
 Original project code is MIT licensed. Dependencies and service images retain their
-own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
+own licenses; see [third-party notices](docs/licenses/THIRD_PARTY_NOTICES.md).

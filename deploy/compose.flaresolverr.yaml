@@ -49,7 +49,7 @@ services:
         max-file: '3'
     build:
       context: .
-      dockerfile: docker/flaresolverr.Dockerfile
+      dockerfile: deploy/docker/flaresolverr.Dockerfile
 networks:
   solver:
     enable_ipv6: false

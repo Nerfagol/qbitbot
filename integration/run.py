@@ -17,7 +17,7 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-QBIT_DOCKERFILE = "docker/qbittorrent.Dockerfile"
+QBIT_DOCKERFILE = "deploy/docker/qbittorrent.Dockerfile"
 
 
 def archive(files):
@@ -253,11 +253,11 @@ def main():
         build = {
             n: (ROOT / n).read_bytes()
             for n in [
-                "Dockerfile",
+                "deploy/docker/bot.Dockerfile",
                 "LICENSE",
-                "THIRD_PARTY_NOTICES.md",
+                "docs/licenses/THIRD_PARTY_NOTICES.md",
                 ".dockerignore",
-                "requirements.lock",
+                "requirements/runtime.lock",
                 *(
                     path.relative_to(ROOT).as_posix()
                     for pattern in ("*.py", "cli/*.py", "locales/*.json")
@@ -270,6 +270,8 @@ def main():
             images,
             image,
             "build",
+            "-f",
+            "deploy/docker/bot.Dockerfile",
             "--label",
             "qbitbot.verification=" + prefix,
             "-t",

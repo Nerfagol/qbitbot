@@ -1,5 +1,8 @@
 # English and Russian Interface Implementation Plan
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Translate the entire bot interface while preserving reliable controls and restart-safe notifications.

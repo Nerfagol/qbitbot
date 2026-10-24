@@ -23,7 +23,7 @@ Choose a new destination each time. Existing destinations are rejected. The back
 contains `watches.sqlite3`, optional `health.sqlite3` and `preferences.sqlite3`, and
 `manifest.json`; absent optional files are recorded explicitly. The watch database
 must already exist. No torrent contents or service credentials are included.
-For bot-only mode, add `-f compose.bot-only.yaml` to each Compose command.
+For bot-only mode, add `--project-directory . -f deploy/compose.bot-only.yaml` to each Compose command.
 
 ## Service configuration and downloaded files
 

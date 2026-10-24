@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: deploy/docker/bot.Dockerfile
     user: "1000:1000"
     read_only: true
     tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]

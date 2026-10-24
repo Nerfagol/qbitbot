@@ -1,5 +1,8 @@
 # Local security hardening implementation plan
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 Goal: reduce remaining image exposure and enforce least privilege and bounded,
 SSRF-resistant HTTP reads; verify offline and on disposable Docker Desktop stacks.
 No NAS deployment, real Telegram poller, existing volume/torrent mutations or

@@ -22,7 +22,7 @@ jobs:
         run: |
           python -m venv "$RUNNER_TEMP/audit"
           "$RUNNER_TEMP/audit/bin/python" -m pip install pip-audit==2.10.1
-          "$RUNNER_TEMP/audit/bin/pip-audit" -r requirements-dev.lock --no-deps --disable-pip
+          "$RUNNER_TEMP/audit/bin/pip-audit" -r requirements/dev.lock --no-deps --disable-pip
       - name: Install checksum-pinned Trivy
         run: |
           mkdir "$RUNNER_TEMP/trivy"
@@ -34,10 +34,10 @@ jobs:
           tar -xzf "$RUNNER_TEMP/trivy/archive.tar.gz" -C "$RUNNER_TEMP/trivy" trivy
       - name: Build and scan every runtime image
         run: |
-          docker build -t qbitbot-security-ci:bot .
-          docker build -f docker/qbittorrent.Dockerfile -t qbitbot-security-ci:qbittorrent .
-          docker build -f docker/jackett.Dockerfile -t qbitbot-security-ci:jackett .
-          docker build -f docker/flaresolverr.Dockerfile -t qbitbot-security-ci:flaresolverr .
+          docker build -f deploy/docker/bot.Dockerfile -t qbitbot-security-ci:bot .
+          docker build -f deploy/docker/qbittorrent.Dockerfile -t qbitbot-security-ci:qbittorrent .
+          docker build -f deploy/docker/jackett.Dockerfile -t qbitbot-security-ci:jackett .
+          docker build -f deploy/docker/flaresolverr.Dockerfile -t qbitbot-security-ci:flaresolverr .
           python integration/flaresolverr.py --image qbitbot-security-ci:flaresolverr
           for component in bot qbittorrent jackett flaresolverr; do
             docker image save "qbitbot-security-ci:$component" -o "$RUNNER_TEMP/$component.tar"

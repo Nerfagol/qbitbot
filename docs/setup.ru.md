@@ -24,7 +24,7 @@ Compose на Linux amd64 (x86_64). Другие NAS-платформы и ARM п
 
 ```sh
 cp .env.example .env
-cp bot.env.example bot.env
+cp config/bot.env.example bot.env
 chmod 600 .env bot.env
 mkdir -p downloads
 ```
@@ -70,14 +70,14 @@ docker compose up -d
 
 ## Уже установленные сервисы
 
-Скопируйте `bot.env.example` в `bot.env`, задайте доступные из контейнера адреса
+Скопируйте `config/bot.env.example` в `bot.env`, задайте доступные из контейнера адреса
 `QBIT_URL` и `JACKETT_TORZNAB_URL`, пароли и список пользователей. `localhost`
 внутри контейнера означает сам контейнер. `QBIT_SAVEPATH` — путь внутри qBittorrent.
 
 ```sh
-docker compose -f compose.bot-only.yaml build
-docker compose -f compose.bot-only.yaml run --rm bot python -m qbitbot.cli.setup_check
-docker compose -f compose.bot-only.yaml up -d
+docker compose --project-directory . -f deploy/compose.bot-only.yaml build
+docker compose --project-directory . -f deploy/compose.bot-only.yaml run --rm bot python -m qbitbot.cli.setup_check
+docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d
 ```
 
 Запускается только бот. Не запускайте два экземпляра с одинаковым Telegram-токеном.

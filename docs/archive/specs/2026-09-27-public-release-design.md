@@ -1,5 +1,8 @@
 # Public qbitbot release design
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../../README.md) for the current source layout.
+
 Date: 2026-09-27
 Status: approved by the user on 2026-09-27; implementation has not started.
 Target: version 0.3, after verification; this document does not declare a release.

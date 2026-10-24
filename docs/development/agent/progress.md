@@ -1,5 +1,48 @@
 # Project Progress
 
+## 2026-10-24 — Applied deployment/documentation layout consolidation
+
+- Owner approved the first structure-review phase. Reduced visible root files15→8:
+  all image inputs now deploy/docker/, optional Compose variants deploy/, public
+  template config/, unchanged locks requirements/, notices docs/licenses/; agent
+  notes under development/agent and historical evidence under docs/archive/.
+- Updated Compose, image COPY/context allowlist, CI, integration exporters/tests,
+  EN/RU setup, docs index/archive navigation and current release instructions.
+  Bot-only commands explicitly use --project-directory .; no project-name override
+  was added. All3 full resolved Compose configs match their old runtime semantics
+  except intended Dockerfile paths; default and custom project/volume names match.
+- Application Python and lock bytes unchanged; only two localized diagnostics now
+  point to config/bot.env.example. No package-manager/src/client refactor here.
+- Verification:621 tests plus lint/format/compile/dependency checks, merged Compose,
+  real API/thread/search/add/control/restart/rollback and state-permission checks,
+  fresh EN/RU/bot-only/outage/backup/restore, solver JS and invalid-TLS rejection.
+  Disposable resources cleaned; only synthetic fixtures and owned Docker volumes.
+- Independent review caught a generated rollback Dockerfile path regression;
+  failure reproduced, fixed and full suite rerun passed. Windows-path normalization
+  in a new Compose assertion also fixed. Follow-up review found no blockers.
+- Actual directory-context canaries exposed parent-directory exceptions admitting
+  private descendants. Added explicit child exclusions and a permanent generated
+  canary to compose-check (stdin tar contexts bypass client ignore processing).
+  Corrected real directory proof passed; fresh public stacks reverified the filter.
+- Current documentation links and Docker-context canary checks verified. Runtime
+  dependencies did not change; dated security audit remains the prior scan evidence.
+  Staged for source-export verification only; no commit/push or NAS operation.
+- Next independent phase, if requested: installed-package/src and client boundaries.
+
+## 2026-10-24 — Reviewed complete public repository structure
+
+- Reviewed tracked root/application/tests/integration/deployment/CI/docs and current
+  PyPA/Docker guidance. Report: docs/archive/reviews/structure-2026-10-24.md. Current flat
+  Docker-first structure is valid, but deployment ownership is inconsistent and
+  checkout-based tests do not verify an installed distribution. app.py combines
+  clients/parsing/handlers with import-time configuration; release guidance is stale.
+- Recommended deployment/docs consolidation first (15 visible root files toward8),
+  then separately approved src/package/client refactoring. Preserve Compose paths,
+  project/volume identities, build allowlists and historical rollback fixtures.
+- Report is advisory; no runtime/layout/deployment change implemented. Confirmed
+  earlier security commit2cfd466 and README4fab35c were pushed in this session;
+  GitHub CI results remain unverified here. Only documentation checks required.
+
 ## 2026-10-24 — Prepared authorized local security/cleanup commit
 
 - Owner requested committing the public changes. Reviewed and staged dependency,
@@ -91,7 +134,7 @@
 - Trivy image/config scans completed. Bot Python findings are zero. Debian OS
   findings have no fixed version in the feed; both latest service images still
   carry fixable Brotli/musl findings. Root runtime remains flagged. Findings are
-  explicit in docs/deployment/security-2026-10-24.md, without ignore rules.
+  explicit in docs/archive/security/security-2026-10-24.md, without ignore rules.
 - Next: obtain patched upstream service images or deliberately maintain derived
   images, address/review the remaining OS and runtime-privilege findings, then
   rerun relevant checks before security sign-off. No NAS deployment, live Telegram

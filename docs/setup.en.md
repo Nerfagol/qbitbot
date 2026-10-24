@@ -24,7 +24,7 @@ Compose on Linux amd64 (x86_64). Other NAS platforms and ARM are unverified.
 
 ```sh
 cp .env.example .env
-cp bot.env.example bot.env
+cp config/bot.env.example bot.env
 chmod 600 .env bot.env
 mkdir -p downloads
 ```
@@ -69,14 +69,14 @@ them directly to the Internet. Peer ports are separate TCP/UDP mappings.
 
 ## Existing qBittorrent and Jackett
 
-Copy only `bot.env.example` to `bot.env`, fill the credentials/allowlist and set
+Copy only `config/bot.env.example` to `bot.env`, fill the credentials/allowlist and set
 reachable `QBIT_URL` and `JACKETT_TORZNAB_URL` values. `localhost` inside the bot
 means that container, not your host. `QBIT_SAVEPATH` is a path inside qBittorrent.
 
 ```sh
-docker compose -f compose.bot-only.yaml build
-docker compose -f compose.bot-only.yaml run --rm bot python -m qbitbot.cli.setup_check
-docker compose -f compose.bot-only.yaml up -d
+docker compose --project-directory . -f deploy/compose.bot-only.yaml build
+docker compose --project-directory . -f deploy/compose.bot-only.yaml run --rm bot python -m qbitbot.cli.setup_check
+docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d
 ```
 
 This starts only the bot. Do not run both entry points with the same Telegram token.

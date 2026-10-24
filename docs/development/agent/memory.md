@@ -37,7 +37,7 @@ is separate and may replay notices. See bilingual backup guides for name mapping
 (v0.3.0 bundled 5.1.2; the current local candidate bundles 5.3.0). Release CI accepts Linux amd64 and uses only
 synthetic Telegram transport. The operator confirmed live acceptance of the exact
 v0.3.0 release on Linux amd64 on 2026-09-27, including completion delivery and normal
-restart recovery; see `docs/acceptance-v0.3.0.md`. This does not certify ARM or later
+restart recovery; see `docs/archive/acceptance-v0.3.0.md`. This does not certify ARM or later
 source revisions. Crash-time notification duplicates remain an expected limitation.
 
 ## Source layout and rollback fixtures
@@ -79,9 +79,10 @@ when editing rollback tests.
   records. LSIO root-init and absent Dockerfile HEALTHCHECK remain configuration
   findings; no dummy liveness check or vulnerability suppressions are used.
   HTTP timeouts remain per-operation, not a total deadline. See the dated
-  docs/deployment/security-hardening-2026-10-24.md for scope and limits.
+  docs/archive/security/security-hardening-2026-10-24.md for scope and limits.
 - Security CI now audits dependencies and the3 base images plus optional FlareSolverr on changes/weekly, using a
-  checksum-pinned scanner; not yet run on GitHub or activated by this local edit.
+  checksum-pinned scanner. Published in commit2cfd466; actual GitHub CI results
+  have not been verified by the structural review.
 
 ## Optional FlareSolverr
 
@@ -96,6 +97,30 @@ See docs/deployment/flaresolverr.md. No private deployment data belongs here.
 
 ## Contributor documentation placement
 
-Agent notes live in docs/development/memory.md and docs/development/progress.md;
+Agent notes live in docs/development/agent/memory.md and docs/development/agent/progress.md;
 root AGENTS.md points to them. Pytest and Ruff share pyproject.toml. Preserve
-standard root Docker/Compose/env-example and dependency-lock entry points.
+root default Compose/tool entry points. All Dockerfiles/variants are in deploy/,
+configuration templates in config/ and reviewed locks in requirements/.
+
+## Structural review
+
+The2026-10-24 report in docs/archive/reviews/structure-2026-10-24.md led to the
+owner-approved deployment/documentation consolidation. Runtime package/src/client
+refactoring is a separate future phase. Preserve Compose project/volume
+identity, root-relative inputs, restricted build contexts and rollback fixtures.
+
+## Applied deployment/documentation layout
+
+Root has8 visible entry files. deploy/docker owns all image recipes, deploy/ the
+optional Compose variants, config/ templates, requirements/ unchanged lock closures,
+docs/licenses/ notices, development/agent notes and archive/ historical evidence.
+Use repository-root build contexts and `--project-directory .` for standalone
+bot-only Compose; preserve checkout or explicit project name and existing volumes.
+All3 migrated Compose configurations were compared against old resolved settings;
+only intended Dockerfile path differences remain. See deploy/README.md for upgrades.
+Python runtime/source layout remains qbitbot/; src/client refactoring is not applied.
+
+Dockerignore parent exceptions can admit descendants: re-exclude children before
+allowing exact runtime inputs. compose-check exercises actual directory filtering
+with synthetic private/required files. Raw stdin tar contexts bypass Docker CLI
+filtering; integration archives must retain their explicit input allowlist.

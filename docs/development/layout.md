@@ -3,20 +3,26 @@
 Keep files with the responsibility that owns them:
 
 ```text
-qbitbot/                    Runtime package
-  __main__.py               Bot entry point
-  app.py                    Telegram handlers and service integration
-  downloads.py, search_ui.py User interactions and rendering
-  health.py, monitoring.py  Background checks and delivery lifecycle
-  watch_store.py            Durable watches and pending notices
-  settings.py               Environment validation
-  i18n.py, language_ui.py    Translation and language selection
-  preferences.py            Durable language preferences
-  locales/                  English/Russian JSON catalogs
-  cli/                      Setup checks and state backups
-tests/                     Offline tests and shared test fixtures
-integration/               Disposable Docker verification and probes
-docs/                      Guides, assets and historical plans
+qbitbot/                    Runtime package (source imports stay unchanged)
+  cli/                      Setup, backup and state-permission commands
+  locales/                  English/Russian resources beside runtime code
+tests/                      Offline behavior and regression cases
+integration/                Disposable Docker verification and probes
+deploy/
+  docker/                   All bot/service Dockerfiles and solver patches
+  compose.bot-only.yaml     Existing-service mode; use --project-directory .
+  compose.flaresolverr.yaml Optional bundled-stack overlay
+config/                     Public configuration templates
+requirements/               Reviewed runtime/development locks
+docs/
+  README.md                 User/developer documentation index
+  deployment/               Current operations and image inputs
+  development/agent/        Agent memory and progress notes
+  development/plans/        Active implementation plans
+  licenses/                 Third-party notices
+  archive/                  Dated audits, acceptance and historical designs
+compose.yaml                Default bundled entry point
+pyproject.toml              Shared Ruff/pytest settings
 ```
 
 ## Placement rules
@@ -30,14 +36,17 @@ docs/                      Guides, assets and historical plans
   disposable service fixtures under `integration/`.
 - Keep packaged resources next to runtime code and resolve them relative to the
   module. Runtime state and secrets belong outside the source package.
-- Reserve the root for Compose/build/tool configuration, dependency locks, examples,
-  license/version information, README and contributor instructions. Keep durable
-  agent notes in `docs/development/memory.md` and handoffs in
-  `docs/development/progress.md`; configure pytest alongside Ruff in `pyproject.toml`.
+- Keep root entry points small: README, CHANGELOG, LICENSE, AGENTS, Makefile,
+  pyproject.toml, VERSION and the default compose.yaml. Tool discovery dotfiles and
+  .env.example stay at root. All Dockerfiles use repository-root build context.
+- Keep dependency locks in requirements/, optional Compose files in deploy/,
+  templates in config/ and detailed license notices in docs/licenses/. Keep durable
+  agent notes in `docs/development/agent/memory.md` and handoffs in
+  `docs/development/agent/progress.md`; configure pytest alongside Ruff in `pyproject.toml`.
 
 ## Running from source
 
-After installing `requirements-dev.lock` into `.venv`, run from the repository root:
+After installing `requirements/dev.lock` into `.venv`, run from the repository root:
 
 ```sh
 .venv/bin/python -m qbitbot
@@ -62,3 +71,10 @@ with the allowlisted package sources and catalogs. Stage newly added files befor
 `make integration-public`: its clean checkout export deliberately includes tracked
 source only. Historical plans and source inventories keep their original paths;
 the recovery harness still tests the original public code from Git history.
+
+## Layout upgrades
+
+See [deployment migration notes](../../deploy/README.md). Root-relative settings,
+Compose project/volume identity and Docker build-context allowlists are compatibility
+requirements. Runtime packaging, src layout and client extraction are a separate
+phase; this migration does not change application imports or startup.

@@ -1,6 +1,6 @@
 # Third-party notices
 
-Original qbitbot code uses the [MIT license](LICENSE). Upstream packages and images
+Original qbitbot code uses the [MIT license](../../LICENSE). Upstream packages and images
 retain their own copyrights/licenses. This source release references service images;
 it does not redistribute or relicense their binaries. Package license files remain
 in installed distributions. Runtime/development versions are fixed in the lock files.
@@ -32,7 +32,7 @@ The version-specific upstream metadata and project links are available from PyPI
 
 ## Container components
 
-Image digests are recorded in [the image inventory](docs/deployment/images.md).
+Image digests are recorded in [the image inventory](../deployment/images.md).
 
 - [qBittorrent licensing](https://github.com/qbittorrent/qBittorrent/blob/master/COPYING):
   source GPL-2.0-or-later; binary distribution GPL-3.0-or-later, with its stated OpenSSL exception.
@@ -51,5 +51,5 @@ uses MIT and is pinned with an archive checksum in the release checklist. Genera
 preview images contain only synthetic fixture text and no third-party screenshots.
 
 - Optional [FlareSolverr3.5.2](https://github.com/FlareSolverr/FlareSolverr/tree/v3.5.2) uses MIT;
-  its notice is retained in `docker/flaresolverr/LICENSE` and the derived image.
+  its notice is retained in `deploy/docker/flaresolverr/LICENSE` and the derived image.
   Browser and OS packages retain their upstream licenses.

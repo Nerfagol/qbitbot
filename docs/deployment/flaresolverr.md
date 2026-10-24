@@ -9,7 +9,7 @@ or solve ordinary account CAPTCHA prompts. Tracker accounts stay in Jackett.
 Use the overlay on every Compose command while the optional service is enabled:
 
 ```sh
-docker compose -f compose.yaml -f compose.flaresolverr.yaml up -d --build
+docker compose -f compose.yaml -f deploy/compose.flaresolverr.yaml up -d --build
 ```
 
 In Jackett's server settings, set **FlareSolverr API URL** to
@@ -29,7 +29,7 @@ never use `down -v` as a maintenance shortcut.
 
 ## Build and security
 
-`docker/flaresolverr.Dockerfile` copies official FlareSolverr3.5.2 source from a
+`deploy/docker/flaresolverr.Dockerfile` copies official FlareSolverr3.5.2 source from a
 pinned release digest onto pinned Python3.11.17/Alpine3.24. Chromium155.0.8059.84
 and its matching Alpine driver replace the vulnerable Debian browser/packages.
 CA/urllib3 fixes are applied and unused installer/SeleniumManager binaries removed.
@@ -66,7 +66,7 @@ response bodies or logs are included here. Other architectures remain unverified
 Run the synthetic smoke check against a newly built image:
 
 ```sh
-docker build -f docker/flaresolverr.Dockerfile -t qbitbot-flaresolverr:local .
+docker build -f deploy/docker/flaresolverr.Dockerfile -t qbitbot-flaresolverr:local .
 python3 integration/flaresolverr.py --image qbitbot-flaresolverr:local
 ```
 

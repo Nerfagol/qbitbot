@@ -1,18 +1,30 @@
-# Only these build inputs may enter the context. Never include bot.env or backups.
+# Deny all, reopen required parents, then deny their children before exact allow rules.
+# A parent exception alone would also admit private descendants.
 **
-!Dockerfile
-!requirements.lock
+!deploy/
+deploy/**
+!deploy/docker/
+deploy/docker/**
+!deploy/docker/*.Dockerfile
+!deploy/docker/flaresolverr/
+deploy/docker/flaresolverr/**
+!deploy/docker/flaresolverr/*.py
+!deploy/docker/flaresolverr/LICENSE
+!requirements/
+requirements/**
+!requirements/runtime.lock
 !qbitbot/
+qbitbot/**
 !qbitbot/*.py
 !qbitbot/cli/
+qbitbot/cli/**
 !qbitbot/cli/*.py
 !qbitbot/locales/
+qbitbot/locales/**
 !qbitbot/locales/*.json
 !LICENSE
-!THIRD_PARTY_NOTICES.md
-!docker/
-!docker/*.Dockerfile
-!docker/flaresolverr/
-!docker/flaresolverr/*.py
-
-!docker/flaresolverr/LICENSE
+!docs/
+docs/**
+!docs/licenses/
+docs/licenses/**
+!docs/licenses/THIRD_PARTY_NOTICES.md

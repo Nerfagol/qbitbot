@@ -20,8 +20,8 @@ RUN apk upgrade --no-cache \
     && chown -R root:root /app \
     && chmod 755 /app/chromedriver \
     && mkdir /config && chown 1000:1000 /config
-COPY docker/flaresolverr/LICENSE /usr/share/licenses/flaresolverr/LICENSE
-COPY docker/flaresolverr/strict_tls.py /tmp/strict_tls.py
+COPY deploy/docker/flaresolverr/LICENSE /usr/share/licenses/flaresolverr/LICENSE
+COPY deploy/docker/flaresolverr/strict_tls.py /tmp/strict_tls.py
 RUN python /tmp/strict_tls.py && rm /tmp/strict_tls.py
 ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1
 USER 1000:1000

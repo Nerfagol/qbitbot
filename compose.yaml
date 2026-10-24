@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: deploy/docker/bot.Dockerfile
     user: "1000:1000"
     read_only: true
     tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
@@ -25,7 +27,7 @@ services:
   qbittorrent:
     build:
       context: .
-      dockerfile: docker/qbittorrent.Dockerfile
+      dockerfile: deploy/docker/qbittorrent.Dockerfile
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -51,7 +53,7 @@ services:
   jackett:
     build:
       context: .
-      dockerfile: docker/jackett.Dockerfile
+      dockerfile: deploy/docker/jackett.Dockerfile
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}

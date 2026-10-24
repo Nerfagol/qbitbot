@@ -16,11 +16,11 @@ not evidence that every supported platform has been tested.
 Re-resolve and test deliberately before changing these pins. Upstream image/platform
 availability does not establish qbitbot support on that platform.
 
-Compose builds the service inputs through `docker/qbittorrent.Dockerfile` and
-`docker/jackett.Dockerfile`. These derived images pin Brotli libraries 1.2.1-r0 and
+Compose builds the service inputs through `deploy/docker/qbittorrent.Dockerfile` and
+`deploy/docker/jackett.Dockerfile`. These derived images pin Brotli libraries 1.2.1-r0 and
 musl/musl-utils 1.2.6-r3 at build time; the application versions remain unchanged.
 The bot uses UID/GID 1000:1000. See [runtime restrictions and offline migration](container-hardening.md)
-and the [dated security review](security-2026-10-24.md) for verification and scope.
+and the [dated security review](../archive/security/security-2026-10-24.md) for verification and scope.
 
 Optional FlareSolverr3.5.2 upstream source digest:
 `sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767`.

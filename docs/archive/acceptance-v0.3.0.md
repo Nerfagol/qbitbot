@@ -1,5 +1,8 @@
 # v0.3.0 live acceptance
 
+> Historical record: paths and commands describe their original revision. Use the
+> [current guides](../README.md) for the current source layout.
+
 Recorded 2026-09-27 for public tag `v0.3.0`, commit
 `18e940b1db491b7a87874585a65e48930dc9b965`, running on a QNAP NAS with Container Station and Docker Compose (Linux amd64 / x86_64).
 The test used a dedicated Telegram bot, separate qBittorrent and separate state

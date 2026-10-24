@@ -14,7 +14,7 @@ private Git refs, diagnostic reports or database snapshots into a release.
 
 Only Linux amd64 containers are accepted. Automated scenarios have no live tracker
 accounts or Telegram token and cannot prove real Telegram delivery. The separate
-[operator-confirmed v0.3.0 live acceptance](acceptance-v0.3.0.md) supplements those checks.
+[operator-confirmed v0.3.0 live acceptance](../archive/acceptance-v0.3.0.md) supplements those checks.
 
 ## Privacy audit
 
@@ -46,11 +46,15 @@ public history for rollback tests. No logs, environments or workspaces are uploa
 as artifacts. See upstream [checkout](https://github.com/actions/checkout) and
 [setup-python](https://github.com/actions/setup-python) documentation.
 
-Create only a new repository, push only reviewed `main`, and inspect CI on that exact
-commit. Prepare `VERSION`/`CHANGELOG`, rerun local checks and audits, push, then wait
-for **both** workflows to pass on the release commit before creating `v0.3.0`.
-Publish the reviewed source/release notes only. Record commit, tag and CI links in
-the handoff; never describe pending CI or unperformed live acceptance as passed.
+For an existing repository, prepare a new version in `VERSION` and `CHANGELOG.md`
+and rerun the checks and privacy audit on the intended release commit. Push only
+reviewed changes, then wait for **check**, **containers** and **security** workflows
+to pass on that exact commit before creating a new version tag. Existing release
+tags, including `v0.3.0`, must not be altered. Record commit, new tag and CI links;
+never describe pending CI or unperformed live acceptance as passed.
+
+The original first-publication procedure and audit below are historical evidence.
+They do not replace checks for the current release.
 
 ## Local audit evidence, 2026-09-27
 

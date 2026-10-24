@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Consolidate image recipes/optional Compose files under deploy/, templates under
+  config/, dependency locks under requirements/, and historical/agent/license docs
+  under their owning folders. Preserve root Compose behavior; bot-only commands
+  now require --project-directory . with deploy/compose.bot-only.yaml. Tighten
+  build-context exclusions and verify private descendant rejection with synthetic
+  directory-context canaries.
+
 - Add an optional hardened FlareSolverr build/Compose overlay, strict TLS/error-page
   checks, isolated browser smoke verification and recurring vulnerability scans.
 
@@ -18,7 +25,7 @@
   the runtime image. Update bundled qBittorrent to 5.3.0 and Jackett to v0.24.2900.
   Support their HTTP 204 authentication/add responses alongside older 5.x APIs.
   Local verification and residual configuration limits are recorded in
-  [the current hardening review](docs/deployment/security-hardening-2026-10-24.md).
+  [the current hardening review](docs/archive/security/security-hardening-2026-10-24.md).
 
 - Organize runtime code and catalogs under `qbitbot/`, with maintenance commands in
   `qbitbot/cli/`. Start from a source checkout with `python -m qbitbot`; setup and
@@ -45,7 +52,7 @@ upstream public signing fingerprint exception in the artifact audit.
 Post-release verification (2026-09-27): operator-confirmed live Telegram acceptance
 on a Linux amd64 NAS covers both languages, search/download controls, completion
 messages, restart recovery and health-card interaction. See
-[acceptance scope](docs/acceptance-v0.3.0.md).
+[acceptance scope](docs/archive/acceptance-v0.3.0.md).
 
 Limits: other architectures are not verified. Notifications may repeat after a crash. No
 prebuilt registry image, Telegram torrent-file upload or media-app integration is included.

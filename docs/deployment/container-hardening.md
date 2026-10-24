@@ -35,7 +35,7 @@ docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check
 docker compose up -d --no-deps bot
 ```
 
-For bot-only installations add `-f compose.bot-only.yaml` to each Compose command.
+For bot-only installations add `--project-directory . -f deploy/compose.bot-only.yaml` to each Compose command.
 The maintenance container temporarily adds only the capabilities needed to
 change ownership and permissions; the normal bot retains no capabilities.
 The utility fixes ownership to 1000:1000 and restricts directories to 0700/files
@@ -58,7 +58,7 @@ PUID/PGID меняют пользователей qBittorrent/Jackett, но не
 Остановите **все** контейнеры и процессы, использующие состояние. Сначала создайте
 и скопируйте наружу проверенную закрытую резервную копию старым рабочим образом
 по [инструкции](../backup.ru.md). Затем выполните команды выше; для режима bot-only
-добавьте `-f compose.bot-only.yaml`. Не используйте `down -v`.
+добавьте `--project-directory . -f deploy/compose.bot-only.yaml`. Не используйте `down -v`.
 
 Команда с `--offline` явно подтверждает остановку всех читателей/писателей и
 наличие копии. Она меняет только владельца на 1000:1000 и права на 0700 для

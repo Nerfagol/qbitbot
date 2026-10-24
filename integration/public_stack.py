@@ -101,7 +101,7 @@ def install_fixture_source(docker, container, source):
 def fresh(docker, root, project, image, checks):
     def compose(*args, only=False):
         files = (
-            ["compose.bot-only.yaml", "only.test.json"]
+            ["deploy/compose.bot-only.yaml", "only.test.json"]
             if only
             else ["compose.yaml", "integration/compose.test.yaml"]
         )
