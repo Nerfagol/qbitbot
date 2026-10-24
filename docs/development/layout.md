@@ -4,6 +4,10 @@ Keep files with the responsibility that owns them:
 
 ```text
 src/qbitbot/                Installable runtime package (imports remain qbitbot.*)
+  clients/                  Independently configured qBittorrent/Jackett clients
+  startup.py                Environment loading, composition and polling
+  app.py                    Telegram handlers and feature I/O boundaries
+  search_results.py         Shared search coverage metadata
   cli/                      Setup, backup and state-permission commands
   locales/                  English/Russian resources beside runtime code
 tests/                      Offline behavior and regression cases
@@ -78,4 +82,5 @@ the recovery harness still tests the original public code from Git history.
 See [deployment migration notes](../../deploy/README.md). Root-relative settings,
 Compose project/volume identity and Docker build-context allowlists are compatibility
 requirements. The src/package migration preserves module commands and application behavior.
-Client extraction is a separate future refactor. See [packaging](packaging.md).
+Service clients and explicit startup are now separate from handlers. See
+[packaging](packaging.md) and [service boundaries](services.md).

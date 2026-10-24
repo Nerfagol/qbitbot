@@ -138,6 +138,8 @@ def check(docker="docker", context=None):
         allowed = [
             "src/qbitbot/__init__.py",
             "src/qbitbot/cli/__init__.py",
+            "src/qbitbot/clients/qbittorrent.py",
+            "src/qbitbot/clients/jackett.py",
             "src/qbitbot/locales/en.json",
             "requirements/runtime.lock",
             "requirements/build.lock",
@@ -154,6 +156,7 @@ def check(docker="docker", context=None):
             "requirements/dev.lock",
             "src/qbitbot/private.env",
             "src/qbitbot/cli/private.env",
+            "src/qbitbot/clients/private.env",
             "src/qbitbot/locales/private.env",
             "docs/development/agent/memory.md",
             "docs/archive/private-canary.txt",

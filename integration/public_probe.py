@@ -10,9 +10,15 @@ from unittest.mock import AsyncMock
 from urllib.parse import urlsplit
 
 from qbitbot import app as bot
+from qbitbot.startup import load_runtime, configure_handlers
+from dataclasses import replace
 from fixtures import sample
 from qbitbot.health import check_jackett
 from qbitbot.cli.setup_check import run_checks
+
+
+settings, values = load_runtime()
+configure_handlers(settings, env=values, handlers=bot)
 
 
 class Card:
@@ -68,6 +74,7 @@ async def exercise():
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
+    original_config = bot._JACKETT_CLIENT.config
     original_url = bot.JACKETT_TORZNAB_URL
     try:
         await bot.application_start(app)
@@ -105,8 +112,11 @@ async def exercise():
             assert ("Hello!" if lang == "en" else "Привет!") in card.text
             await bot.cmd_health(event, context)
             assert completed in card.text
-            # Only the search URL points to generated HTTP data; health uses real Jackett.
+            # The generated service owns both search and its private metadata URLs.
             bot.JACKETT_TORZNAB_URL = "http://127.0.0.1:8765/torznab"
+            bot._JACKETT_CLIENT.config = replace(
+                bot._JACKETT_CLIENT.config, url=bot.JACKETT_TORZNAB_URL
+            )
             card.text = "generated fixture"
             await bot.on_text(event, context)
             await card.click("1", bot.on_pick, event, context)
@@ -124,19 +134,20 @@ async def exercise():
                     break
                 await asyncio.sleep(0.2)
             assert not bot.qbit_torrents_info_sync(hashes=fixture["hash"], limit=1)
+            bot._JACKETT_CLIENT.config = original_config
             bot.JACKETT_TORZNAB_URL = original_url
             checks.append(
                 lang
                 + " lifecycle, search, explicit add, numbered controls, pause/resume, confirmed file deletion, health"
             )
         # Read-only container paths must fail storage diagnostics without relaxing modes.
-        from dataclasses import replace
         from pathlib import Path
 
         cfg = replace(bot._SETTINGS, watch_db_path=Path("/proc/qbitbot-test/watches.sqlite3"))
         assert any(r.message_key == "setup.storage" for r in run_checks(cfg))
         checks.append("state permission failure remains actionable")
     finally:
+        bot._JACKETT_CLIENT.config = original_config
         bot.JACKETT_TORZNAB_URL = original_url
         await bot.monitoring_close(app)
         server.shutdown()

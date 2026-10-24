@@ -94,7 +94,7 @@ def test_duplicate_magnet_is_not_added_again(bot, monkeypatch):
 )
 def test_http_200_with_fails_body_is_not_success(bot, monkeypatch, method, args):
     session = SimpleNamespace(post=lambda *a, **k: SimpleNamespace(status_code=200, text="Fails."))
-    monkeypatch.setattr(bot, "qbit_session", lambda: session)
+    monkeypatch.setattr(bot._QBIT_CLIENT, "session", lambda: session)
     with pytest.raises(RuntimeError, match="add.*failed"):
         getattr(bot, method)(*args)
 

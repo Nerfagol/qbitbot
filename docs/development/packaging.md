@@ -16,8 +16,9 @@ make wheel
 install-dev installs requirements/dev.lock and a local editable package without
 resolving new runtime versions. Refresh the editable installation after changing
 metadata. Importing qbitbot is inert: it exposes installed __version__ without
-reading bot.env or starting polling. Importing qbitbot.app still performs its
-existing configuration validation; startup/client extraction is separate work.
+reading bot.env or starting polling. Handler, startup and client imports are inert with respect to personal settings,
+state and networking. Explicit startup loads/validates configuration and composes
+service clients before polling. See [service boundaries](services.md).
 
 ## Version and dependency ownership
 

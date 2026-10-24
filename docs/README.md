@@ -16,6 +16,7 @@ Commands in current guides run from the repository root.
 
 - [Repository layout](development/layout.md)
 - [Package builds and installation](development/packaging.md)
+- [Service clients and startup](development/services.md)
 - [Localization](development/localization.md)
 - [Release verification](development/releases.md)
 - [Dependency locks](../requirements/README.md)

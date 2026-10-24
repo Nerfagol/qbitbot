@@ -4,8 +4,10 @@
 
 Python 3.12 Telegram bot using Jackett search and qBittorrent downloads.
 
-- `src/qbitbot/`: runtime package; `app.py` owns handlers/API integration. Search,
+- `src/qbitbot/`: runtime package; `app.py` owns handlers and feature I/O boundaries. Search,
   downloads, health, monitoring and storage retain their separate modules.
+- `src/qbitbot/clients/`: narrow service configs, authentication/session/search protocols.
+- `src/qbitbot/startup.py`: explicit env loading, settings injection and application wiring.
 - `src/qbitbot/cli/`: maintenance commands; run with `python -m qbitbot.cli.<name>`.
 - `src/qbitbot/locales/`: matched English/Russian catalogs; pass language explicitly
   and preserve queued notice payloads. `preferences.py` owns the language database.
@@ -25,7 +27,11 @@ children before exact allow rules. Stdin build archives require their own explic
 input allowlist; make compose-check tests actual directory-context exclusions.
 Current docs have an index at docs/README.md; historical
 evidence lives in docs/archive/. All image builds use repository-root context.
-Use `qbitbot.*` imports; keep package initializers free of startup/configuration effects.
+Use `qbitbot.*` imports; handler/client/startup imports must not read personal
+configuration, validate environment, open databases/network or start polling.
+startup.load_runtime/configure_handlers/build_application own explicit startup;
+configure each handler module once before its poller runs. Keep allowlist and
+client protocol checks at their existing boundaries.
 Add modules alongside their owning feature; create subpackages only for a cohesive
 responsibility. See `docs/development/layout.md` for entry points and placement rules.
 

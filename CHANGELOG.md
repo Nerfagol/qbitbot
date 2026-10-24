@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Extract independently configured qBittorrent/Jackett clients and shared search
+  results. Separate explicit environment/startup/application construction from
+  inert handler imports, preserving commands, access checks and HTTP protections.
+
 - Install the bot as a wheel from src/qbitbot/, with standard project metadata,
   explicit locale/license inclusion and version ownership in pyproject.toml.
   Add offline wheel/sdist/private-file checks and editable development setup;

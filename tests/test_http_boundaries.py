@@ -1,6 +1,8 @@
 """The runtime must use bounded reads at each external metadata boundary."""
 
 from contextlib import contextmanager
+from dataclasses import replace
+from qbitbot.clients import jackett
 import json
 
 import pytest
@@ -48,9 +50,9 @@ def test_search_body_is_bounded_and_closed(bot, monkeypatch, json_api):
         if json_api
         else "http://jackett.invalid/custom"
     )
-    monkeypatch.setattr(bot, "JACKETT_TORZNAB_URL", url)
-    monkeypatch.setattr(bot, "MAX_SEARCH_BYTES", 4)
-    response, calls = transport(monkeypatch, bot, b"oversized")
+    monkeypatch.setattr(bot._JACKETT_CLIENT, "config", replace(bot._JACKETT_CLIENT.config, url=url))
+    monkeypatch.setattr(jackett, "MAX_SEARCH_BYTES", 4)
+    response, calls = transport(monkeypatch, jackett, b"oversized")
     with pytest.raises(ValueError):
         bot.jackett_search_sync("query")
     assert response.closed
@@ -60,8 +62,8 @@ def test_search_body_is_bounded_and_closed(bot, monkeypatch, json_api):
 
 def test_json_search_uses_bounded_bytes_instead_of_unbounded_json_method(bot, monkeypatch):
     url = "http://jackett.invalid/api/v2.0/indexers/all/results/torznab/api"
-    monkeypatch.setattr(bot, "JACKETT_TORZNAB_URL", url)
-    response, _ = transport(monkeypatch, bot, json.dumps(payload()).encode())
+    monkeypatch.setattr(bot._JACKETT_CLIENT, "config", replace(bot._JACKETT_CLIENT.config, url=url))
+    response, _ = transport(monkeypatch, jackett, json.dumps(payload()).encode())
     assert bot.jackett_search_sync("query").availability == "partial"
     assert response.closed
 

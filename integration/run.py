@@ -263,7 +263,7 @@ def main():
                 "README.md",
                 *(
                     path.relative_to(ROOT).as_posix()
-                    for pattern in ("*.py", "cli/*.py", "locales/*.json")
+                    for pattern in ("*.py", "cli/*.py", "clients/*.py", "locales/*.json")
                     for path in sorted((ROOT / "src/qbitbot").glob(pattern))
                 ),
             ]
@@ -315,6 +315,8 @@ assert Path(qbitbot.__file__).is_relative_to('/usr/local/lib')
 assert qbitbot.__version__ == importlib.metadata.version('qbitbot')
 assert tr('nav.search', 'en') != tr('nav.search', 'ru')
 assert 'qbitbot.app' not in __import__('sys').modules
+from qbitbot import app as handlers
+assert handlers._SETTINGS is None and not handlers.ALLOWED_USERS
 assert importlib.util.find_spec('setuptools') is None
 assert importlib.util.find_spec('pip') is None
 assert not Path('/app/qbitbot').exists()
@@ -483,7 +485,10 @@ for base in ('/release', '/backup'):
         )
         check = """import hashlib
 from qbitbot import app as b
-assert b.BOT_TOKEN=='rollback-fixture'
+from qbitbot.startup import load_runtime, configure_handlers
+settings, values = load_runtime()
+configure_handlers(settings, env=values, handlers=b)
+assert settings.bot_token=='rollback-fixture'
 print(hashlib.sha256(open('/app/qbitbot/app.py','rb').read()).hexdigest())
 """
         original = ephemeral_output(

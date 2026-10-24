@@ -1,5 +1,28 @@
 # Project Progress
 
+## 2026-10-24 — Published checkpoints; extracted clients and explicit startup
+
+- User authorized all proposed next steps. Pushed e9413e9/071c192; check, security
+  and containers workflows all passed on071c192. No release tags/NAS changes.
+- Added independently configured qBit/Jackett clients and shared SearchResults;
+  moved env loading/application wiring/polling to startup. Handler import is inert
+  and default access denies until explicit validated configuration. Existing module
+  commands, callback order/sequential control/background jobs and state preserved.
+- Six RED boundary tests became GREEN. Targeted protocols moved their mocks to
+  clients, without weakening assertions. Preserved TTL/relogin, 200/204 handling,
+  Host/auth/redirect/HTTP/body/privacy protections, hash controls and coverage data.
+- Package/source/context manifests include client code and reject private files.
+  Runtime locks unchanged and app.py remains CRLF; handler length1220→929 lines.
+- Verification:631 full tests/checks, wheel/sdist/installed resources, actual Compose
+  and context canaries, API/thread/search/add/control/restart/rollback, fresh EN/RU/
+  bot-only/history/outage/backup/restore, scoped cleanup. Runtime Trivy0 findings.
+- Real fixtures exposed old global URL test seams. Updated both client search URL
+  and matching trusted metadata origin; protections were retained. Independent
+  review found no code blockers. Secret/source checks before publication required.
+- Task authorization covers committing/pushing this verified refactor and checking
+  all3 workflows on its exact commit; Git/Actions remain publication truth. No
+  production token/poller, existing torrent/state mutation or NAS operation.
+
 ## 2026-10-24 — Committed phase1 and verified installable src package
 
 - User requested the phase1 checkpoint and packaging next. Committed reviewed

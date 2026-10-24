@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+from dataclasses import replace
 import importlib
 import json
 import os
@@ -16,9 +17,13 @@ from unittest.mock import AsyncMock
 from urllib.parse import parse_qs, urlsplit
 
 import requests
+from qbitbot.startup import load_runtime, configure_handlers
 
 os.environ.update(json.loads(Path("/tmp/verification-config.json").read_text()))
 bot = importlib.import_module("qbitbot.app")
+
+settings, values = load_runtime()
+configure_handlers(settings, env=values, handlers=bot)
 
 
 def passed(name):
@@ -491,9 +496,10 @@ def main():
                 return self
 
         async def partial_search_retry():
-            original_url = bot.JACKETT_TORZNAB_URL
-            bot.JACKETT_TORZNAB_URL = (
-                "http://fixtures:8765/api/v2.0/indexers/all/results/torznab/api"
+            original_config = bot._JACKETT_CLIENT.config
+            bot._JACKETT_CLIENT.config = replace(
+                original_config,
+                url="http://fixtures:8765/api/v2.0/indexers/all/results/torznab/api",
             )
             before = {row["hash"] for row in bot.qbit_torrents_info_sync(limit=None)}
             try:
@@ -516,7 +522,7 @@ def main():
                 assert partial.context.user_data["search"]["message"] != partial.message_id
                 assert {row["hash"] for row in bot.qbit_torrents_info_sync(limit=None)} == before
             finally:
-                bot.JACKETT_TORZNAB_URL = original_url
+                bot._JACKETT_CLIENT.config = original_config
 
         asyncio.run(partial_search_retry())
         passed(

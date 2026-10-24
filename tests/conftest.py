@@ -25,7 +25,7 @@ def no_network(monkeypatch):
 
 @pytest.fixture
 def bot(monkeypatch, tmp_path, no_network):
-    # The module loads bot.env at import time. Never import from the project cwd.
+    # Configuration is injected explicitly; never load a personal environment file.
     monkeypatch.chdir(tmp_path)
     import os
 
@@ -53,4 +53,8 @@ def bot(monkeypatch, tmp_path, no_network):
     spec = importlib.util.spec_from_file_location("bot_under_test", SOURCE)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    from qbitbot.settings import read_settings
+    from qbitbot.startup import configure_handlers
+
+    configure_handlers(read_settings(os.environ), env=os.environ, handlers=module)
     return module

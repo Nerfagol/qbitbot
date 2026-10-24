@@ -19,8 +19,14 @@ src/**
 !src/qbitbot/
 src/qbitbot/**
 !src/qbitbot/*.py
+!src/qbitbot/clients/
+src/qbitbot/clients/**
+!src/qbitbot/clients/*.py
 !src/qbitbot/cli/
 src/qbitbot/cli/**
+!src/qbitbot/clients/
+src/qbitbot/clients/**
+!src/qbitbot/clients/*.py
 !src/qbitbot/cli/*.py
 !src/qbitbot/locales/
 src/qbitbot/locales/**

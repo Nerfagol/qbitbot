@@ -105,8 +105,7 @@ configuration templates in config/ and reviewed locks in requirements/.
 ## Structural review
 
 The2026-10-24 report in docs/archive/reviews/structure-2026-10-24.md led to the
-owner-approved deployment/documentation consolidation. The package/src migration is applied locally; client extraction remains a
-separate future phase. Preserve Compose project/volume
+owner-approved deployment/documentation consolidation. The package/src and service-client/startup migrations are implemented. Preserve Compose project/volume
 identity, root-relative inputs, restricted build contexts and rollback fixtures.
 
 ## Applied deployment/documentation layout
@@ -118,8 +117,8 @@ Use repository-root build contexts and `--project-directory .` for standalone
 bot-only Compose; preserve checkout or explicit project name and existing volumes.
 All3 migrated Compose configurations were compared against old resolved settings;
 only intended Dockerfile path differences remain. See deploy/README.md for upgrades.
-Runtime source now lives under src/qbitbot with wheel installation; client
-extraction is not applied. The8-root count above describes phase1; packaging
+Runtime source lives under src/qbitbot with wheel installation and separate
+service clients/explicit startup. The8-root count above describes phase1; packaging
 retires VERSION, leaving7 visible root files.
 
 Dockerignore parent exceptions can admit descendants: re-exclude children before
@@ -129,7 +128,8 @@ filtering; integration archives must retain their explicit input allowlist.
 
 ## Installed package migration (local, 2026-10-24)
 
-Phase1 is committed as e9413e9; no push in this task. Packaging remains local.
+Phase1 e9413e9 and packaging071c192 are published; all3 workflows passed
+on071c192.
 pyproject.toml is the single version source (still0.3.0) and declares the existing
 exact direct requirements/Python3.12 series. src/qbitbot preserves runtime bytes
 apart from the inert installed __version__ export. VERSION was removed.
@@ -139,4 +139,19 @@ Development requires make install-dev; existing python -m module commands remain
 Do not reintroduce checkout PYTHONPATH; historical rollback has explicit exceptions.
 625 offline/artifact checks, Compose/context, real API/restart/rollback and fresh
 EN/RU/bot-only/backup/recovery passed. New runtime Trivy and updated dev/build pip-audit
-report zero known findings. Client extraction remains a separate future task.
+report zero known findings. Service clients/startup are now separately implemented.
+
+## Service clients and startup
+
+clients/qbittorrent.py owns narrow secret-safe config, authentication/session cache,
+info/control/add protocols; clients/jackett.py owns bounded trusted-origin search/
+parsing. search_results.py owns shared coverage data, reexported from search_ui.
+app.py retains handlers/feature I/O boundaries and no longer reads configuration at
+import. startup.load_runtime/configure_handlers/build_application explicitly load
+and wire settings/clients/hooks; __main__ owns polling through startup.main.
+Preserve one configured handler module per poller/process; no hot reconfiguration.
+Input env is copied, injected values retain precedence, and unconfigured access
+is denied. Keep client and metadata-origin settings aligned in synthetic fixtures.
+631 checks, actual API/thread/controls/restart/rollback and fresh EN/RU/history/
+bot-only/backup/recovery pass; runtime scan0, no changed dependency pins. No NAS or
+production poller was touched. Publication status is tracked by Git/GitHub Actions.

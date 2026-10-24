@@ -4,16 +4,16 @@ import time
 import asyncio
 import hashlib
 import requests
-import xml.etree.ElementTree as ET
 import base64
 import binascii
 import re
 import io
 import hmac
 import json
-from qbitbot.http_safety import MAX_SEARCH_BYTES, open_response, read_limited, redirect_destination
+from qbitbot.http_safety import open_response, read_limited, redirect_destination
 from types import SimpleNamespace
 from pathlib import Path
+from qbitbot.clients.jackett import torznab_items, jackett_response
 from qbitbot.i18n import tr, normalize_language
 from qbitbot.preferences import LanguageService, PreferenceStore
 from qbitbot.language_ui import LanguagePicker, command_list, set_private_commands
@@ -27,54 +27,16 @@ from typing import List, Dict, Optional, Tuple, Set
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, BotCommand, MenuButtonCommands
 from telegram.error import TelegramError
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-    filters,
-)
+from telegram.ext import ContextTypes
 
-# Environment files are optional; injected environment values take precedence.
-from qbitbot.settings import load_env, read_settings
-
-load_env()
-_SETTINGS = read_settings(os.environ)
-BOT_TOKEN = _SETTINGS.bot_token
-ALLOWED_USERS = set(_SETTINGS.allowed_users)
-JACKETT_TORZNAB_URL = _SETTINGS.jackett_url
-JACKETT_API_KEY = _SETTINGS.jackett_key
-JACKETT_SEARCH_TIMEOUT_SEC = _SETTINGS.search_timeout
-QBIT_URL = _SETTINGS.qbit_url
-QBIT_HOST_HEADER = _SETTINGS.qbit_host_header
-QBIT_USER = _SETTINGS.qbit_user
-QBIT_PASS = _SETTINGS.qbit_pass
-QBIT_SAVEPATH = _SETTINGS.savepath
-QBIT_CATEGORY = _SETTINGS.category
-
+# Startup explicitly injects validated settings and service clients.
+_SETTINGS = None
+ALLOWED_USERS = frozenset()
+_QBIT_CLIENT = None
+_JACKETT_CLIENT = None
 RESULTS_LIMIT = 50
 SEARCH_TTL_SEC = 15 * 60
-
-# qBittorrent polling
-WATCH_DB_PATH = str(_SETTINGS.watch_db_path)
-WATCH_INTERVAL_SEC = _SETTINGS.watch_interval
-WATCH_MISSING_GRACE_SEC = _SETTINGS.missing_grace
-WATCH_PROGRESS_STEP = 10  # notify every N%
-
-DOWNLOAD_HEALTH = DownloadHealth(max_gap=max(90, 2 * WATCH_INTERVAL_SEC))
-
-# diagnostics
-DIAG_REDACT = os.environ.get("DIAG_REDACT", "1").lower() not in ("0","false","no")
-
-# HTTP .torrent fallback download
-TORRENT_FETCH_TIMEOUT_SEC = _SETTINGS.torrent_timeout
-TORRENT_FETCH_MAX_BYTES = _SETTINGS.torrent_max_bytes
-TORRENT_FETCH_USER_AGENT = os.environ.get(
-    "TORRENT_FETCH_USER_AGENT",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-)
+WATCH_PROGRESS_STEP = 10
 
 # ----------------- helpers -----------------
 def allowed(update: Update) -> bool:
@@ -122,129 +84,35 @@ def format_download_progress(info, *, live=False, stalled=False, language="en"):
     ), live=live, stalled=stalled, language=language)
 
 
-# ---- qBittorrent API (sync, called via asyncio.to_thread) ----
-_QBIT_SESSION: Optional[requests.Session] = None
-_QBIT_SESSION_TS: float = 0.0
-_QBIT_SESSION_TTL_SEC = 30 * 60  # 30 minutes
+# ---- Service boundaries (sync helpers run through asyncio.to_thread) ----
+def _qbit_client():
+    if _QBIT_CLIENT is None:
+        raise RuntimeError("Application is not configured")
+    return _QBIT_CLIENT
 
 
 def qbit_login_session() -> requests.Session:
-    s = requests.Session()
-    s.trust_env = False
-    if QBIT_HOST_HEADER:
-        s.headers["Host"] = QBIT_HOST_HEADER
-    s.resolve_redirects = lambda *args, **kwargs: iter(())
-    r = s.post(
-        f"{QBIT_URL}/api/v2/auth/login",
-        data={"username": QBIT_USER, "password": QBIT_PASS},
-        timeout=15,
-    )
-    if not ((r.status_code == 200 and r.text.strip() == "Ok.")
-            or (r.status_code == 204 and not r.text.strip())):
-        raise RuntimeError(f"qBittorrent login failed: {r.status_code} {r.text}")
-    return s
+    return _qbit_client().login()
 
 
 def qbit_session() -> requests.Session:
-    global _QBIT_SESSION, _QBIT_SESSION_TS
-    now = time.time()
-    if _QBIT_SESSION is None or (now - _QBIT_SESSION_TS) > _QBIT_SESSION_TTL_SEC:
-        _QBIT_SESSION = qbit_login_session()
-        _QBIT_SESSION_TS = now
-        return _QBIT_SESSION
-
-    # try a cheap call; if it fails, relogin
-    try:
-        r = _QBIT_SESSION.get(f"{QBIT_URL}/api/v2/app/version", timeout=10)
-        if r.status_code == 200:
-            return _QBIT_SESSION
-    except Exception:
-        pass
-
-    _QBIT_SESSION = qbit_login_session()
-    _QBIT_SESSION_TS = now
-    return _QBIT_SESSION
+    return _qbit_client().session()
 
 
-def qbit_torrents_info_sync(
-    *,
-    hashes: Optional[str] = None,
-    filter_: Optional[str] = None,
-    sort: str = "added_on",
-    reverse: bool = True,
-    limit: Optional[int] = 50,
-) -> List[Dict]:
-    s = qbit_session()
-    params = {
-        "sort": sort,
-        "reverse": "true" if reverse else "false",
-    }
-    if limit is not None:
-        params["limit"] = str(limit)
-    if hashes:
-        params["hashes"] = hashes
-    if filter_:
-        params["filter"] = filter_
-    r = s.get(f"{QBIT_URL}/api/v2/torrents/info", params=params, timeout=20)
-    r.raise_for_status()
-    return r.json()
+def qbit_torrents_info_sync(*, hashes=None, filter_=None, sort="added_on", reverse=True, limit=50):
+    return _qbit_client().info(hashes=hashes, filter_=filter_, sort=sort, reverse=reverse, limit=limit)
 
 
 def qbit_control_sync(action: str, t_hash: str) -> None:
-    # Deliberately prohibit qBittorrent's bulk/all syntax at this boundary.
-    endpoints = {"pause": "stop", "resume": "start", "keep": "delete", "delete": "delete"}
-    if action not in endpoints or not re.fullmatch(r"(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})", t_hash):
-        raise ValueError("Invalid torrent control")
-    payload = {"hashes": t_hash}
-    if action in ("keep", "delete"):
-        payload["deleteFiles"] = "true" if action == "delete" else "false"
-    response = qbit_session().post(
-        f"{QBIT_URL}/api/v2/torrents/{endpoints[action]}", data=payload, timeout=20,
-    )
-    response.raise_for_status()
+    return _qbit_client().control(action, t_hash)
 
 
 def qbit_add_sync(url: str) -> str:
-    s = qbit_session()
-    payload = {"urls": url}
-    if QBIT_SAVEPATH:
-        payload["savepath"] = QBIT_SAVEPATH
-    if QBIT_CATEGORY:
-        payload["category"] = QBIT_CATEGORY
-
-    r = s.post(f"{QBIT_URL}/api/v2/torrents/add", data=payload, timeout=25)
-
-    txt = (r.text or "").strip()
-    if r.status_code not in (200, 204):
-        raise RuntimeError(f"HTTP {r.status_code}: {txt}")
-    # ВАЖНО: qBittorrent часто возвращает 200, но в body пишет Fails.
-    if txt.lower().startswith("fail"):
-        raise RuntimeError(f"qBittorrent add failed: {txt}")
-    return txt
+    return _qbit_client().add_url(url)
 
 
 def qbit_add_file_sync(torrent_bytes: bytes, filename: str = "download.torrent") -> str:
-    if not torrent_bytes:
-        raise RuntimeError("torrent file is empty")
-
-    s = qbit_session()
-    payload: Dict[str, str] = {}
-    if QBIT_SAVEPATH:
-        payload["savepath"] = QBIT_SAVEPATH
-    if QBIT_CATEGORY:
-        payload["category"] = QBIT_CATEGORY
-
-    files = {
-        "torrents": (filename, torrent_bytes, "application/x-bittorrent"),
-    }
-    r = s.post(f"{QBIT_URL}/api/v2/torrents/add", data=payload, files=files, timeout=30)
-
-    txt = (r.text or "").strip()
-    if r.status_code not in (200, 204):
-        raise RuntimeError(f"HTTP {r.status_code}: {txt}")
-    if txt.lower().startswith("fail"):
-        raise RuntimeError(f"qBittorrent add(file) failed: {txt}")
-    return txt
+    return _qbit_client().add_file(torrent_bytes, filename)
 
 
 def _filename_from_content_disposition(cd: str) -> Optional[str]:
@@ -690,112 +558,11 @@ async def watch_torrent_until_done(
         await asyncio.sleep(WATCH_INTERVAL_SEC)
 
 
-# ---- Jackett / Torznab helpers ----
-def torznab_items(xml_text: str) -> List[Dict]:
-    """
-    Robust Torznab parser:
-    - supports namespaced or non-namespaced torznab:attr
-    - prefers magneturl attr; falls back to <link>
-    """
-    root = ET.fromstring(xml_text)
-    if root.tag != "rss" or root.find("channel") is None or any(
-        element.tag.rsplit("}", 1)[-1] == "error" for element in root.iter()
-    ):
-        raise ValueError("Search response unavailable")
-    out: List[Dict] = []
-
-    # channel/item is standard for torznab
-    for item in root.findall("./channel/item"):
-        title = (item.findtext("title") or "").strip() or "Untitled"
-        link = (item.findtext("link") or "").strip() or None
-
-        try:
-            size = int(item.findtext("size") or "")
-        except ValueError:
-            size = None
-        seeders = None
-        magnet = None
-
-        # Match any namespace: {anything}attr
-        for attr in item.findall(".//{*}attr"):
-            name = attr.attrib.get("name")
-            val = attr.attrib.get("value")
-            if not name or val is None:
-                continue
-            if name == "size":
-                try:
-                    size = int(val)
-                except Exception:
-                    pass
-            elif name == "seeders":
-                try:
-                    seeders = int(val)
-                except Exception:
-                    pass
-            elif name == "magneturl":
-                magnet = val
-
-        url = magnet or link
-        if not url:
-            continue
-
-        out.append(
-            {
-                "title": title,
-                "url": url,
-                "size": size,
-                "seeders": seeders,
-            }
-        )
-        source = (item.findtext("jackettindexer") or "").strip()
-        if source:
-            out[-1]["source"] = source
-
-    return out
-
-
-def jackett_response(payload):
-    if not isinstance(payload, dict) or not isinstance(payload.get("Results"), list):
-        raise ValueError("Search response unavailable")
-    items = []
-    for row in payload["Results"]:
-        if not isinstance(row, dict):
-            raise ValueError("Search response unavailable")
-        url = row.get("MagnetUri") or row.get("Link")
-        if not isinstance(url, str) or not url.startswith(("magnet:?", "http://", "https://")):
-            continue
-        items.append({
-            "title": str(row.get("Title") or "Untitled"), "url": url,
-            "size": row.get("Size") if type(row.get("Size")) is int else None,
-            "seeders": row.get("Seeders") if type(row.get("Seeders")) is int else None,
-            "source": str(row.get("Tracker") or ""),
-        })
-    if payload["Results"] and not items:
-        raise ValueError("Search response unavailable")
-    indexers = payload.get("Indexers")
-    statuses = [row.get("Status") if isinstance(row, dict) else None for row in indexers] if isinstance(indexers, list) else None
-    return SearchResults(items, statuses=statuses)
-
-
+# ---- Search health is owned by the handler/application lifecycle. ----
 def _jackett_search_sync(query: str, limit: int = RESULTS_LIMIT) -> List[Dict]:
-    parts = urlsplit(JACKETT_TORZNAB_URL)
-    # Jackett's manual-search response includes per-query indexer statuses.
-    # Custom Torznab URLs retain their existing query semantics, with unknown coverage.
-    if not parts.query and re.fullmatch(r".*/api/v2\.0/indexers/[^/]+/results/torznab/api/?", parts.path):
-        path = parts.path.rstrip("/")[:-len("/torznab/api")]
-        url = urlunsplit(parts._replace(path=path, fragment=""))
-        with open_response("GET", url, trusted_url=JACKETT_TORZNAB_URL,
-                           allow_external_redirects=False,
-                           params={"apikey": JACKETT_API_KEY, "query": query},
-                           timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC)) as r:
-            r.raise_for_status()
-            return jackett_response(json.loads(read_limited(r, MAX_SEARCH_BYTES)))
-    params = {"apikey": JACKETT_API_KEY, "q": query, "limit": str(limit)}
-    with open_response("GET", JACKETT_TORZNAB_URL, trusted_url=JACKETT_TORZNAB_URL,
-                       allow_external_redirects=False, params=params,
-                       timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC)) as r:
-        r.raise_for_status()
-        return SearchResults(torznab_items(read_limited(r, MAX_SEARCH_BYTES)))
+    if _JACKETT_CLIENT is None:
+        raise RuntimeError("Application is not configured")
+    return _JACKETT_CLIENT.search(query, limit)
 
 
 LAST_SEARCH_HEALTH = None
@@ -1160,61 +927,3 @@ async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
         print("ERROR:", type(context.error).__name__)
     except Exception:
         pass
-
-
-def main():
-    if not BOT_TOKEN:
-        raise RuntimeError("BOT_TOKEN is empty (set it in bot.env)")
-    if not (JACKETT_TORZNAB_URL and JACKETT_API_KEY):
-        raise RuntimeError("Jackett config missing (JACKETT_TORZNAB_URL/JACKETT_API_KEY)")
-    if not (QBIT_URL and QBIT_USER and QBIT_PASS):
-        raise RuntimeError("qBittorrent config missing (QBIT_URL/QBIT_USER/QBIT_PASS)")
-    if not ALLOWED_USERS:
-        raise RuntimeError("ALLOWED_USERS is empty (add your Telegram ID)")
-
-    builder = ApplicationBuilder().token(BOT_TOKEN)
-
-    # On some Windows setups, the default HTTPXRequest (httpx/anyio) init may become very slow.
-    # If you hit startup hangs, use the aiohttp backend from ptbcontrib:
-    #   pip install aiohttp
-    #   pip install git+https://github.com/python-telegram-bot/ptbcontrib.git@main
-    # You can disable this behavior via PTB_USE_AIOHTTP=0.
-    use_aiohttp = os.getenv("PTB_USE_AIOHTTP", "1").lower() not in ("0", "false", "no")
-    if use_aiohttp:
-        try:
-            from ptbcontrib.aiohttp_request import AiohttpRequest
-            req = AiohttpRequest()
-            builder = builder.request(req).get_updates_request(req)
-            print("✅ Using AiohttpRequest backend (ptbcontrib).")
-        except Exception as e:
-            raise RuntimeError(
-                "PTB_USE_AIOHTTP=1 requires ptbcontrib.aiohttp_request.\n"
-                "Install the optional dependencies:\n"
-                "  pip install aiohttp\n"
-                "  pip install git+https://github.com/python-telegram-bot/ptbcontrib.git@main\n"
-                f"Error type: {type(e).__name__}"
-            )
-
-    builder = builder.post_init(application_start).post_stop(monitoring_stop).post_shutdown(monitoring_close)
-    app = builder.build()
-    app.add_handler(CommandHandler("language", cmd_language))
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("search", cmd_search))
-    app.add_handler(CommandHandler("status", cmd_status))
-    app.add_handler(CommandHandler("health", cmd_health))
-    app.add_handler(CommandHandler("downloads", cmd_downloads))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, dispatch_search))
-    app.add_handler(CallbackQueryHandler(on_language, pattern=r"^lang:"))
-    app.add_handler(CallbackQueryHandler(on_navigation, pattern=r"^nav:"))
-    app.add_handler(CallbackQueryHandler(on_downloads, pattern=r"^dl:"))
-    app.add_handler(CallbackQueryHandler(on_health, pattern=r"^health:"))
-    app.add_handler(CallbackQueryHandler(on_torrent_link, pattern=r"^go:"))
-    app.add_handler(CallbackQueryHandler(dispatch_pick))
-    app.add_error_handler(on_error)
-
-    app.run_polling()
-
-
-if __name__ == "__main__":
-    main()

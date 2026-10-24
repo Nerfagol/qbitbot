@@ -3,6 +3,8 @@
 import asyncio
 import json
 from contextlib import nullcontext
+from dataclasses import replace
+from qbitbot.clients import jackett
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -75,9 +77,12 @@ def test_invalid_search_payload_is_not_an_empty_success(bot, data):
 
 def test_search_uses_same_origin_json_endpoint_with_query_and_timeout(bot, monkeypatch):
     monkeypatch.setattr(
-        bot,
-        "JACKETT_TORZNAB_URL",
-        "http://jackett.invalid/base/api/v2.0/indexers/all/results/torznab/api",
+        bot._JACKETT_CLIENT,
+        "config",
+        replace(
+            bot._JACKETT_CLIENT.config,
+            url="http://jackett.invalid/base/api/v2.0/indexers/all/results/torznab/api",
+        ),
     )
     calls = []
 
@@ -91,7 +96,7 @@ def test_search_uses_same_origin_json_endpoint_with_query_and_timeout(bot, monke
             )
         )
 
-    monkeypatch.setattr(bot, "open_response", get)
+    monkeypatch.setattr(jackett, "open_response", get)
     result = bot.jackett_search_sync("ubuntu", 50)
     assert result.availability == "partial"
     assert calls[0][0] == "http://jackett.invalid/base/api/v2.0/indexers/all/results"

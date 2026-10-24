@@ -243,7 +243,7 @@ def test_control_posts_exact_hash_and_file_policy(bot, monkeypatch, action, endp
         calls.append((url, kwargs))
         return SimpleNamespace(raise_for_status=lambda: None)
 
-    monkeypatch.setattr(bot, "qbit_session", lambda: SimpleNamespace(post=post))
+    monkeypatch.setattr(bot._QBIT_CLIENT, "session", lambda: SimpleNamespace(post=post))
     bot.qbit_control_sync(action, "a" * 40)
     assert calls == [
         (
@@ -255,7 +255,7 @@ def test_control_posts_exact_hash_and_file_policy(bot, monkeypatch, action, endp
 
 @pytest.mark.parametrize("t_hash", ["all", "", "a" * 40 + "|" + "b" * 40, "bad"])
 def test_control_rejects_bulk_or_invalid_targets(bot, monkeypatch, t_hash):
-    monkeypatch.setattr(bot, "qbit_session", lambda: pytest.fail("No request allowed"))
+    monkeypatch.setattr(bot._QBIT_CLIENT, "session", lambda: pytest.fail("No request allowed"))
     with pytest.raises(ValueError):
         bot.qbit_control_sync("delete", t_hash)
 

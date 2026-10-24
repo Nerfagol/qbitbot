@@ -12,6 +12,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 
 from qbitbot.i18n import tr
+from qbitbot.search_results import SearchResults as SearchResults
 
 PAGE_SIZE = 5
 ENOUGH_SOURCES = 25
@@ -28,25 +29,6 @@ def size_filters(language):
         10: tr("search.filter.max10", language),
         20: tr("search.filter.max20", language),
     }
-
-
-class SearchResults(list):
-    """List-compatible results with safe per-query coverage counts, never raw errors."""
-
-    def __init__(self, items=(), *, statuses=None):
-        super().__init__(items)
-        self.total = len(statuses) if statuses is not None else 0
-        self.responded = sum(type(s) is int and s == 2 for s in statuses or [])
-        failed = sum(type(s) is int and s == 1 for s in statuses or [])
-        self.availability = (
-            "complete"
-            if self.total and self.responded == self.total
-            else "partial"
-            if self.responded
-            else "unavailable"
-            if self.total and failed == self.total
-            else "unknown"
-        )
 
 
 def search_notice(results, *, language="en"):

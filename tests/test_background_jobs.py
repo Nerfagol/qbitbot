@@ -137,7 +137,9 @@ def test_registered_text_handler_returns_before_search_finishes(bot, monkeypatch
 
     captured = []
     monkeypatch.setattr(Application, "run_polling", lambda app: captured.append(app))
-    bot.main()
+    from qbitbot.startup import build_application
+
+    build_application(bot._SETTINGS, env={"PTB_USE_AIOHTTP": "0"}, handlers=bot).run_polling()
     handler = next(
         h for group in captured[0].handlers.values() for h in group if isinstance(h, MessageHandler)
     )

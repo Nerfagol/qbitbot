@@ -2,7 +2,7 @@
 
 
 def main():
-    from qbitbot.app import main as run
+    from qbitbot.startup import main as run
 
     run()
 

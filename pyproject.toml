@@ -26,7 +26,7 @@ include-package-data = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["qbitbot", "qbitbot.cli"]
+include = ["qbitbot", "qbitbot.cli", "qbitbot.clients"]
 namespaces = false
 
 [tool.setuptools.package-data]

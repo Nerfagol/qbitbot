@@ -1,5 +1,6 @@
 """qBittorrent 5.x authentication and mutation response compatibility."""
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -33,7 +34,7 @@ def test_login_rejects_unsuccessful_or_unexpected_responses(bot, monkeypatch, st
 )
 def test_add_accepts_legacy_and_no_content_success(bot, monkeypatch, status, text, method, args):
     client = SimpleNamespace(post=lambda *a, **k: SimpleNamespace(status_code=status, text=text))
-    monkeypatch.setattr(bot, "qbit_session", lambda: client)
+    monkeypatch.setattr(bot._QBIT_CLIENT, "session", lambda: client)
     assert getattr(bot, method)(*args) == text
 
 
@@ -56,7 +57,11 @@ def test_configured_host_header_is_used_without_changing_api_destination(bot, mo
         post=lambda url, **kw: calls.append(url) or SimpleNamespace(status_code=204, text=""),
     )
     monkeypatch.setattr(bot.requests, "Session", lambda: client)
-    monkeypatch.setattr(bot, "QBIT_HOST_HEADER", "nas.example:13800")
+    monkeypatch.setattr(
+        bot._QBIT_CLIENT,
+        "config",
+        replace(bot._QBIT_CLIENT.config, host_header="nas.example:13800"),
+    )
     assert bot.qbit_login_session() is client
     assert client.headers["Host"] == "nas.example:13800"
     assert calls == [bot.QBIT_URL + "/api/v2/auth/login"]

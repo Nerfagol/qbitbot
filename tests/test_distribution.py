@@ -72,6 +72,7 @@ def distribution(tmp_path_factory):
         "private.sqlite3",
         "docs/development/agent/private.txt",
         "src/qbitbot/private.env",
+        "src/qbitbot/clients/private.env",
         "src/qbitbot/locales/private.env",
     ):
         target = project / name
@@ -108,6 +109,9 @@ def test_wheel_has_metadata_locales_and_no_private_or_development_files(distribu
         assert "qbitbot/locales/en.json" in names
         assert "qbitbot/locales/ru.json" in names
         assert "qbitbot/cli/state_permissions.py" in names
+        assert "qbitbot/clients/qbittorrent.py" in names
+        assert "qbitbot/clients/jackett.py" in names
+        assert "qbitbot/startup.py" in names
         assert not any(
             "private" in n or n.endswith(".env") or n.startswith(("tests/", "integration/", "src/"))
             for n in names
