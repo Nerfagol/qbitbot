@@ -13,6 +13,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from qbitbot.i18n import tr
+from qbitbot.http_safety import MAX_CAPABILITIES_BYTES, open_response, read_limited
 
 from qbitbot.settings import Settings, SettingsError, load_env, read_settings
 
@@ -34,6 +35,10 @@ class UnsupportedVersionError(Exception):
 
 def _qbit(settings):
     client = requests.Session()
+    client.trust_env = False
+    if settings.qbit_host_header:
+        client.headers["Host"] = settings.qbit_host_header
+    client.resolve_redirects = lambda *args, **kwargs: iter(())
     try:
         response = client.post(
             settings.qbit_url + "/api/v2/auth/login",
@@ -41,7 +46,10 @@ def _qbit(settings):
             timeout=(5, 10),
         )
         response.raise_for_status()
-        if response.text.strip() != "Ok.":
+        if not (
+            (response.status_code == 200 and response.text.strip() == "Ok.")
+            or (response.status_code == 204 and not response.text.strip())
+        ):
             raise AuthenticationError
         response = client.get(settings.qbit_url + "/api/v2/app/version", timeout=(5, 10))
         response.raise_for_status()
@@ -56,13 +64,16 @@ def _qbit(settings):
 def _jackett(settings):
     parts = urlsplit(settings.jackett_url)
     query = [(k, v) for k, v in parse_qsl(parts.query) if k.lower() not in ("apikey", "q", "t")]
-    response = requests.get(
+    with open_response(
+        "GET",
         urlunsplit(parts._replace(query=urlencode(query), fragment="")),
+        trusted_url=settings.jackett_url,
+        allow_external_redirects=False,
         params={"apikey": settings.jackett_key, "t": "caps"},
         timeout=(5, 10),
-    )
-    response.raise_for_status()
-    root = ET.fromstring(response.text)
+    ) as response:
+        response.raise_for_status()
+        root = ET.fromstring(read_limited(response, MAX_CAPABILITIES_BYTES))
     if root.tag == "error" and root.get("code") in ("100", "101", "102"):
         raise AuthenticationError
     if root.tag != "caps" or root.find("searching") is None:

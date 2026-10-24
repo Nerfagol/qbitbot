@@ -12,21 +12,21 @@ The version-specific upstream metadata and project links are available from PyPI
 
 | Distribution | Version | License | Source/metadata |
 | --- | --- | --- | --- |
-| anyio | 4.12.1 | MIT | [PyPI](https://pypi.org/project/anyio/4.12.1/) |
-| certifi | 2026.1.4 | MPL-2.0 | [PyPI](https://pypi.org/project/certifi/2026.1.4/) |
+| anyio | 4.14.2 | MIT | [PyPI](https://pypi.org/project/anyio/4.14.2/) |
+| certifi | 2026.10.19 | MPL-2.0 | [PyPI](https://pypi.org/project/certifi/2026.10.19/) |
 | charset-normalizer | 3.4.4 | MIT | [PyPI](https://pypi.org/project/charset-normalizer/3.4.4/) |
 | h11 | 0.16.0 | MIT | [PyPI](https://pypi.org/project/h11/0.16.0/) |
 | httpcore | 1.0.9 | BSD-3-Clause | [PyPI](https://pypi.org/project/httpcore/1.0.9/) |
 | httpx | 0.28.1 | BSD-3-Clause | [PyPI](https://pypi.org/project/httpx/0.28.1/) |
-| idna | 3.11 | BSD-3-Clause | [PyPI](https://pypi.org/project/idna/3.11/) |
+| idna | 3.15 | BSD-3-Clause | [PyPI](https://pypi.org/project/idna/3.15/) |
 | python-telegram-bot | 21.11.1 | LGPL-3.0-only | [PyPI](https://pypi.org/project/python-telegram-bot/21.11.1/) |
-| requests | 2.32.5 | Apache-2.0 | [PyPI](https://pypi.org/project/requests/2.32.5/) |
+| requests | 2.33.0 | Apache-2.0 | [PyPI](https://pypi.org/project/requests/2.33.0/) |
 | typing_extensions | 4.15.0 | PSF-2.0 | [PyPI](https://pypi.org/project/typing-extensions/4.15.0/) |
-| urllib3 | 2.6.3 | MIT | [PyPI](https://pypi.org/project/urllib3/2.6.3/) |
+| urllib3 | 2.8.0 | MIT | [PyPI](https://pypi.org/project/urllib3/2.8.0/) |
 | iniconfig | 2.3.0 | MIT | [PyPI](https://pypi.org/project/iniconfig/2.3.0/) |
 | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause | [PyPI](https://pypi.org/project/packaging/26.3/) |
 | pluggy | 1.6.0 | MIT | [PyPI](https://pypi.org/project/pluggy/1.6.0/) |
-| pytest | 8.3.5 | MIT | [PyPI](https://pypi.org/project/pytest/8.3.5/) |
+| pytest | 9.0.3 | MIT | [PyPI](https://pypi.org/project/pytest/9.0.3/) |
 | PyYAML | 6.0.2 | MIT | [PyPI](https://pypi.org/project/PyYAML/6.0.2/) |
 | ruff | 0.11.13 | MIT | [PyPI](https://pypi.org/project/ruff/0.11.13/) |
 
@@ -49,3 +49,7 @@ GitHub `actions/checkout` and `actions/setup-python` use MIT; their exact source
 commits are pinned in the workflows. [Gitleaks](https://github.com/gitleaks/gitleaks)
 uses MIT and is pinned with an archive checksum in the release checklist. Generated
 preview images contain only synthetic fixture text and no third-party screenshots.
+
+- Optional [FlareSolverr3.5.2](https://github.com/FlareSolverr/FlareSolverr/tree/v3.5.2) uses MIT;
+  its notice is retained in `docker/flaresolverr/LICENSE` and the derived image.
+  Browser and OS packages retain their upstream licenses.

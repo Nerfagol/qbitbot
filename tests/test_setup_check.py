@@ -1,4 +1,5 @@
 import tempfile
+from contextlib import nullcontext
 
 import requests
 
@@ -19,6 +20,11 @@ def rig(monkeypatch, tmp_path, *, password_ok=True, outage=False):
         def raise_for_status(self):
             pass
 
+        headers = {}
+
+        def iter_content(self, **kw):
+            yield self.text.encode()
+
     class Client:
         def post(self, url, **kw):
             calls.append(("POST", url, kw))
@@ -33,12 +39,12 @@ def rig(monkeypatch, tmp_path, *, password_ok=True, outage=False):
         def close(self):
             pass
 
-    def get(url, **kw):
+    def get(method, url, **kw):
         calls.append(("GET", url, kw))
-        return Response("<caps><searching/></caps>")
+        return nullcontext(Response("<caps><searching/></caps>"))
 
     monkeypatch.setattr(setup_check.requests, "Session", Client)
-    monkeypatch.setattr(setup_check.requests, "get", get)
+    monkeypatch.setattr(setup_check, "open_response", get)
     sleeps = []
     monkeypatch.setattr(setup_check.time, "sleep", sleeps.append)
     cfg = read_settings(
@@ -107,3 +113,27 @@ def test_unsupported_qbittorrent_version_is_not_ready(monkeypatch, tmp_path):
     result = setup_check.run_checks(cfg)[0]
     assert not result.ok and result.message_key == "setup.version"
     assert not sleeps
+
+
+def test_probe_accepts_no_content_login_success(monkeypatch, tmp_path):
+    cfg, calls, sleeps = rig(monkeypatch, tmp_path)
+    client = setup_check.requests.Session()
+    client.post = lambda *a, **k: type(
+        "Response", (), {"status_code": 204, "text": "", "raise_for_status": lambda self: None}
+    )()
+    monkeypatch.setattr(setup_check.requests, "Session", lambda: client)
+    result = setup_check.run_checks(cfg)[0]
+    assert result.ok
+    assert not sleeps
+
+
+def test_probe_preserves_configured_host_header(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    cfg, _, _ = rig(monkeypatch, tmp_path)
+    cfg = replace(cfg, qbit_host_header="nas.example:13800")
+    client = setup_check.requests.Session()
+    client.headers = {}
+    monkeypatch.setattr(setup_check.requests, "Session", lambda: client)
+    assert setup_check.run_checks(cfg)[0].ok
+    assert client.headers["Host"] == "nas.example:13800"

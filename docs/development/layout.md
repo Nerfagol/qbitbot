@@ -31,7 +31,9 @@ docs/                      Guides, assets and historical plans
 - Keep packaged resources next to runtime code and resolve them relative to the
   module. Runtime state and secrets belong outside the source package.
 - Reserve the root for Compose/build/tool configuration, dependency locks, examples,
-  license/version information, README and contributor/handoff files.
+  license/version information, README and contributor instructions. Keep durable
+  agent notes in `docs/development/memory.md` and handoffs in
+  `docs/development/progress.md`; configure pytest alongside Ruff in `pyproject.toml`.
 
 ## Running from source
 

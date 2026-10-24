@@ -1,6 +1,14 @@
 services:
   bot:
     build: .
+    user: "1000:1000"
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 128
     env_file: [bot.env]
     environment:
       WATCH_DB_PATH: /state/watches.sqlite3

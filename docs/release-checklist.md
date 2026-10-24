@@ -41,7 +41,7 @@ not a privacy guarantee. Resolve every finding before upload.
 ## CI and publication
 
 Workflow permissions are `contents: read`; actions are full-commit pinned and Python
-is 3.12.12. Checkout disables persisted credentials. Container CI fetches complete
+is 3.12.15. Checkout disables persisted credentials. Container CI fetches complete
 public history for rollback tests. No logs, environments or workspaces are uploaded
 as artifacts. See upstream [checkout](https://github.com/actions/checkout) and
 [setup-python](https://github.com/actions/setup-python) documentation.

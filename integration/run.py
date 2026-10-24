@@ -17,7 +17,7 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-QBIT_IMAGE = "lscr.io/linuxserver/qbittorrent@sha256:7034f73a3c6fa4ea40fd67df462939d1665d765231b572523921c98c2db5362e"
+QBIT_DOCKERFILE = "docker/qbittorrent.Dockerfile"
 
 
 def archive(files):
@@ -26,7 +26,8 @@ def archive(files):
         for name, data in files.items():
             header = tarfile.TarInfo(name)
             header.size = len(data)
-            header.mode = 0o600
+            # Public source and synthetic probes must be readable by UID 1000.
+            header.mode = 0o644
             tar.addfile(header, io.BytesIO(data))
     return stream.getvalue()
 
@@ -129,6 +130,7 @@ def main():
     prefix = "qbitbot-verify-" + uuid.uuid4().hex[:10]
     image = prefix + ":baseline"
     candidate = prefix + ":candidate"
+    qbit_image = prefix + ":qbittorrent"
     network = prefix + "-net"
     containers, volumes, images = [], [], []
     network_created = False
@@ -281,6 +283,94 @@ def main():
         smoke = ephemeral("--network", "none", image, check=False)
         assert smoke.returncode != 0 and b"ALLOWED_USERS:" in smoke.stderr
         passed("default entry point imports successfully and rejects missing credentials")
+        hardened = [
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=32m,mode=1777",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--memory",
+            "256m",
+            "--cpus",
+            "1",
+            "--pids-limit",
+            "128",
+        ]
+        private_state = volume("permissions")
+        verify_runtime = """import os, sqlite3, ssl
+from pathlib import Path
+assert os.getuid()==os.getgid()==1000
+assert Path('/state').stat().st_uid==1000
+with sqlite3.connect('/state/smoke.sqlite3') as conn:
+    conn.execute('CREATE TABLE smoke(n)')
+Path('/tmp/smoke').write_text('temporary')
+try:
+    Path('/app/forbidden').write_text('fail')
+except OSError:
+    pass
+else:
+    raise AssertionError('root filesystem is writable')
+status=Path('/proc/self/status').read_text()
+assert 'CapEff:\\t0000000000000000' in status and 'NoNewPrivs:\\t1' in status
+"""
+        ephemeral(*hardened, "-v", private_state + ":/state", image, "python", "-c", verify_runtime)
+        passed(
+            "nonroot musl/SSL/SQLite runtime, read-only root, tmpfs, no capabilities and no privilege escalation"
+        )
+        old_state = volume("old-permissions")
+        seed_permissions = """from pathlib import Path
+p=Path('/legacy'); p.chmod(0o700)
+(p/'watches.sqlite3').write_bytes(b'unchanged synthetic state')
+(p/'snapshot').mkdir(mode=0o700)
+(p/'snapshot'/'backup').write_bytes(b'unchanged synthetic backup')
+"""
+        ephemeral(
+            "--network",
+            "none",
+            "--user",
+            "0:0",
+            "-v",
+            old_state + ":/legacy",
+            image,
+            "python",
+            "-c",
+            seed_permissions,
+        )
+        ephemeral(
+            *hardened,
+            "--user",
+            "0:0",
+            "--cap-add",
+            "CHOWN",
+            "--cap-add",
+            "DAC_OVERRIDE",
+            "--cap-add",
+            "FOWNER",
+            "-v",
+            old_state + ":/state",
+            image,
+            "python",
+            "-m",
+            "qbitbot.cli.state_permissions",
+            "--offline",
+        )
+        check_permissions = """from pathlib import Path
+p=Path('/state')
+assert (p/'watches.sqlite3').read_bytes()==b'unchanged synthetic state'
+assert (p/'snapshot'/'backup').read_bytes()==b'unchanged synthetic backup'
+for path in [p,*p.rglob('*')]:
+    assert path.stat().st_uid==path.stat().st_gid==1000
+    assert path.stat().st_mode & 0o777 == (0o700 if path.is_dir() else 0o600)
+(p/'postmigration').write_text('writable')
+"""
+        ephemeral(*hardened, "-v", old_state + ":/state", image, "python", "-c", check_permissions)
+        passed(
+            "explicit offline ownership migration preserves existing state/backup bytes and private permissions"
+        )
         digest = ephemeral_output(
             "--network",
             "none",
@@ -291,8 +381,22 @@ def main():
         )
         assert digest == hashlib.sha256((ROOT / "qbitbot/app.py").read_bytes()).hexdigest()
         passed("built source checksum matches current local source")
-        docker("pull", QBIT_IMAGE, timeout=300)
-        summary["qbit_image"] = QBIT_IMAGE
+        create_tracked(
+            docker,
+            images,
+            qbit_image,
+            "build",
+            "--label",
+            "qbitbot.verification=" + prefix,
+            "-t",
+            qbit_image,
+            "-f",
+            QBIT_DOCKERFILE,
+            "-",
+            stdin=archive({QBIT_DOCKERFILE: (ROOT / QBIT_DOCKERFILE).read_bytes()}),
+            timeout=300,
+        )
+        summary["qbit_image"] = qbit_image
         network_created = True
         output(
             "network", "create", "--internal", "--label", "qbitbot.verification=" + prefix, network
@@ -318,7 +422,7 @@ def main():
             config + ":/config",
             "-v",
             data + ":/downloads",
-            QBIT_IMAGE,
+            qbit_image,
         )
         password = wait_password(qbit)
         time.sleep(1)
@@ -343,6 +447,9 @@ shutil.copytree('/app/qbitbot', p/'qbitbot')
 (p/'compose.yaml').write_text('services: {bot: {image: retained-baseline}}\\n')
 with tarfile.open('/backup/app.tar','w') as t: t.add('/release',arcname='app')
 Path('/backup/app.tar').chmod(0o600)
+for base in ('/release', '/backup'):
+    for path in [Path(base), *Path(base).rglob('*')]:
+        shutil.chown(path, user=1000, group=1000)
 """
         ephemeral(
             "--network",
@@ -351,6 +458,8 @@ Path('/backup/app.tar').chmod(0o600)
             app + ":/release",
             "-v",
             backup + ":/backup",
+            "--user",
+            "0:0",
             image,
             "python",
             "-c",
@@ -376,7 +485,9 @@ print(hashlib.sha256(open('/app/qbitbot/app.py','rb').read()).hexdigest())
             candidate,
             "-",
             stdin=archive(
-                {"Dockerfile": f"FROM {image}\nRUN echo candidate > /candidate-marker\n".encode()}
+                {
+                    "Dockerfile": f"FROM {image}\nUSER 0:0\nRUN echo candidate > /candidate-marker\nUSER 1000:1000\n".encode()
+                }
             ),
         )
         assert (

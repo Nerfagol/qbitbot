@@ -20,7 +20,10 @@ def test_stack_separates_services_and_state():
         assert "container_name" not in service and "network_mode" not in service
         if name != "bot":
             assert "env_file" not in service
-            assert "@sha256:" in service["image"]
+            dockerfile = ROOT / service["build"]["dockerfile"]
+            assert "@sha256:" in dockerfile.read_text().splitlines()[1]
+            assert not service.get("read_only")
+            assert not service.get("cap_drop")
             assert not any("PASS" in key or "TOKEN" in key for key in service["environment"])
 
 
@@ -52,3 +55,16 @@ def test_web_interfaces_default_to_loopback_and_peer_ports_match():
     assert cfg["services"]["jackett"]["environment"]["AUTO_UPDATE"] == "false"
     assert qbit["volumes"][1]["target"] == "/downloads"
     assert qbit["volumes"][1]["type"] == "bind"
+
+
+def test_both_bot_modes_enforce_unprivileged_resource_bounded_runtime():
+    for name in ("compose.yaml", "compose.bot-only.yaml"):
+        bot = config(name)["services"]["bot"]
+        assert bot["user"] == "1000:1000"
+        assert bot["read_only"] is True
+        assert bot["cap_drop"] == ["ALL"]
+        assert bot["security_opt"] == ["no-new-privileges:true"]
+        assert bot["mem_limit"] == "256m"
+        assert bot["cpus"] == 1.0
+        assert bot["pids_limit"] == 128
+        assert bot["tmpfs"] == ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]

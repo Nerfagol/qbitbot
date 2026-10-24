@@ -9,6 +9,7 @@ Python 3.12 Telegram bot using Jackett search and qBittorrent downloads.
 - `qbitbot/cli/`: maintenance commands; run with `python -m qbitbot.cli.<name>`.
 - `qbitbot/locales/`: matched English/Russian catalogs; pass language explicitly
   and preserve queued notice payloads. `preferences.py` owns the language database.
+- `qbitbot/http_safety.py`: DNS-pinned metadata requests and decoded body limits.
 - `tests/`: offline tests with synthetic data; `integration/`: disposable Docker checks.
 - `docs/`: user/developer guides, assets and historical plans.
 
@@ -39,13 +40,26 @@ checks own their resources and must never prune globally or touch existing servi
 Preserve allowlists, owner-bound callbacks, target identity checks, explicit download
 and file-deletion confirmations, watch schema compatibility and separate durable state.
 No production tokens or deployments are authorized by ordinary test commands.
+The bot runtime is UID/GID 1000 with read-only application storage. Existing state
+ownership changes require the documented explicit offline/backup procedure; never
+chown recursively at startup or discard state to work around permission errors.
+Preserve the configured-Jackett-only private HTTP origin exception, DNS pinning,
+redirect rules and decoded response limits. Optional QBIT_HOST_HEADER changes
+only the trusted service HTTP Host; preserve its authentication, host allowlist
+and TLS certificate validation. Service package fixes belong in image
+builds, never startup. Optional FlareSolverr uses `compose.flaresolverr.yaml` with the bundled stack;
+keep its API unpublished on a Jackett-only network and preserve strict TLS.
+`integration/flaresolverr.py --image <image>` verifies browser JavaScript and TLS
+rejection using only generated internal-network fixtures; host OpenSSL is required.
+The security workflow audits dependencies/images weekly
+and on changes; zero findings is dated evidence, not blanket security assurance.
 
 ## Agent workflow
 
-Before substantial work, read this file, `MEMORY.md`, recent relevant `PROGRESS.md`
+Before substantial work, read this file, `docs/development/memory.md`, recent relevant `docs/development/progress.md`
 entries and the actual source/configuration. Source, tests and Git history outrank
 memory. Follow established conventions and verify assumptions. Do not silently change
 architecture or claim completion without implementation and reasonable verification.
-After substantial work, curate durable discoveries in `MEMORY.md`, append a dated
-newest-first handoff in `PROGRESS.md`, and update this guide only when persistent
+After substantial work, curate durable discoveries in `docs/development/memory.md`, append a dated
+newest-first handoff in `docs/development/progress.md`, and update this guide only when persistent
 instructions change. Do not update these files mechanically for trivial edits.

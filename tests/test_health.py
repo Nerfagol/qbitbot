@@ -1,6 +1,7 @@
 """Health cards: safe probes, hourly edits, durable ownership and optional pinning."""
 
 import asyncio
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -214,14 +215,21 @@ async def test_hourly_loop_interval_and_shutdown(bot, tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("body", ['<error code="100" description="SECRET"/>', "<html/>", "<rss/>"])
 def test_jackett_probe_rejects_false_success_without_search(monkeypatch, body):
+    from qbitbot import health
     from qbitbot.health import check_jackett
 
     calls = []
     monkeypatch.setattr(
-        requests,
-        "get",
-        lambda url, **kw: calls.append((url, kw))
-        or SimpleNamespace(raise_for_status=lambda: None, text=body),
+        health,
+        "open_response",
+        lambda method, url, **kw: calls.append((url, kw))
+        or nullcontext(
+            SimpleNamespace(
+                raise_for_status=lambda: None,
+                headers={},
+                iter_content=lambda **kw: iter([body.encode()]),
+            )
+        ),
     )
     with pytest.raises(ValueError):
         check_jackett("http://fixture/api?t=search&q=film&apikey=old", "test-key")
@@ -230,13 +238,18 @@ def test_jackett_probe_rejects_false_success_without_search(monkeypatch, body):
 
 
 def test_jackett_capabilities_probe_accepts_valid_response(monkeypatch):
+    from qbitbot import health
     from qbitbot.health import check_jackett
 
     monkeypatch.setattr(
-        requests,
-        "get",
-        lambda *a, **kw: SimpleNamespace(
-            raise_for_status=lambda: None, text="<caps><searching/></caps>"
+        health,
+        "open_response",
+        lambda *a, **kw: nullcontext(
+            SimpleNamespace(
+                raise_for_status=lambda: None,
+                headers={},
+                iter_content=lambda **kw: iter([b"<caps><searching/></caps>"]),
+            )
         ),
     )
     check_jackett("http://fixture/api", "test-key")

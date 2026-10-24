@@ -1,0 +1,46 @@
+name: security
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12.15'
+      - name: Audit the complete Python dependency lock
+        run: |
+          python -m venv "$RUNNER_TEMP/audit"
+          "$RUNNER_TEMP/audit/bin/python" -m pip install pip-audit==2.10.1
+          "$RUNNER_TEMP/audit/bin/pip-audit" -r requirements-dev.lock --no-deps --disable-pip
+      - name: Install checksum-pinned Trivy
+        run: |
+          mkdir "$RUNNER_TEMP/trivy"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz \
+            --output "$RUNNER_TEMP/trivy/archive.tar.gz"
+          printf '%s  %s\n' c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0 \
+            "$RUNNER_TEMP/trivy/archive.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/trivy/archive.tar.gz" -C "$RUNNER_TEMP/trivy" trivy
+      - name: Build and scan every runtime image
+        run: |
+          docker build -t qbitbot-security-ci:bot .
+          docker build -f docker/qbittorrent.Dockerfile -t qbitbot-security-ci:qbittorrent .
+          docker build -f docker/jackett.Dockerfile -t qbitbot-security-ci:jackett .
+          docker build -f docker/flaresolverr.Dockerfile -t qbitbot-security-ci:flaresolverr .
+          python integration/flaresolverr.py --image qbitbot-security-ci:flaresolverr
+          for component in bot qbittorrent jackett flaresolverr; do
+            docker image save "qbitbot-security-ci:$component" -o "$RUNNER_TEMP/$component.tar"
+            "$RUNNER_TEMP/trivy/trivy" image --input "$RUNNER_TEMP/$component.tar" \
+              --scanners vuln --exit-code 1 --no-progress
+          done

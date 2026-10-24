@@ -1,6 +1,6 @@
 # Installation
 
-qBittorrent **5.x** is required for Pause/Resume; the bundled and tested version is **5.1.2**. Setup checks reject other major versions.
+qBittorrent **5.x** is required for Pause/Resume; the bundled and tested version is **5.3.0**. Setup checks reject other major versions.
 Install Docker Engine/Desktop with Compose v2. Use a Linux amd64 host for the
 verified target. Download this repository and work from its root directory.
 
@@ -36,6 +36,7 @@ already occupied. Relative paths resolve from this project directory.
 Start the two services first; bot credentials may still be blank:
 
 ```sh
+docker compose build qbittorrent jackett
 docker compose up -d qbittorrent jackett
 ```
 
@@ -87,3 +88,13 @@ containers to upgrade while retaining those volumes. **`down -v` deletes named
 state/config volumes**; it is not an upgrade command. Downloaded files live in the
 configured host directory. Back up bot settings, each service's configuration and
 all bot databases privately. Do not copy live SQLite files as an ordinary file backup.
+
+[Container restrictions and existing-volume migration](deployment/container-hardening.md): the bot now runs as UID/GID 1000:1000.
+
+For an existing qBittorrent with a strict Web UI domain allowlist, set
+`QBIT_HOST_HEADER` to its already allowed hostname/IP and optional port while
+`QBIT_URL` uses the reachable Docker service address. This changes only the HTTP
+Host header: authentication and redirects remain protected, and HTTPS certificate
+verification still uses the hostname in `QBIT_URL`. Do not disable host validation.
+
+[Optional FlareSolverr setup and security](deployment/flaresolverr.md) — for indexers requiring browser challenges.

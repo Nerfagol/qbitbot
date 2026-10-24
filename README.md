@@ -44,7 +44,11 @@ Synthetic examples rendered from the bot's message formatters; these are not liv
 Live Telegram acceptance was confirmed by the operator on 2026-09-27; see the
 [acceptance record](docs/acceptance-v0.3.0.md) for scope and remaining limitations.
 Automated checks use generated torrents, local APIs and a fake Telegram transport.
-No prebuilt registry image is published; Compose builds the bot from reviewed source.
+No prebuilt registry image is published; Compose builds the bot and patched bundled services from reviewed source.
+See [container hardening and offline state migration](docs/deployment/container-hardening.md)
+before reusing an existing state volume.
+
+Optional browser challenges: [FlareSolverr setup and security](docs/deployment/flaresolverr.md).
 
 ## Development
 

@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Add an optional hardened FlareSolverr build/Compose overlay, strict TLS/error-page
+  checks, isolated browser smoke verification and recurring vulnerability scans.
+
+- Support an optional validated qBittorrent Host header for existing installations
+  whose allowed Web UI host differs from their reachable Docker service address.
+  Authentication/redirect protections and HTTPS certificate verification remain.
+
+- Harden the public container stack: non-root/read-only bot on a minimal Alpine
+  base, resource/capability restrictions, explicit offline state-permission
+  migration, and patched derived service images. Add DNS-pinned HTTP destination/
+  redirect checks, decoded response limits and recurring security CI.
+
+- Refresh Python dependencies and pin Python 3.12.15; exclude build-only pip from
+  the runtime image. Update bundled qBittorrent to 5.3.0 and Jackett to v0.24.2900.
+  Support their HTTP 204 authentication/add responses alongside older 5.x APIs.
+  Local verification and residual configuration limits are recorded in
+  [the current hardening review](docs/deployment/security-hardening-2026-10-24.md).
+
 - Organize runtime code and catalogs under `qbitbot/`, with maintenance commands in
   `qbitbot/cli/`. Start from a source checkout with `python -m qbitbot`; setup and
   backup commands now use `python -m qbitbot.cli.setup_check` and

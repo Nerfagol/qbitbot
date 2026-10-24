@@ -1,6 +1,14 @@
 services:
   bot:
     build: .
+    user: "1000:1000"
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 128
     env_file: [bot.env]
     environment:
       QBIT_URL: http://qbittorrent:${QBIT_WEBUI_PORT:-8080}
@@ -15,7 +23,9 @@ services:
       jackett: {condition: service_healthy}
     restart: unless-stopped
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent@sha256:7034f73a3c6fa4ea40fd67df462939d1665d765231b572523921c98c2db5362e
+    build:
+      context: .
+      dockerfile: docker/qbittorrent.Dockerfile
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -39,7 +49,9 @@ services:
       start_period: 30s
     restart: unless-stopped
   jackett:
-    image: lscr.io/linuxserver/jackett@sha256:c10a9a66fe0b2dba71b0b78b38797b0b218bf9d565af7e66c5dfbfa83c6dbe45
+    build:
+      context: .
+      dockerfile: docker/jackett.Dockerfile
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}

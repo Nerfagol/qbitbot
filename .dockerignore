@@ -10,3 +10,9 @@
 !qbitbot/locales/*.json
 !LICENSE
 !THIRD_PARTY_NOTICES.md
+!docker/
+!docker/*.Dockerfile
+!docker/flaresolverr/
+!docker/flaresolverr/*.py
+
+!docker/flaresolverr/LICENSE

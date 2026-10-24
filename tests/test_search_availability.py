@@ -1,6 +1,8 @@
 """Coverage comes from Jackett's query response, never missing result sources."""
 
 import asyncio
+import json
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -79,11 +81,17 @@ def test_search_uses_same_origin_json_endpoint_with_query_and_timeout(bot, monke
     )
     calls = []
 
-    def get(url, **kw):
+    def get(method, url, **kw):
         calls.append((url, kw))
-        return SimpleNamespace(raise_for_status=lambda: None, json=lambda: payload())
+        return nullcontext(
+            SimpleNamespace(
+                raise_for_status=lambda: None,
+                headers={},
+                iter_content=lambda **kw: iter([json.dumps(payload()).encode()]),
+            )
+        )
 
-    monkeypatch.setattr(bot.requests, "get", get)
+    monkeypatch.setattr(bot, "open_response", get)
     result = bot.jackett_search_sync("ubuntu", 50)
     assert result.availability == "partial"
     assert calls[0][0] == "http://jackett.invalid/base/api/v2.0/indexers/all/results"

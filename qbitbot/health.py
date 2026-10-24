@@ -12,6 +12,8 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 
+from qbitbot.http_safety import MAX_CAPABILITIES_BYTES, open_response, read_limited
+
 from qbitbot.i18n import tr, normalize_language
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import BadRequest, Forbidden, TelegramError
@@ -24,13 +26,16 @@ def check_jackett(url, key):
     # Capabilities authenticate the configured API without searching any indexer.
     parts = urlsplit(url)
     query = [(k, v) for k, v in parse_qsl(parts.query) if k.lower() not in {"t", "q", "apikey"}]
-    response = requests.get(
+    with open_response(
+        "GET",
         urlunsplit(parts._replace(query=urlencode(query), fragment="")),
+        trusted_url=url,
+        allow_external_redirects=False,
         params={"apikey": key, "t": "caps"},
         timeout=(5, 10),
-    )
-    response.raise_for_status()
-    root = ET.fromstring(response.text)
+    ) as response:
+        response.raise_for_status()
+        root = ET.fromstring(read_limited(response, MAX_CAPABILITIES_BYTES))
     if root.tag != "caps" or root.find("searching") is None:
         raise ValueError("Invalid capabilities response")
 

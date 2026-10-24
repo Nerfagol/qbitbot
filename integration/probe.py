@@ -174,8 +174,8 @@ def main():
         raise AssertionError("Expected connection failure while disposable service is stopped")
 
     version = api("GET", "app/version").text
-    assert version == "v5.1.2", version
-    passed("qBittorrent 5.1.2 authentication and version")
+    assert version == "v5.3.0", version
+    passed("qBittorrent 5.3.0 authentication and version")
     if mode.startswith("watch-"):
         from qbitbot.watch_store import WatchStore
 

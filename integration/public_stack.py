@@ -80,6 +80,24 @@ def export_checkout(destination):
         shutil.copyfile(source, target)
 
 
+def install_fixture_source(docker, container, source):
+    # docker cp rejects read-only containers even for their writable tmpfs. Let
+    # the unprivileged running process write only this controlled fixture file.
+    source = Path(source)
+    if source.name not in {"public_probe.py", "fixtures.py", "recovery_probe.py"}:
+        raise ValueError("Unexpected fixture source")
+    docker(
+        "exec",
+        "-i",
+        container,
+        "python",
+        "-c",
+        "import sys; from pathlib import Path; Path(sys.argv[1]).write_bytes(sys.stdin.buffer.read())",
+        "/tmp/" + source.name,
+        stdin=source.read_bytes(),
+    )
+
+
 def fresh(docker, root, project, image, checks):
     def compose(*args, only=False):
         files = (
@@ -102,8 +120,7 @@ def fresh(docker, root, project, image, checks):
     (root / "bot.env").write_text("")
     cfg = json.loads(compose("config", "--format", "json"))
     validate_isolation(cfg)
-    compose("build", "bot")
-    compose("pull", "qbittorrent", "jackett")
+    compose("build", "bot", "qbittorrent", "jackett")
     compose("up", "-d", "--wait", "--wait-timeout", "150", "qbittorrent", "jackett")
     checks.append("dependency bootstrap with blank bot credentials")
     qbit = compose("ps", "-q", "qbittorrent").decode().strip()
@@ -135,7 +152,7 @@ def fresh(docker, root, project, image, checks):
     compose("up", "-d", "--no-deps", "bot")
     bot = compose("ps", "-q", "bot").decode().strip()
     for name in ("public_probe.py", "fixtures.py"):
-        docker("cp", str(root / "integration" / name), bot + ":/tmp/" + name)
+        install_fixture_source(docker, bot, root / "integration" / name)
     result = json.loads(docker("exec", bot, "python", "/tmp/public_probe.py", "fresh", timeout=120))
     checks.extend(result["checks"])
     # A service outage is observed by the same bot container, then recovers.
@@ -168,7 +185,7 @@ def fresh(docker, root, project, image, checks):
 
 def recovery(docker, root, project, image, bot, config, checks):
     probe = root / "integration/recovery_probe.py"
-    docker("cp", str(probe), bot + ":/tmp/recovery_probe.py")
+    install_fixture_source(docker, bot, probe)
     docker("exec", bot, "python", "/tmp/recovery_probe.py", "seed")
     docker(
         "exec",
@@ -213,13 +230,26 @@ def recovery(docker, root, project, image, bot, config, checks):
             "com.docker.compose.project=" + project,
             "--network",
             "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=32m,mode=1777",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--memory",
+            "256m",
+            "--cpus",
+            "1",
+            "--pids-limit",
+            "128",
             *mounts,
             selected,
             "python",
-            "/tmp/recovery_probe.py",
+            "-c",
+            probe.read_text(),
             mode,
         )
-        docker("cp", str(probe), identifier + ":/tmp/recovery_probe.py")
         docker("start", "--attach", identifier)
         assert docker("inspect", "--format", "{{.State.ExitCode}}", identifier).strip() == b"0"
 
@@ -255,9 +285,9 @@ def main(argv=None):
         if k in ("PATH", "HOME", "DOCKER_HOST", "DOCKER_CONFIG", "XDG_RUNTIME_DIR", "WSL_INTEROP")
     }
 
-    def docker(*parts, timeout=120):
+    def docker(*parts, stdin=None, timeout=120):
         result = subprocess.run(
-            command + list(parts), capture_output=True, env=env, timeout=timeout
+            command + list(parts), input=stdin, capture_output=True, env=env, timeout=timeout
         )
         if result.returncode:
             diagnostic = ROOT / ".verification" / "public-failure.log"
@@ -292,7 +322,12 @@ def main(argv=None):
                 except Exception:
                     failure = "Scoped resource cleanup failed"
             try:
-                for owned_image in (project + ":original-public", image):
+                for owned_image in (
+                    project + ":original-public",
+                    image,
+                    project + "-qbittorrent",
+                    project + "-jackett",
+                ):
                     if docker("image", "ls", "-q", owned_image).strip():
                         docker("image", "rm", owned_image)
             except Exception:

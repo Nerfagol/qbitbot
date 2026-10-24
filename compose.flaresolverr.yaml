@@ -1,0 +1,55 @@
+services:
+  jackett:
+    networks:
+    - default
+    - solver
+    depends_on:
+      flaresolverr:
+        condition: service_healthy
+  flaresolverr:
+    user: 1000:1000
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,nosuid,nodev,size=512m,mode=1777
+    - /app/.config:rw,noexec,nosuid,nodev,size=64m,uid=1000,gid=1000,mode=0700
+    - /config:rw,noexec,nosuid,nodev,size=16m,uid=1000,gid=1000,mode=0700
+    shm_size: 256m
+    environment:
+      LOG_LEVEL: warning
+      LOG_HTML: 'false'
+      TZ: ${TZ:-Etc/UTC}
+      LANG: en_US
+      HEADLESS: 'true'
+      HOME: /tmp
+      PROMETHEUS_ENABLED: 'false'
+    networks:
+    - solver
+    mem_limit: 1g
+    cpus: 1.5
+    pids_limit: 256
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191/', timeout=4).read()
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+    build:
+      context: .
+      dockerfile: docker/flaresolverr.Dockerfile
+networks:
+  solver:
+    enable_ipv6: false

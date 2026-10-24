@@ -10,6 +10,8 @@ import binascii
 import re
 import io
 import hmac
+import json
+from qbitbot.http_safety import MAX_SEARCH_BYTES, open_response, read_limited, redirect_destination
 from types import SimpleNamespace
 from pathlib import Path
 from qbitbot.i18n import tr, normalize_language
@@ -45,6 +47,7 @@ JACKETT_TORZNAB_URL = _SETTINGS.jackett_url
 JACKETT_API_KEY = _SETTINGS.jackett_key
 JACKETT_SEARCH_TIMEOUT_SEC = _SETTINGS.search_timeout
 QBIT_URL = _SETTINGS.qbit_url
+QBIT_HOST_HEADER = _SETTINGS.qbit_host_header
 QBIT_USER = _SETTINGS.qbit_user
 QBIT_PASS = _SETTINGS.qbit_pass
 QBIT_SAVEPATH = _SETTINGS.savepath
@@ -127,12 +130,17 @@ _QBIT_SESSION_TTL_SEC = 30 * 60  # 30 minutes
 
 def qbit_login_session() -> requests.Session:
     s = requests.Session()
+    s.trust_env = False
+    if QBIT_HOST_HEADER:
+        s.headers["Host"] = QBIT_HOST_HEADER
+    s.resolve_redirects = lambda *args, **kwargs: iter(())
     r = s.post(
         f"{QBIT_URL}/api/v2/auth/login",
         data={"username": QBIT_USER, "password": QBIT_PASS},
         timeout=15,
     )
-    if r.status_code != 200 or r.text.strip() != "Ok.":
+    if not ((r.status_code == 200 and r.text.strip() == "Ok.")
+            or (r.status_code == 204 and not r.text.strip())):
         raise RuntimeError(f"qBittorrent login failed: {r.status_code} {r.text}")
     return s
 
@@ -207,7 +215,7 @@ def qbit_add_sync(url: str) -> str:
     r = s.post(f"{QBIT_URL}/api/v2/torrents/add", data=payload, timeout=25)
 
     txt = (r.text or "").strip()
-    if r.status_code != 200:
+    if r.status_code not in (200, 204):
         raise RuntimeError(f"HTTP {r.status_code}: {txt}")
     # ВАЖНО: qBittorrent часто возвращает 200, но в body пишет Fails.
     if txt.lower().startswith("fail"):
@@ -232,7 +240,7 @@ def qbit_add_file_sync(torrent_bytes: bytes, filename: str = "download.torrent")
     r = s.post(f"{QBIT_URL}/api/v2/torrents/add", data=payload, files=files, timeout=30)
 
     txt = (r.text or "").strip()
-    if r.status_code != 200:
+    if r.status_code not in (200, 204):
         raise RuntimeError(f"HTTP {r.status_code}: {txt}")
     if txt.lower().startswith("fail"):
         raise RuntimeError(f"qBittorrent add(file) failed: {txt}")
@@ -266,28 +274,28 @@ def resolve_http_redirect_to_magnet_sync(url: str) -> Optional[str]:
     headers = {"User-Agent": TORRENT_FETCH_USER_AGENT}
     cur = url
     for _ in range(10):
-        r = requests.get(
+        with open_response("GET",
             cur,
-            allow_redirects=False,
-            stream=True,
+            follow_redirects=False,
+            trusted_url=JACKETT_TORZNAB_URL,
             timeout=TORRENT_FETCH_TIMEOUT_SEC,
             headers=headers,
-        )
-        try:
-            if r.status_code in (301, 302, 303, 307, 308):
-                loc = (r.headers.get("location") or "").strip()
-                if not loc:
+        ) as r:
+            try:
+                if r.status_code in (301, 302, 303, 307, 308):
+                    loc = (r.headers.get("location") or "").strip()
+                    if not loc:
+                        return None
+                    loc = urljoin(cur, loc)
+                    if loc.lower().startswith("magnet:?"):
+                        return loc
+                    if loc.lower().startswith(("http://", "https://")):
+                        cur = redirect_destination(cur, loc, trusted_url=JACKETT_TORZNAB_URL)
+                        continue
                     return None
-                loc = urljoin(cur, loc)
-                if loc.lower().startswith("magnet:?"):
-                    return loc
-                if loc.lower().startswith(("http://", "https://")):
-                    cur = loc
-                    continue
                 return None
-            return None
-        finally:
-            r.close()
+            finally:
+                r.close()
     return None
 
 
@@ -304,55 +312,54 @@ def download_torrent_file_sync(url: str) -> Dict:
         "size": 0,
     }
 
-    r = requests.get(
+    with open_response("GET",
         url,
-        allow_redirects=True,
-        stream=True,
+        trusted_url=JACKETT_TORZNAB_URL,
         timeout=TORRENT_FETCH_TIMEOUT_SEC,
         headers=headers,
-    )
-    try:
-        r.raise_for_status()
-        out["final_url"] = str(r.url)
-        out["content_type"] = r.headers.get("content-type")
-        out["content_length"] = r.headers.get("content-length")
+    ) as r:
+        try:
+            r.raise_for_status()
+            out["final_url"] = str(r.url)
+            out["content_type"] = r.headers.get("content-type")
+            out["content_length"] = r.headers.get("content-length")
 
-        chunks: List[bytes] = []
-        total = 0
-        for chunk in r.iter_content(chunk_size=65536):
-            if not chunk:
-                continue
-            total += len(chunk)
-            if total > TORRENT_FETCH_MAX_BYTES:
+            chunks: List[bytes] = []
+            total = 0
+            for chunk in r.iter_content(chunk_size=65536):
+                if not chunk:
+                    continue
+                total += len(chunk)
+                if total > TORRENT_FETCH_MAX_BYTES:
+                    raise RuntimeError(
+                        f"torrent file too large: {total} bytes (limit {TORRENT_FETCH_MAX_BYTES})"
+                    )
+                chunks.append(chunk)
+
+            data = b"".join(chunks)
+            out["size"] = len(data)
+            if not data:
+                raise RuntimeError("empty HTTP body")
+
+            content_type = (out.get("content_type") or "").lower()
+            if not looks_like_torrent_bytes(data):
+                sample = data[:120].decode("utf-8", errors="replace").replace("\n", " ").replace("\r", " ")
                 raise RuntimeError(
-                    f"torrent file too large: {total} bytes (limit {TORRENT_FETCH_MAX_BYTES})"
+                    "downloaded content is not a .torrent file "
+                    f"(content-type={content_type or 'unknown'}, sample={sample!r})"
                 )
-            chunks.append(chunk)
 
-        data = b"".join(chunks)
-        out["size"] = len(data)
-        if not data:
-            raise RuntimeError("empty HTTP body")
-
-        content_type = (out.get("content_type") or "").lower()
-        if not looks_like_torrent_bytes(data):
-            sample = data[:120].decode("utf-8", errors="replace").replace("\n", " ").replace("\r", " ")
-            raise RuntimeError(
-                "downloaded content is not a .torrent file "
-                f"(content-type={content_type or 'unknown'}, sample={sample!r})"
-            )
-
-        name = _filename_from_content_disposition(r.headers.get("content-disposition", ""))
-        if not name:
-            path_name = os.path.basename(urlsplit(str(r.url)).path)
-            name = unquote(path_name) if path_name else "download.torrent"
-        if not name.lower().endswith(".torrent"):
-            name = f"{name}.torrent"
-        out["filename"] = name
-        out["bytes"] = data
-        return out
-    finally:
-        r.close()
+            name = _filename_from_content_disposition(r.headers.get("content-disposition", ""))
+            if not name:
+                path_name = os.path.basename(urlsplit(str(r.url)).path)
+                name = unquote(path_name) if path_name else "download.torrent"
+            if not name.lower().endswith(".torrent"):
+                name = f"{name}.torrent"
+            out["filename"] = name
+            out["bytes"] = data
+            return out
+        finally:
+            r.close()
 
 
 # ---- Magnet hash extraction ----
@@ -450,47 +457,18 @@ def url_kind(url: str) -> str:
 
 
 def probe_url_sync(url: str) -> Dict:
-    """Lightweight диагностика для HTTP ссылок (без существенной загрузки)."""
     out: Dict = {"ok": False, "status": None, "final_url": None, "content_type": None, "note": ""}
-
-    try:
-        r = requests.head(url, allow_redirects=True, timeout=12)
-        out.update(
-            ok=True,
-            method="HEAD",
-            status=r.status_code,
-            final_url=str(r.url),
-            content_type=r.headers.get("content-type"),
-            content_length=r.headers.get("content-length"),
-        )
-        # Many endpoints don't support HEAD (405). In that case, fall back to GET.
-        if r.status_code == 405:
-            raise RuntimeError("HEAD not allowed (405)")
-        # If HEAD errors or doesn't provide content-type, try GET to learn what it actually returns.
-        if r.status_code >= 400:
-            raise RuntimeError(f"HEAD returned {r.status_code}")
-        if (out.get("content_type") is None) and (200 <= r.status_code < 400):
-            raise RuntimeError("HEAD ok but no content-type")
-        return out
-    except Exception:
-        pass
-
-    try:
-        r = requests.get(url, allow_redirects=True, stream=True, timeout=12)
-        _ = r.raw.read(2048) if r.raw else b""
-        r.close()
-        out.update(
-            ok=True,
-            method="GET",
-            status=r.status_code,
-            final_url=str(r.url),
-            content_type=r.headers.get("content-type"),
-            content_length=r.headers.get("content-length"),
-        )
-        return out
-    except Exception as e:
-        out["note"] = str(e)
-        return out
+    for method in ("HEAD", "GET"):
+        try:
+            with open_response(method, url, trusted_url=JACKETT_TORZNAB_URL, timeout=12) as r:
+                if method == "HEAD" and (r.status_code >= 400 or not r.headers.get("content-type")):
+                    continue
+                out.update(ok=True, method=method, status=r.status_code, final_url=str(r.url),
+                           content_type=r.headers.get("content-type"), content_length=r.headers.get("content-length"))
+                return out
+        except Exception as error:
+            out["note"] = type(error).__name__
+    return out
 
 
 async def probe_url(url: str) -> Dict:
@@ -806,13 +784,18 @@ def _jackett_search_sync(query: str, limit: int = RESULTS_LIMIT) -> List[Dict]:
     if not parts.query and re.fullmatch(r".*/api/v2\.0/indexers/[^/]+/results/torznab/api/?", parts.path):
         path = parts.path.rstrip("/")[:-len("/torznab/api")]
         url = urlunsplit(parts._replace(path=path, fragment=""))
-        r = requests.get(url, params={"apikey": JACKETT_API_KEY, "query": query}, timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC))
-        r.raise_for_status()
-        return jackett_response(r.json())
+        with open_response("GET", url, trusted_url=JACKETT_TORZNAB_URL,
+                           allow_external_redirects=False,
+                           params={"apikey": JACKETT_API_KEY, "query": query},
+                           timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC)) as r:
+            r.raise_for_status()
+            return jackett_response(json.loads(read_limited(r, MAX_SEARCH_BYTES)))
     params = {"apikey": JACKETT_API_KEY, "q": query, "limit": str(limit)}
-    r = requests.get(JACKETT_TORZNAB_URL, params=params, timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC))
-    r.raise_for_status()
-    return SearchResults(torznab_items(r.text))
+    with open_response("GET", JACKETT_TORZNAB_URL, trusted_url=JACKETT_TORZNAB_URL,
+                       allow_external_redirects=False, params=params,
+                       timeout=(5, JACKETT_SEARCH_TIMEOUT_SEC)) as r:
+        r.raise_for_status()
+        return SearchResults(torznab_items(read_limited(r, MAX_SEARCH_BYTES)))
 
 
 LAST_SEARCH_HEALTH = None

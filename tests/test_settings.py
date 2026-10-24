@@ -68,3 +68,25 @@ def test_env_file_quotes_and_existing_environment(tmp_path):
     env = {"ALLOWED_USERS": "202"}
     load_env(path, env)
     assert env == {"ALLOWED_USERS": "202", "QBIT_PASS": "a $b #c 'quoted'"}
+
+
+@pytest.mark.parametrize("value", ["nas.example:13800", "192.0.2.1:13800", "[::1]:13800"])
+def test_explicit_qbit_host_header_is_retained(value):
+    assert read_settings({**valid_env(), "QBIT_HOST_HEADER": value}).qbit_host_header == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "https://nas.example",
+        "nas\r\nInjected: yes",
+        "user@nas",
+        "nas/path",
+        "nas:0",
+        "nas:70000",
+        "nas,other",
+    ],
+)
+def test_qbit_host_header_rejects_injection_and_non_authorities(value):
+    with pytest.raises(SettingsError, match="QBIT_HOST_HEADER"):
+        read_settings({**valid_env(), "QBIT_HOST_HEADER": value})

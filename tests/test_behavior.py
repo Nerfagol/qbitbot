@@ -1,11 +1,11 @@
 import asyncio
+from contextlib import nullcontext
 import base64
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 from unittest.mock import AsyncMock
 
 import pytest
-import requests
 
 from tests.helpers import Message, context, torrent, update
 
@@ -155,7 +155,7 @@ def test_download_file_enforces_size_limit(bot, monkeypatch):
             self.closed = True
 
     response = Response()
-    monkeypatch.setattr(requests, "get", lambda *a, **k: response)
+    monkeypatch.setattr(bot, "open_response", lambda *a, **k: nullcontext(response))
     monkeypatch.setattr(bot, "TORRENT_FETCH_MAX_BYTES", 8)
     with pytest.raises(RuntimeError, match="too large"):
         bot.download_torrent_file_sync(response.url)

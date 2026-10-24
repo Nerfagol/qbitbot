@@ -34,6 +34,7 @@ class Settings:
     bot_token: str
     allowed_users: frozenset[int]
     qbit_url: str
+    qbit_host_header: str | None
     qbit_user: str
     qbit_pass: str
     jackett_url: str
@@ -83,6 +84,27 @@ def read_settings(env: Mapping[str, str]) -> Settings:
             ) from None
         return value.rstrip("/")
 
+    def host_header():
+        value = env.get("QBIT_HOST_HEADER", "").strip()
+        if not value:
+            return None
+        try:
+            parts = urlsplit("//" + value)
+            if (
+                len(value) > 320
+                or not re.fullmatch(r"[A-Za-z0-9.\-:\[\]]+", value)
+                or not parts.hostname
+                or len(parts.hostname) > 253
+                or value.endswith(":")
+                or (parts.port is not None and not 1 <= parts.port <= 65535)
+            ):
+                raise ValueError
+        except ValueError:
+            raise SettingsError(
+                "QBIT_HOST_HEADER: hostname/IP and optional port required"
+            ) from None
+        return value
+
     users = env.get("ALLOWED_USERS", "").split(",")
     if not all(re.fullmatch(r"[0-9]+", v.strip()) and int(v.strip()) > 0 for v in users):
         raise SettingsError("ALLOWED_USERS: comma-separated positive user IDs required")
@@ -90,6 +112,7 @@ def read_settings(env: Mapping[str, str]) -> Settings:
         bot_token=required("BOT_TOKEN").strip(),
         allowed_users=frozenset(int(v.strip()) for v in users),
         qbit_url=url("QBIT_URL"),
+        qbit_host_header=host_header(),
         qbit_user=required("QBIT_USER"),
         qbit_pass=required("QBIT_PASS"),
         jackett_url=url("JACKETT_TORZNAB_URL"),
