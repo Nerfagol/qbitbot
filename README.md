@@ -19,6 +19,25 @@ removes the torrent **and its files**, after confirmation. Jackett indexers requ
 manual setup; no tracker accounts or credentials are supplied. Direct Telegram file
 uploads and media-app integration are outside this release.
 
+## Installation
+
+Use Docker with Compose v2 on Linux amd64 for the verified target.
+qBittorrent **5.x** is required; the bundled version is **5.3.0**.
+
+| Setup | When to use it |
+| --- | --- |
+| [Bundled stack](docs/setup.en.md#bundled-bot-qbittorrent-and-jackett) | Install the bot, qBittorrent and Jackett together. |
+| [Bot-only mode](docs/setup.en.md#existing-qbittorrent-and-jackett) | Connect to qBittorrent and Jackett you already operate. |
+
+Follow the [English](docs/setup.en.md) or [Russian](docs/setup.ru.md) guide to
+configure private credentials, set the Telegram allowlist and run the setup check
+before starting the bot. The check verifies service access without polling
+Telegram or adding torrents. Jackett indexers must be configured manually.
+
+For indexers requiring browser challenges, enable the optional
+[FlareSolverr overlay](docs/deployment/flaresolverr.md). Its API stays on a private
+Docker network shared with Jackett, with no published host port.
+
 ## NAS support
 
 **Tested on QNAP with Container Station and Docker Compose (Linux amd64 / x86_64).**
@@ -41,14 +60,38 @@ Synthetic examples rendered from the bot's message formatters; these are not liv
 
 [Troubleshooting](docs/troubleshooting.en.md) · [Устранение неполадок](docs/troubleshooting.ru.md)
 
-Live Telegram acceptance was confirmed by the operator on 2026-09-27; see the
-[acceptance record](docs/acceptance-v0.3.0.md) for scope and remaining limitations.
-Automated checks use generated torrents, local APIs and a fake Telegram transport.
-No prebuilt registry image is published; Compose builds the bot and patched bundled services from reviewed source.
-See [container hardening and offline state migration](docs/deployment/container-hardening.md)
-before reusing an existing state volume.
+Normal restarts and upgrades retain named state volumes. Back up the bot databases
+and service configuration before upgrades; `docker compose down -v` deletes named
+state/configuration volumes. Before reusing an existing bot volume, follow the
+[offline ownership migration guide](docs/deployment/container-hardening.md).
 
-Optional browser challenges: [FlareSolverr setup and security](docs/deployment/flaresolverr.md).
+No prebuilt registry image is published. Compose builds the bot and patched service
+images from the reviewed Dockerfiles.
+
+## Security and verification
+
+Current `main` includes updated dependency pins, patched service images, a non-root
+bot with a read-only application filesystem and resource limits, and validated
+HTTP destinations with bounded metadata responses. Optional FlareSolverr also runs
+non-root/read-only and verifies TLS certificates; its Chromium browser retains
+upstream's disabled internal sandbox. Its isolation and remaining limits are
+explained in the [FlareSolverr guide](docs/deployment/flaresolverr.md).
+
+Web management interfaces bind to localhost by default. Keep them private, retain
+service authentication and protect `.env`/`bot.env`; never commit credentials or
+run two bot instances with the same Telegram token.
+
+Automated verification includes offline tests, disposable API/recovery checks and
+weekly dependency/image security scans. The dated
+[security review](docs/deployment/security-hardening-2026-10-24.md) records the
+2026-10-24 scan results and remaining limits; scans need repeating as advisories
+and packages change. Check [GitHub Actions](https://github.com/Nerfagol/qbitbot/actions)
+for the status of a particular commit.
+
+The operator confirmed live Telegram acceptance of **v0.3.0** on 2026-09-27;
+see its [acceptance record](docs/acceptance-v0.3.0.md). Later security and setup
+changes are documented in the [changelog](CHANGELOG.md); that historical record
+does not certify every later revision or platform.
 
 ## Development
 
