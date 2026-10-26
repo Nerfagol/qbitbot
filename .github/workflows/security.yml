@@ -39,8 +39,11 @@ jobs:
           docker build -f deploy/docker/jackett.Dockerfile -t qbitbot-security-ci:jackett .
           docker build -f deploy/docker/flaresolverr.Dockerfile -t qbitbot-security-ci:flaresolverr .
           python integration/flaresolverr.py --image qbitbot-security-ci:flaresolverr
+          scan_status=0
           for component in bot qbittorrent jackett flaresolverr; do
+            printf 'Scanning %s\n' "$component"
             docker image save "qbitbot-security-ci:$component" -o "$RUNNER_TEMP/$component.tar"
             "$RUNNER_TEMP/trivy/trivy" image --input "$RUNNER_TEMP/$component.tar" \
-              --scanners vuln --exit-code 1 --no-progress
+              --scanners vuln --exit-code 1 --no-progress || scan_status=1
           done
+          exit "$scan_status"

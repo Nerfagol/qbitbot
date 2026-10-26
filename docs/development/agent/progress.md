@@ -1,5 +1,22 @@
 # Project Progress
 
+## 2026-10-26 — Fixed scheduled curl image security findings
+
+- User reported failed security CI. Run40329899239 failed in qBit image scanning,
+  while Python audit passed; unchanged e66c5b8 had passed2026-10-24. Updated feed
+  reported48 curl/libcurl records (two high), installed8.22.0-r0/fixed8.23.0-r0.
+- Added exact curl/libcurl8.23.0-r0 build patches to both service Dockerfiles;
+  retained application/upstream digest pins. No scanner ignores or relaxed gates.
+  CI now labels/scans all4 images and aggregates failures instead of stopping at
+  the first finding. Synthetic all-pass/failure shell checks verify both outcomes.
+- Verification:631 tests/checks; updated DB/all4 images0 findings; actual qBit API/
+  thread/control/restart/rollback and fresh solver JS/selfsigned-TLS checks passed.
+  Fresh EN/RU/bot-only/history/outage/backup/recovery passed. Exact-commit GitHub
+  CI is checked after publishing the fix.
+- Private reports/build logs under /tmp/qbitbot-security-20261026. Public docs
+  record dated evidence. Commit/push fixes the public CI; no NAS/production poller,
+  existing torrents/state, credentials or application version changes authorized.
+
 ## 2026-10-24 — Published checkpoints; extracted clients and explicit startup
 
 - User authorized all proposed next steps. Pushed e9413e9/071c192; check, security

@@ -155,3 +155,11 @@ is denied. Keep client and metadata-origin settings aligned in synthetic fixture
 631 checks, actual API/thread/controls/restart/rollback and fresh EN/RU/history/
 bot-only/backup/recovery pass; runtime scan0, no changed dependency pins. No NAS or
 production poller was touched. Publication status is tracked by Git/GitHub Actions.
+
+## curl advisory maintenance, 2026-10-26
+
+Scheduled security run40329899239 on unchanged e66c5b8 found48 curl/libcurl records
+in pinned qBit input8.22.0-r0, fixed in8.23.0-r0. Both service recipes now patch
+curl/libcurl at build time without application/digest changes. Fresh all4 image
+scans report0 with current DB. Loop scans all components despite findings and
+retains failure status. No NAS rollout occurs as part of this repo/CI fix.

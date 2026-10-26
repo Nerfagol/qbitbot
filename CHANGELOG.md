@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Patch curl/libcurl to8.23.0-r0 in qBittorrent/Jackett image builds after the
+  recurring audit detected new advisory records. Report every image scan even
+  when one fails, retaining the strict failing exit status and no suppressions.
+
 - Extract independently configured qBittorrent/Jackett clients and shared search
   results. Separate explicit environment/startup/application construction from
   inert handler imports, preserving commands, access checks and HTTP protections.

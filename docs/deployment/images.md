@@ -27,3 +27,18 @@ Optional FlareSolverr3.5.2 upstream source digest:
 Its separate Python3.11.17/Alpine3.24 base digest:
 `sha256:5fb4bc53dd0180955e31e5245b648bbb24a4ac4ab03a1de81513642325220bcd`.
 See [build, setup and security limits](flaresolverr.md).
+
+## curl security maintenance — 2026-10-26
+
+Both LinuxServer-derived service recipes additionally pin curl/libcurl8.23.0-r0.
+The scheduled scan on unchanged source e66c5b8 began reporting48 curl/libcurl
+records (two high; package duplicates included) in the qBittorrent image. curl
+upstream lists8.23.0 as fixing the affected range, including CVE-2026-92392.
+Application versions/upstream digests remain unchanged. Fresh Trivy scans of all4
+candidate images report zero findings with the2026-10-26 database, no ignores.
+The scan loop now continues after findings to report every image, then fails if
+any scan failed. Existing deployments require a separate image update; changing
+these recipes does not mutate already running containers.
+
+References: [failed scheduled run](https://github.com/Nerfagol/qbitbot/actions/runs/40329899239),
+[curl advisory](https://curl.se/docs/CVE-2026-92392.html).
