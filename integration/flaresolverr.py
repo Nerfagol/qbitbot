@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -112,6 +113,23 @@ def main():
                 fixture,
             )
             created.append(("container", name + "-fixture"))
+            fixture_deadline = time.monotonic() + 30
+            while time.monotonic() < fixture_deadline:
+                if (
+                    run(
+                        "exec",
+                        name + "-fixture",
+                        "python",
+                        "-c",
+                        "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/', timeout=2).status)",
+                        check=False,
+                    )
+                    == "200"
+                ):
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError("Generated browser fixture readiness timed out")
             run(
                 "run",
                 "-d",
@@ -143,7 +161,7 @@ def main():
                 "--tmpfs",
                 "/config:rw,noexec,nosuid,nodev,size=16m,uid=1000,gid=1000,mode=0700",
                 "-e",
-                "LOG_LEVEL=warning",
+                "LOG_LEVEL=info",
                 "-e",
                 "LOG_HTML=false",
                 args.image,
@@ -161,6 +179,8 @@ def main():
                 )
                 if ready == "200":
                     break
+                if run("inspect", "--format", "{{.State.Running}}", name, check=False) == "false":
+                    raise RuntimeError("FlareSolverr exited during startup")
                 time.sleep(2)
             else:
                 raise RuntimeError("FlareSolverr readiness timed out")
@@ -171,6 +191,46 @@ def main():
             response = request("https://fixture:8443/")
             assert response["status"] == "error", response
             print("PASS: Chromium rendered JavaScript and rejected selfsigned HTTPS")
+        except Exception:
+            # These are owned synthetic fixtures only. Scrub URLs before CI output.
+            for kind, owned in created:
+                if kind != "container":
+                    continue
+                try:
+                    state = run("inspect", "--format", "{{json .State}}", owned, check=False)
+                    if state:
+                        parsed = json.loads(state)
+                        print(
+                            "Fixture state:",
+                            owned,
+                            {key: parsed.get(key) for key in ("Status", "ExitCode", "OOMKilled")},
+                            flush=True,
+                        )
+                    limits = run(
+                        "exec",
+                        owned,
+                        "python",
+                        "-c",
+                        "from pathlib import Path; "
+                        "[(print(p, Path(p).read_text())) for p in "
+                        "['/sys/fs/cgroup/memory.events','/sys/fs/cgroup/pids.events'] "
+                        "if Path(p).is_file()]",
+                        check=False,
+                    )
+                    print(limits, flush=True)
+                    logs = subprocess.run(
+                        docker + ["logs", "--tail", "40", owned],
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
+                    )
+                    sanitized = re.sub(
+                        r"https?://[^\s\"<>]+", "[redacted URL]", logs.stdout + logs.stderr
+                    )
+                    print(sanitized[-10000:], flush=True)
+                except (ValueError, OSError, subprocess.TimeoutExpired) as error:
+                    print("Fixture diagnostics unavailable:", type(error).__name__, flush=True)
+            raise
         finally:
             failures = []
             for kind, owned in reversed(created):

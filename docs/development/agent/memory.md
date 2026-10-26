@@ -163,3 +163,8 @@ in pinned qBit input8.22.0-r0, fixed in8.23.0-r0. Both service recipes now patch
 curl/libcurl at build time without application/digest changes. Fresh all4 image
 scans report0 with current DB. Loop scans all components despite findings and
 retains failure status. No NAS rollout occurs as part of this repo/CI fix.
+
+Solver3.5.2 executable startup only creates Chromium/reads user-agent; the old
+README TEST_URL flag is unused. On readiness failures, retain sanitized startup/
+resource diagnostics before cleanup. CI must scan images even if smoke fails,
+but both smoke and advisory gates remain required. Timeout cause is not assumed.

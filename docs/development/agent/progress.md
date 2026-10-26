@@ -1,5 +1,21 @@
 # Project Progress
 
+## 2026-10-26 — Exposed a separate solver CI startup failure
+
+- curl remediation b7e0c7a was published; code/containers passed, but security
+  run40335400018 timed out waiting for Chromium initialization before scanning.
+  Original harness suppressed startup logs and removed fixtures on failure.
+- Added fixture readiness, exited-process detection and URL-scrubbed startup/
+  cgroup/OOM diagnostics before scoped cleanup. Two offline regressions verify
+  redaction, original-error preservation and cleanup even when diagnostics time out.
+- Scanner loop now runs after smoke failure, while either smoke/scan failure
+  still fails the job. Synthetic four-way gate checks and local browser JS/TLS
+  passed; full633 tests/checks passed. No readiness deadline/security relaxation.
+- Confirmed shipped3.5.2 startup reads browser user-agent without navigation;
+  README TEST_URL is stale and unused. No ineffective URL override was committed.
+  Exact CI startup cause needs diagnostic rerun; do not claim it was network access.
+- Public CI follow-up only; no images/dependencies/NAS services changed here.
+
 ## 2026-10-26 — Fixed scheduled curl image security findings
 
 - User reported failed security CI. Run40329899239 failed in qBit image scanning,

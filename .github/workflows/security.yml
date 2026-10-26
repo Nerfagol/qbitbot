@@ -38,8 +38,8 @@ jobs:
           docker build -f deploy/docker/qbittorrent.Dockerfile -t qbitbot-security-ci:qbittorrent .
           docker build -f deploy/docker/jackett.Dockerfile -t qbitbot-security-ci:jackett .
           docker build -f deploy/docker/flaresolverr.Dockerfile -t qbitbot-security-ci:flaresolverr .
-          python integration/flaresolverr.py --image qbitbot-security-ci:flaresolverr
           scan_status=0
+          python integration/flaresolverr.py --image qbitbot-security-ci:flaresolverr || scan_status=1
           for component in bot qbittorrent jackett flaresolverr; do
             printf 'Scanning %s\n' "$component"
             docker image save "qbitbot-security-ci:$component" -o "$RUNNER_TEMP/$component.tar"
