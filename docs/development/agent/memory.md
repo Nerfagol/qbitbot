@@ -168,3 +168,15 @@ Solver3.5.2 executable startup only creates Chromium/reads user-agent; the old
 README TEST_URL flag is unused. On readiness failures, retain sanitized startup/
 resource diagnostics before cleanup. CI must scan images even if smoke fails,
 but both smoke and advisory gates remain required. Timeout cause is not assumed.
+
+## Additive CI security checks, 2026-11-06
+
+Local workflows add checksum-pinned Gitleaks8.30.1 full-public-history and tracked
+export scans (redacted output), PR dependency review across all scopes at low+
+severity, Python CodeQL security-extended and weekly Actions-only Dependabot.
+Only CodeQL's job grants security-events write; exclude Dependabot branch pushes
+from CodeQL because uploads need its PR-event allowance. No automatic merges.
+GitHub dependency graph/advanced CodeQL settings and merge protection need hosted
+verification; custom requirements/*.lock remain covered by pip-audit. Direct
+scanner downloads still need manual version/checksum upkeep. See releases.md.
+Docker image publication is the owner's next separate phase, not implemented here.

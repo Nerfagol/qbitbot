@@ -1,5 +1,29 @@
 # Project Progress
 
+## 2026-11-06 — Added CI security checks before Docker publication
+
+- Owner selected security improvements first and clarified that later packaging
+  means a Docker image. Added independent Gitleaks/dependency-review jobs without
+  changing the existing complete-lock audit or image build/smoke/scan gate.
+- Gitleaks8.30.1 uses the existing reviewed checksum/config, full public history
+  and tracked-source export, fully redacted output and no finding artifacts.
+  The export scan runs after history findings; either failure fails the job.
+- Added commit-pinned CodeQL4 Python/security-extended and dependency-review4
+  (low+ vulnerabilities/all scopes, no license policy or PR comments), plus weekly
+  Actions-only Dependabot. Existing runtime/build/development pins unchanged.
+- Independent review found the Dependabot push-token/SARIF failure: verified
+  against official GitHub docs and excluded dependabot/** push branches while
+  retaining PR coverage. No other review blockers reported.
+- Verification: make check633 passed, Ruff/format/compile/pip check passed;
+  checksum-verified actionlint1.7.12 passed; Gitleaks scanned all28 public commits
+  and the candidate tracked-source export with no findings. Synthetic current-file
+  and deleted-history secrets each failed with exit1 and redacted output; the
+  clean synthetic export passed. Fixtures/tools stayed under /tmp.
+- Local changes only; no commit/push, hosted CodeQL/dependency review, repository
+  settings changes, Docker publication or production operations. Next: publish
+  reviewed workflows, confirm actual hosted runs/graph/advanced CodeQL settings,
+  then configure merge protection. Docker registry/release work follows separately.
+
 ## 2026-10-26 — Exposed a separate solver CI startup failure
 
 - curl remediation b7e0c7a was published; code/containers passed, but security

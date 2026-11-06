@@ -42,16 +42,54 @@ not a privacy guarantee. Resolve every finding before upload.
 
 ## CI and publication
 
-Workflow permissions are `contents: read`; actions are full-commit pinned and Python
-is 3.12.15. Checkout disables persisted credentials. Container CI fetches complete
-public history for rollback tests. No logs, environments or workspaces are uploaded
-as artifacts. See upstream [checkout](https://github.com/actions/checkout) and
+Workflow permissions default to `contents: read`; only the CodeQL analysis job adds
+`security-events: write` to upload code-scanning results. Actions are full-commit
+pinned and Python is 3.12.15. Checkout disables persisted credentials. Container
+and secret-scanning CI fetch complete public history. No raw findings, logs,
+environments or workspaces are uploaded as artifacts. See upstream
+[checkout](https://github.com/actions/checkout) and
 [setup-python](https://github.com/actions/setup-python) documentation.
+
+The security workflow runs independent jobs so secret/dependency-review failures
+do not prevent the existing Python dependency and runtime-image audits:
+
+- Gitleaks 8.30.1 is checksum verified and scans full public Git history and a
+  tracked-source export on pushes, PRs, weekly schedules and manual dispatch.
+  Output is fully redacted. The source scan still runs after a history finding;
+  either scan failing fails the job. Local untracked files are not exported.
+- PR dependency review rejects introduced vulnerabilities of low severity and
+  above across runtime, development and unknown scopes. It uses the GitHub
+  dependency graph, which must be enabled in repository settings. This supplements
+  pip-audit: custom `requirements/*.lock` files still rely on the complete-lock
+  audit. Dependency review neither posts PR comments nor enforces a license policy.
+- A separate CodeQL workflow analyzes Python with `security-extended` queries on
+  pushes, PRs, weekly schedules and manual dispatch. Dependabot branch pushes are
+  excluded because their read-only tokens cannot upload results; their PR runs
+  remain covered. Use advanced code-scanning
+  setup for this workflow; disable any duplicate default CodeQL setup. Review
+  findings in GitHub's Security tab. Configure code-scanning protection rules to
+  block merges on alerts; a completed analysis alone does not mean zero findings.
+
+Weekly Dependabot proposals update GitHub Actions pins only. Review and merge
+them through the same checks; there is no automatic merge. Python dependency
+updates must keep pyproject.toml and reviewed lock files consistent. Scanner
+binaries downloaded directly by shell (Gitleaks/Trivy) need manual version and
+checksum maintenance; Dependabot does not update these downloads.
+
+After publishing these workflows, verify actual hosted runs and configure required
+checks/protection rules in GitHub settings. Local lint/scanner results do not
+prove those settings are enabled. See official
+[CodeQL configuration](https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options),
+[dependency review](https://github.com/actions/dependency-review-action) and
+[Dependabot options](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference).
+The full manual privacy audit above, including built images/layers and private
+identifier comparisons, remains required before release.
 
 For an existing repository, prepare a new `[project].version` in `pyproject.toml` and update `CHANGELOG.md`
 and rerun the checks and privacy audit on the intended release commit. Push only
-reviewed changes, then wait for **check**, **containers** and **security** workflows
-to pass on that exact commit before creating a new version tag. Existing release
+reviewed changes, then wait for **check**, **containers**, **security** and **codeql**
+workflows to pass on that exact commit and resolve security findings before creating
+a new version tag. Require dependency review on the PR before merging. Existing release
 tags, including `v0.3.0`, must not be altered. Record commit, new tag and CI links;
 never describe pending CI or unperformed live acceptance as passed.
 
