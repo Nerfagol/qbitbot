@@ -180,3 +180,16 @@ GitHub dependency graph/advanced CodeQL settings and merge protection need hoste
 verification; custom requirements/*.lock remain covered by pip-audit. Direct
 scanner downloads still need manual version/checksum upkeep. See releases.md.
 Docker image publication is the owner's next separate phase, not implemented here.
+
+## Image advisory maintenance, 2026-11-07
+
+Hosted0515b13 checks/containers/CodeQL/secrets/Python audit passed; security correctly
+failed on qBit Expat/Python and Jackett bundled.NET vulnerabilities. No solver
+startup issue occurred in this run. The patched qBit recipe retains5.3.0 and
+pins libexpat2.10.0-r0, zlib1.4-r0, Python3/pyc family3.14.10-r1 (r0 is no longer
+in the Alpine index). Jackett upstream digestf235901dce0b… is0.24.3025-ls29 with
+.NET9.0.22 in server/updater; Alpine Brotli updates cannot fix its bundled runtime.
+New DB findings also require zlib1.4-r0 in both bot stages and explicit
+libexpat2.10.0-r0/zlib1.4-r0 in FlareSolverr to invalidate vulnerable cached builds.
+Keep build-only fixes, full scan severity gates and existing runtime restrictions.
+See deployment/images.md for exact inputs; dated local/hosted evidence is in progress.md.
