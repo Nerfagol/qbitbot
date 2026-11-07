@@ -36,6 +36,8 @@ their digests. The published Git tag is unchanged, so its original registry
 overlays show the former package names. Use the current overlays/guide for the
 single-package layout. The release's additional `images-0.4.0-single-package.json`
 asset records current references; its original manifest remains historical evidence.
+The three former companion packages were deleted after verified migration and
+explicit owner approval. Their old pull URLs no longer work.
 
 Bundled services:
 

@@ -1,5 +1,20 @@
 # Project Progress
 
+## 2026-11-07 — Completed approved legacy GHCR cleanup
+
+- Owner explicitly approved deleting the3 named legacy packages and versions
+  after verified migration. Cleanup run[42416363560](https://github.com/Nerfagol/qbitbot/actions/runs/42416363560)
+  succeeded on67617b3 after check/containers/security/codeql all passed. The
+  workflow validated all canonical tags and legacy version graphs before deletion.
+- Deleted only qbitbot-qbittorrent, qbitbot-jackett and qbitbot-flaresolverr.
+  Post-cleanup anonymous verification confirmed all8 canonical version/source
+  tags match original release manifest digests and all4 config digests are
+  unchanged. Anonymous legacy pulls are unavailable.
+- Updated release notes/current guide and durable memory. Original Git tag and
+  release manifest remain historical evidence; former companion URLs no longer
+  work. No service restart, tracker query or production state change.
+- Consolidation is complete; no pending cleanup approval or implementation.
+
 ## 2026-11-07 — Verified canonical component tags in one GHCR package
 
 - Sourced143846 passed all4 hosted checks. Manual consolidation42415347375 ran

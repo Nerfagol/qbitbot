@@ -14,7 +14,7 @@ labels, published Git tags and live services. Future publication uses this layou
   access and QNAP pulls against the original manifest/config digests.
 - [x] Update current registry guides and add a consolidated public release asset.
   Retain original immutable source/tag/artifacts as historical evidence.
-- [ ] Only after verified migration, request explicit approval before deleting
+- [x] Only after verified migration, request explicit approval before deleting
   the three old packages, because their existing public pull URLs will break.
   Cleanup must reject unknown legacy versions/tags or mismatching target digests.
 
@@ -36,5 +36,8 @@ manifest/config digests equal the original public lock. QNAP pulled all4 tags wi
 an empty registry config and verified original config/source metadata. Every live
 container ID/start time stayed unchanged. Added a new canonical release manifest
 asset and updated release notes; original Git tag/manifest were retained.
-Legacy package tag lists contain only0.4.0 and its original source SHA. No deletion
-has been authorized or performed; await explicit owner cleanup approval.
+Owner explicitly approved deletion after migration. Cleanup run42416363560 passed
+on67617b3 after all4 hosted CI workflows succeeded and removed the3 named legacy
+packages. Post-cleanup verification confirmed all8 canonical tags and all4 config
+digests match the original release; anonymous legacy pulls are unavailable.
+Release notes/current guide reflect the completed cleanup. No remaining work.
