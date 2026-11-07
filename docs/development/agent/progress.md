@@ -1,5 +1,29 @@
 # Project Progress
 
+## 2026-11-07 — Verified restart-only Jackett tracker warm-up
+
+- Owner selected restart-only warm-up, explicitly rejecting periodic requests;
+  complete-source search behavior remains unchanged. Added a native s6 oneshot
+  to the derived Jackett image, enabled by bundled Compose and opt-in elsewhere.
+- After service readiness it uses the existing local API key privately, lists
+  configured indexers and invokes Test once each within a bounded budget. No
+  helper retries, periodic polling or bot-startup trigger. Health gates on this
+  boot's completion, including failures, then probes only the local Dashboard.
+  Internal process restarts do not rerun the container hook. Test can itself
+  involve several tracker HTTP requests; expiry can still cause a cold search.
+- Eight regressions first failed for missing implementation; nine offline helper
+  tests now pass, including failures, malformed IDs, secret suppression, stale
+  completion and total budget. Full make check645 passed. Context exclusion,
+  actionlint, redacted Gitleaks and full disposable public-stack API/EN-RU/
+  outage/restart/rollback/backup acceptance passed. Jackett scan found0 records.
+- Synthetic native-s6 integration used real curl/jq with network-disabled HTTP;
+  verified health waits, one Test each including500, no idle/retry traffic and
+  exactly one additional run after container restart. Added this check to CI.
+  Independent review found no blockers after documenting host jq prerequisite.
+- NAS deployment and hosted checks remain pending for this source change. No
+  real tracker query was used to validate the helper. Private deployment evidence
+  stays outside Git; GHCR remains deferred until acceptance.
+
 ## 2026-11-07 — Corrected silent health-card reopening during NAS acceptance
 
 - Owner reports health appears ignored and a roughly30s search. Runtime logs
@@ -22,9 +46,14 @@
 - Owner explicitly selected waiting for complete source coverage. No indexer,
   timeout, source-completeness policy or search request code changed. Real query
   history/results/credentials remain under private /tmp evidence, never fixtures.
-- Next publish this verified fix and update only the NAS bot with a fresh private
-  state backup; retain the existing service images and rollback path. Owner must
-  retry `/health` in Telegram; GHCR implementation remains deferred.
+- Published16599fc; all4 hosted workflows passed. Rebuilt/scanned/transferred
+  only the bot, verified its archive/config/layer and installed-source/catalog
+  hashes, and deployed it with a fresh verified offline backup and retained
+  durable card identities. Three service containers were not restarted/replaced.
+- Post-update native Telegram/menu checks, SQLite integrity, service readiness
+  and startup/polling-conflict log checks passed. Owner must retry `/health` in
+  Telegram; GHCR implementation remains deferred. Private artifacts remain
+  outside the public checkout.
 
 ## 2026-11-07 — Deployed verified candidate to QNAP for acceptance
 

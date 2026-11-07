@@ -6,6 +6,9 @@ deploy/**
 !deploy/docker/
 deploy/docker/**
 !deploy/docker/*.Dockerfile
+!deploy/docker/jackett/
+deploy/docker/jackett/**
+!deploy/docker/jackett/startup.sh
 !deploy/docker/flaresolverr/
 deploy/docker/flaresolverr/**
 !deploy/docker/flaresolverr/*.py

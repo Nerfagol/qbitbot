@@ -140,7 +140,8 @@ does not certify every later revision or platform.
 
 ## Development
 
-Use Python 3.12:
+Use Python 3.12 and install the host `jq` command (used by the offline Jackett
+startup-helper tests; the Jackett image already includes it):
 
 ```sh
 python3.12 -m venv .venv

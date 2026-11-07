@@ -21,3 +21,5 @@ jobs:
       - run: make compose-check
       - run: make integration
       - run: make integration-public
+      - run: docker build -f deploy/docker/jackett.Dockerfile -t qbitbot-jackett-startup:ci .
+      - run: .venv/bin/python integration/jackett_startup.py --image qbitbot-jackett-startup:ci

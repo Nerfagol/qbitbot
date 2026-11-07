@@ -10,6 +10,14 @@ belong here; keep real bot.env/.env, databases and downloads outside this folder
 
 Follow the [setup guides](../docs/README.md) to fill credentials before startup.
 
+The bundled Jackett image runs a best-effort tracker warm-up once per container
+start, before its health gate lets the bot start. It invokes Jackett's Test API
+once per configured indexer, without helper retries or periodic requests. A bot
+restart does not trigger it. Set `JACKETT_WARMUP_ON_START=0` in Compose's `.env`
+and recreate Jackett to disable it. Standalone uses of the derived image must
+explicitly set `JACKETT_WARMUP_ON_START=1`; bot-only deployments cannot warm an
+external Jackett automatically. See [limits](../docs/troubleshooting.en.md#slow-first-search).
+
 ```sh
 # Bundled stack, after setup:
 docker compose up -d --build

@@ -241,3 +241,19 @@ outlier; a repeated cached query was50ms HTTP and an uncached variation564ms wit
 both indexers responding. The manual API path is unchanged by client extraction.
 No persistent30s application slowdown or exact upstream cause was established;
 do not claim a speed fix or silently drop slow sources. Keep raw history private.
+
+## Restart-only Jackett warm-up, 2026-11-07
+
+Owner explicitly rejects periodic tracker warm-up traffic. The derived Jackett
+image now has an opt-in native s6 oneshot, enabled by bundled Compose through
+JACKETT_WARMUP_ON_START=1. It runs after svc-jackett readiness, lists configured
+indexers locally and invokes Test at most once each within a roughly120s budget.
+No helper retries, scheduling or bot-startup trigger. Test can itself involve
+multiple tracker HTTP requests. Completion is best effort, tied to host boot ID
+and PID1 start ticks; health waits for it, then probes only the local Dashboard.
+Internal service-process restarts do not rerun this container-start hook.
+Do not implement this as custom-services.d: its longruns restart after exit.
+Never promise warm-up prevents later cookie expiry or all30s outliers.
+Native s6/real curl/jq verification uses integration/jackett_startup.py against
+synthetic HTTP in a network-disabled namespace, including a500 response and
+container restart. Offline helper tests require host jq, declared in README.

@@ -148,6 +148,7 @@ def check(docker="docker", context=None):
             "docs/licenses/THIRD_PARTY_NOTICES.md",
             "deploy/docker/flaresolverr/LICENSE",
             "deploy/docker/flaresolverr/strict_tls.py",
+            "deploy/docker/jackett/startup.sh",
         ]
         forbidden = [
             "bot.env",
@@ -162,6 +163,7 @@ def check(docker="docker", context=None):
             "docs/archive/private-canary.txt",
             "deploy/private.env",
             "deploy/docker/flaresolverr/private.env",
+            "deploy/docker/jackett/private.env",
             ".git/private-canary",
             "state/private-canary",
             "backups/private-canary",

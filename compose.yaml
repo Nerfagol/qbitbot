@@ -59,11 +59,12 @@ services:
       PGID: ${PGID:-1000}
       TZ: ${TZ:-Etc/UTC}
       AUTO_UPDATE: "false"
+      JACKETT_WARMUP_ON_START: ${JACKETT_WARMUP_ON_START:-1}
     volumes: [jackett-config:/config]
     ports:
       - ${WEB_BIND_ADDRESS:-127.0.0.1}:${JACKETT_WEBUI_PORT:-9117}:9117
     healthcheck:
-      test: [CMD, curl, --fail, --silent, --output, /dev/null, --max-time, "4", http://127.0.0.1:9117/UI/Dashboard]
+      test: [CMD, /usr/local/bin/qbitbot-jackett-startup, health]
       interval: 10s
       timeout: 5s
       retries: 12
