@@ -206,3 +206,38 @@ Merge commits preserve history and avoid Dependabot-authored squash/SARIF issues
 An intermittent solver Chrome-not-reachable startup failure occurred in a push
 run while the same head's PR run passed. A single targeted job rerun passed;
 do not treat that as a root-cause fix or weaken browser/TLS/scanner requirements.
+
+## Authorized QNAP candidate rollout, 2026-11-07
+
+Owner authorized deploying verified public9307ad8 before GHCR work. All4 candidate
+images were scanned, transferred, verified and started with existing private
+configuration, original projects/mounts and nonroot/read-only restrictions.
+Offline SQLite/config backups and retained old images support rollback. Automated
+NAS readiness, installed-source/catalog hashes, torrent identity retention,
+database integrity, EN/RU native menus and controlled bot restart passed. Manual
+Telegram search/download/completion/hourly acceptance remains separate and pending.
+Keep private deployment artifacts on NAS or /tmp, never in Git.
+
+Cross-engine image identity: newer Docker's local image ID may be an OCI manifest
+ID while QNAP reports the image-config digest. Compare exported archive config
+digest, rootfs layer diff IDs and revision labels instead of assuming IDs match.
+After stopping a poller, QNAP's running-container listing can briefly lag its
+stopped state. Boundedly wait for no state-volume writers, then also verify the
+specific container's Running=false; never bypass this backup safety condition.
+
+## Health acknowledgement and search acceptance, 2026-11-07
+
+Manual NAS testing exposed silent `/health` reopening: editing a saved older card
+creates no current reply. Reopening now replies with localized acknowledgement
+targeting that same card; durable ownership/token, hourly updates and pins persist.
+PTB21.11.1 Message.reply_text converts legacy reply_to_message_id into
+ReplyParameters, then rejects a separate allow_sending_without_reply. Pass one
+explicit ReplyParameters object containing both; the real PTB transport regression
+must remain because the small Message fake does not exercise that validation.
+
+Owner explicitly chose waiting for complete source coverage. Preserve indexers,
+timeouts and coverage reporting. Private search history had a30.334s upstream
+outlier; a repeated cached query was50ms HTTP and an uncached variation564ms with
+both indexers responding. The manual API path is unchanged by client extraction.
+No persistent30s application slowdown or exact upstream cause was established;
+do not claim a speed fix or silently drop slow sources. Keep raw history private.

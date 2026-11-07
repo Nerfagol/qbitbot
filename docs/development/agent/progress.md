@@ -1,5 +1,57 @@
 # Project Progress
 
+## 2026-11-07 — Corrected silent health-card reopening during NAS acceptance
+
+- Owner reports health appears ignored and a roughly30s search. Runtime logs
+  had no handler/startup errors; persisted HealthManager.open edited the saved
+  old message and returned without a current acknowledgement. Added localized
+  EN/RU reply pointing to the same card without replacing its token/pin/hourly
+  subscription. Unauthorized users still receive no response or edit.
+- Three regression failures became green. Review found the initial legacy reply
+  arguments fail real PTB21.11.1 validation despite passing the simple fake.
+  Added a real Bot/Message/BaseRequest offline regression, observed the exact
+  ValueError RED, switched to explicit ReplyParameters and verified GREEN.
+- Final make check636 passed (25 health tests;53 focused health/locale tests),
+  with lint/format/compile/dependency checks. Independent review found no remaining
+  blockers. Source handler CRLF and runtime dependency pins are untouched.
+- Private persisted history confirms the reported upstream search took30.334s;
+  an older run was493ms. Repeat cache result took50ms HTTP; a fresh variation
+  took564ms, with individual sources232/533ms and complete coverage. Same manual
+  search endpoint existed before client extraction. Root cause of the individual
+  slow upstream run remains unknown; no search-speed fix is claimed.
+- Owner explicitly selected waiting for complete source coverage. No indexer,
+  timeout, source-completeness policy or search request code changed. Real query
+  history/results/credentials remain under private /tmp evidence, never fixtures.
+- Next publish this verified fix and update only the NAS bot with a fresh private
+  state backup; retain the existing service images and rollback path. Owner must
+  retry `/health` in Telegram; GHCR implementation remains deferred.
+
+## 2026-11-07 — Deployed verified candidate to QNAP for acceptance
+
+- Owner explicitly authorized latest-version NAS rollout/testing before GHCR.
+  Deployed public9307ad8 to Linux amd64 using4 exact candidate images with
+  revision labels. No source/runtime code change or registry publication.
+- Scan gate passed for all4; transferred archive checksum, exported config/layer
+  digests and installed Python/catalog hashes verified. Preserved existing
+  private descriptors except image tags, all storage/network/project identity,
+  credentials, resource/security settings and retained previous images.
+- Offline bot SQLite snapshots and service-configuration backups verified before
+  switching. Candidate read identical schemas/row counts; all existing torrent
+  identities remained present. No test torrent was added/paused/deleted.
+- Automated NAS checks passed: authenticated qBit/Jackett/state readiness, service
+  health, all3 DB integrity checks, Telegram identity and EN/RU command menus,
+  no webhook, controlled bot restart and no startup/polling-conflict log errors.
+- Two preliminary attempts safely resumed original images before replacement:
+  a post-stop container-list lag tripped the strict backup guard; then a helper
+  snapshot-copy path typo was corrected with an explicit path-equality assertion.
+  Final attempt used a fresh backup destination and completed successfully.
+- Private scripts/configuration/snapshots/logs/reports stay on NAS and under
+  /tmp/qbitbot-qnap-20261107; none are imported into the public checkout. Only
+  sanitized agent handoff notes changed locally and remain uncommitted.
+- Next: owner tests real Telegram search/download/completion behavior and confirms
+  acceptance before GHCR implementation. Automated checks are not full live
+  acceptance; hourly delivery and real completion observation remain pending.
+
 ## 2026-11-07 — Validated and merged Dependabot action updates
 
 - Owner authorized enabling required security settings, refreshing/testing and

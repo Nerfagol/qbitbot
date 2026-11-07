@@ -2,12 +2,15 @@
 
 import asyncio
 from contextlib import nullcontext
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
 import requests
+from telegram import Bot, Message as TelegramMessage
 from telegram.error import BadRequest, Forbidden, NetworkError
+from telegram.request import BaseRequest
 
 from tests.helpers import Message, update
 from tests.test_persistence import async_test
@@ -61,13 +64,97 @@ async def test_open_refresh_and_hourly_cycle_edit_one_card(bot, tmp_path):
         assert "не проверялись" in card.text
         assert calls == ["qbit", "jackett"]
         await manager.open(update(request))
-        assert len(request.replies) == 1
+        assert len(request.replies) == 2
+        assert request.sent[-1]["reply_parameters"].message_id == card.message_id
         await manager.callback(callback(card, action(card, "refresh")))
         assert len(calls) == 2  # Fast refreshes share a short cache.
         await manager.cycle()
         assert calls == ["qbit", "jackett"] * 2
         assert telegram.edit_message_text.call_args.kwargs["message_id"] == card.message_id
         assert not telegram.pin_chat_message.await_count
+    finally:
+        await manager.close()
+
+
+@async_test
+@pytest.mark.parametrize("language, acknowledgement", [("en", "updated"), ("ru", "обновлена")])
+async def test_reopening_saved_card_replies_visibly_without_replacing_it(
+    bot, tmp_path, language, acknowledgement
+):
+    manager, _, _ = setup_health(bot, tmp_path)
+    request = Message()
+    await manager.open(update(request))
+    card = request.replies[-1]
+    token = manager.row(101, 303)["token"]
+    await manager.close()
+    restored, _, transport = setup_health(bot, tmp_path)
+    restored.api.language_for_user = lambda user: language
+    try:
+        command = Message("/health", message_id=200)
+        await restored.open(update(command))
+        assert len(command.replies) == 1
+        assert acknowledgement in command.replies[0].text
+        assert command.sent[0]["reply_parameters"].message_id == card.message_id
+        assert restored.row(101, 303)["message_id"] == card.message_id
+        assert restored.row(101, 303)["token"] == token
+        assert restored.db.execute("SELECT COUNT(*) FROM cards").fetchone()[0] == 1
+        assert transport.edit_message_text.await_count == 1
+        unauthorized = Message("/health")
+        await restored.open(update(unauthorized, user_id=999))
+        assert not unauthorized.replies
+        assert transport.edit_message_text.await_count == 1
+    finally:
+        await restored.close()
+
+
+@async_test
+async def test_reopened_card_reply_passes_real_telegram_message_parameter_validation(bot, tmp_path):
+    sent = []
+
+    class OfflineRequest(BaseRequest):
+        async def initialize(self):
+            pass
+
+        async def shutdown(self):
+            pass
+
+        async def do_request(self, url, method, request_data=None, **kwargs):
+            if url.endswith("/getMe"):
+                result = {"id": 777, "is_bot": True, "first_name": "Synthetic"}
+            else:
+                assert url.endswith("/sendMessage")
+                sent.append(request_data.parameters)
+                result = {
+                    "message_id": 300,
+                    "date": 0,
+                    "chat": {"id": 303, "type": "private"},
+                    "text": request_data.parameters["text"],
+                }
+            return 200, json.dumps({"ok": True, "result": result}).encode()
+
+    manager, _, _ = setup_health(bot, tmp_path)
+    try:
+        first = Message()
+        await manager.open(update(first))
+        card = first.replies[-1]
+        transport = OfflineRequest()
+        async with Bot(
+            "123:SYNTHETIC", request=transport, get_updates_request=transport
+        ) as telegram:
+            command = TelegramMessage.de_json(
+                {
+                    "message_id": 200,
+                    "date": 0,
+                    "chat": {"id": 303, "type": "private"},
+                    "text": "/health",
+                },
+                telegram,
+            )
+            await manager.open(update(command))
+        assert len(sent) == 1
+        assert sent[0]["reply_parameters"]["message_id"] == card.message_id
+        assert sent[0]["reply_parameters"]["allow_sending_without_reply"] is True
+        assert manager.row(101, 303)["message_id"] == card.message_id
     finally:
         await manager.close()
 

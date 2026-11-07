@@ -199,6 +199,7 @@
   "download.link_failed": "Could not open this download: it may have changed, the link expired, or the service is unavailable.",
   "status.recent": "Recent:",
   "health.title": "🩺 System health",
+  "health.reopened": "🩺 Health card updated. Tap the replied-to message to open it.",
   "health.bot": "🟢 Bot — running",
   "health.ok": "available",
   "health.timeout": "timed out",

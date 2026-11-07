@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make repeated `/health` commands visibly acknowledge the refreshed card and
+  reply to its message, including after a restart. Retain one durable card,
+  hourly updates, explicit pinning and English/Russian acknowledgements.
+
 - Refresh the README quick start and CI badges, align English/Russian source-build
   upgrades, and document version/tag preparation for the next release.
 

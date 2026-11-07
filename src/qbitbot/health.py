@@ -15,7 +15,7 @@ import requests
 from qbitbot.http_safety import MAX_CAPABILITIES_BYTES, open_response, read_limited
 
 from qbitbot.i18n import tr, normalize_language
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyParameters
 from telegram.error import BadRequest, Forbidden, TelegramError
 
 INTERVAL = 3600
@@ -228,6 +228,13 @@ class HealthManager:
             await self.sample()
             row = self.row(user, chat)
             if row and await self.edit(row):
+                await update.message.reply_text(
+                    tr("health.reopened", self.language(user)),
+                    reply_parameters=ReplyParameters(
+                        message_id=row["message_id"], allow_sending_without_reply=True
+                    ),
+                    parse_mode=None,
+                )
                 return
             token = secrets.token_hex(8)
             message = await update.message.reply_text(
