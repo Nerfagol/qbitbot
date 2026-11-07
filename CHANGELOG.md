@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.4.0 — 2026-11-07
+
+- Add tag-triggered, exact-commit CI-gated GHCR publishing for the bot and patched
+  qBittorrent/Jackett/FlareSolverr images on Linux amd64, with version/source
+  labels, immutable version tags, pre-upload scans and registry Compose overlays.
+
+- Warm configured Jackett sources with one empty API-key search per container
+  start, before bot readiness. No periodic warm-up, helper retries or bot-restart
+  trigger. Keep full-source user searches and dashboard authentication unchanged.
+
 - Make repeated `/health` commands visibly acknowledge the refreshed card and
   reply to its message, including after a restart. Retain one durable card,
   hourly updates, explicit pinning and English/Russian acknowledgements.

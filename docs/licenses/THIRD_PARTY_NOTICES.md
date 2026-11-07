@@ -1,8 +1,10 @@
 # Third-party notices
 
 Original qbitbot code uses the [MIT license](../../LICENSE). Upstream packages and images
-retain their own copyrights/licenses. This source release references service images;
-it does not redistribute or relicense their binaries. Package license files remain
+retain their own copyrights/licenses. GHCR companion images redistribute derived
+upstream service images without relicensing their binaries. Their Dockerfiles,
+pinned upstream inputs and source/license links below describe those components.
+Package license files remain
 in installed distributions. Runtime/development versions are fixed in the lock files.
 
 ## Python distributions
@@ -37,6 +39,8 @@ Image digests are recorded in [the image inventory](../deployment/images.md).
 - [qBittorrent licensing](https://github.com/qbittorrent/qBittorrent/blob/master/COPYING):
   source GPL-2.0-or-later; binary distribution GPL-3.0-or-later, with its stated OpenSSL exception.
 - [Jackett](https://github.com/Jackett/Jackett/blob/master/LICENSE): GPL-2.0.
+  Corresponding application source: [Jackett0.24.3025](https://github.com/Jackett/Jackett/tree/v0.24.3025)
+  and [qBittorrent5.3.0](https://github.com/qbittorrent/qBittorrent/tree/release-5.3.0).
 - LinuxServer [qBittorrent image build](https://github.com/linuxserver/docker-qbittorrent/blob/master/LICENSE)
   and [Jackett image build](https://github.com/linuxserver/docker-jackett/blob/master/LICENSE): GPL-3.0.
 - [CPython](https://docs.python.org/3.12/license.html) and the
@@ -56,6 +60,6 @@ preview images contain only synthetic fixture text and no third-party screenshot
 
 ## Package build backend
 
-Setuptools 68.1.2 uses MIT and is pinned in requirements/build.lock.
+Setuptools84.2.1 uses MIT and is pinned in requirements/build.lock.
 It constructs the wheel in a separate build stage and is absent from the final
-runtime image. Its metadata is available from [PyPI](https://pypi.org/project/setuptools/68.1.2/).
+runtime image. Its metadata is available from [PyPI](https://pypi.org/project/setuptools/84.2.1/).

@@ -1,5 +1,35 @@
 # Project Progress
 
+## 2026-11-07 — Prepared GHCR release0.4.0 for publication
+
+- Owner explicitly authorized the proposed workflow/version/changelog/publication
+  and QNAP pull test. Selected0.4.0 for accumulated changes; existingv0.3.0 is
+  unchanged. No new runtime features, periodic tracker requests or state migrations.
+- Added tag-only publication with exact main-commit check/containers/security/
+  codeql gate, aligned package/changelog/tag validation and existing-version-tag
+  refusal. Only the upload job receives packages:write via ephemeral GITHUB_TOKEN.
+  Four amd64 images get version/source tags and OCI metadata; exact built images
+  undergo synthetic startup/browser tests and vulnerability/secret scans first.
+- Registry overlays remove builds while preserving all deployment settings;
+  resolved-config equivalence across0.4.0/0.4.1 passed. Added setup/registry guides,
+  version/changelog and third-party redistribution/source notices without changing
+  existing Compose defaults or project/state identities. Host jq remains required.
+- Verification:659 tests/lint/format/compile/dependency checks, make compose-check,
+  make integration, make integration-public, wheel0.4.0 and candidate native-s6/
+  real-dashboard-auth/browser-JS/TLS fixtures passed. All4 candidate Trivy scans
+  found0 vulnerabilities/secrets. Independent workflow review found no blockers.
+- Redacted source/history/staged Gitleaks and private-identifier comparison over
+  public Git/source and17171 regular files/blobs across43 unique layers passed.
+  Layer Gitleaks's5 findings were4 upstream public signing fingerprints and an
+  official Alpine libmagic header database. Independent equality review cleared
+  exact anchored artifact-only exceptions; final layer scan passed. Repository
+  source-scanner rules remain unchanged. No raw findings/private data enter Git.
+- Next: publish reviewed source, wait for exact-commit hosted checks, create new
+  version tag and verify real GHCR upload/API behavior. New personal GHCR packages
+  default private; official GitHub docs provide only an owner UI visibility change.
+  Complete all available work before requesting that one-time external action;
+  anonymous public/QNAP pulls and GitHub release publication remain pending.
+
 ## 2026-11-07 — Corrected warm-up API authorization after NAS acceptance
 
 - The first warm-up source1538285 passed all4 hosted workflows, but real NAS

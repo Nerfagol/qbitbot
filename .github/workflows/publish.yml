@@ -1,0 +1,101 @@
+name: publish
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: registry-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.gate.outputs.version }}
+      prefix: ${{ steps.gate.outputs.prefix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
+      - name: Require aligned version and successful source checks
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python integration/registry_release.py gate
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      packages: write
+    env:
+      VERSION: ${{ needs.verify.outputs.version }}
+      PREFIX: ${{ needs.verify.outputs.prefix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
+      - name: Refuse existing version tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python integration/registry_release.py available
+      - name: Build the four Linux amd64 release images
+        run: |
+          for component in bot qbittorrent jackett flaresolverr; do
+            image="$PREFIX"
+            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
+            docker build --platform linux/amd64 -f "deploy/docker/$component.Dockerfile" \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              -t "$image:$VERSION" -t "$image:sha-$GITHUB_SHA" .
+          done
+      - name: Verify release artifacts with synthetic services
+        run: |
+          python integration/jackett_startup.py --image "$PREFIX-jackett:$VERSION"
+          python integration/flaresolverr.py --image "$PREFIX-flaresolverr:$VERSION"
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges:true -e "EXPECTED_VERSION=$VERSION" \
+            --entrypoint python "$PREFIX:$VERSION" \
+            -c 'import importlib.metadata, os; assert importlib.metadata.version("qbitbot") == os.environ["EXPECTED_VERSION"]'
+      - name: Scan exact release images before uploading
+        run: |
+          mkdir "$RUNNER_TEMP/trivy"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz \
+            --output "$RUNNER_TEMP/trivy/archive.tar.gz"
+          printf '%s  %s\n' c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0 \
+            "$RUNNER_TEMP/trivy/archive.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/trivy/archive.tar.gz" -C "$RUNNER_TEMP/trivy" trivy
+          for component in bot qbittorrent jackett flaresolverr; do
+            image="$PREFIX"
+            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
+            "$RUNNER_TEMP/trivy/trivy" image --scanners vuln,secret --exit-code 1 --no-progress "$image:$VERSION"
+          done
+      - name: Upload verified images
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io' EXIT
+          for component in bot qbittorrent jackett flaresolverr; do
+            image="$PREFIX"
+            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
+            docker push "$image:$VERSION"
+            docker push "$image:sha-$GITHUB_SHA"
+            printf '%s\n' "Published $image:$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          done

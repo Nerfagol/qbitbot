@@ -5,18 +5,18 @@ private Git refs, diagnostic reports or database snapshots into a release.
 
 ## Release preparation
 
-The latest published release is v0.3.0. Current changes remain under **Unreleased**
-in CHANGELOG.md; package metadata still says0.3.0. Before the next release, select
-a new version, update `[project].version` in pyproject.toml and move the unreleased
-notes under that version with the actual release date. Keep the package version,
-Git tag and any future Docker version tags consistent. Never republish current
-source under the existing v0.3.0 tag.
+Version0.4.0 is prepared in pyproject.toml and the dated changelog. v0.3.0 remains
+the existing published release until the new release passes its publication and
+registry-pull checks. For each later release, choose a new version, update
+`[project].version` and date its changelog notes. Keep package, Git tag and Docker
+version tags aligned. Never overwrite an existing release tag or version image.
 
 README badges track main; verify the intended release commit separately. Keep the
 English/Russian installation and upgrade guides aligned. The supported verified
-container target remains Linux amd64. Current instructions build images from
-source; GHCR publication is not implemented yet. Add registry pull instructions
-only after publishing and testing the actual images.
+container target remains Linux amd64. Default Compose builds from source;
+[registry overlays and publication requirements](../deployment/registry.md)
+provide the prebuilt-image path. New personal GHCR packages default to private;
+the owner must set public visibility before anonymous/QNAP pulls can be verified.
 
 ## Verification
 
@@ -56,6 +56,14 @@ raw findings. Check forbidden file classes, image `/app` allowlist, PNG metadata
 not a privacy guarantee. Resolve every finding before upload.
 
 ## CI and publication
+
+`publish.yml` runs on stable version tags or manual dispatch at such a tag. Its
+read-only gate requires check/containers/security/codeql success on the exact main
+commit and validates tag/package/changelog agreement. A separate job gets only
+contents:read and packages:write, refuses existing version images, builds amd64
+images, verifies synthetic Jackett/browser behavior and scans exact images before
+upload. The ephemeral workflow token is used only for registry/API operations.
+Verify anonymous pulls and QNAP compatibility before publishing the GitHub release.
 
 Workflow permissions default to `contents: read`; only the CodeQL analysis job adds
 `security-events: write` to upload code-scanning results. Actions are full-commit

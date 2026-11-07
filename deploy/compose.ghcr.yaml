@@ -1,0 +1,11 @@
+# Requires Docker Compose 2.24.4+. Apply after the root source Compose file.
+services:
+  bot:
+    build: !reset null
+    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.0}
+  qbittorrent:
+    build: !reset null
+    image: ghcr.io/nerfagol/qbitbot-qbittorrent:${QBITBOT_VERSION:-0.4.0}
+  jackett:
+    build: !reset null
+    image: ghcr.io/nerfagol/qbitbot-jackett:${QBITBOT_VERSION:-0.4.0}

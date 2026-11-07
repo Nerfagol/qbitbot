@@ -81,10 +81,19 @@ docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d
 
 This starts only the bot. Do not run both entry points with the same Telegram token.
 
+## Prebuilt GHCR images
+
+For Linux amd64 and Compose2.24.4+, use the [registry overlays and commands](deployment/registry.md)
+after filling the same private settings described above. They support the bundled
+stack, bot-only mode and optional FlareSolverr, preserving project/volume/security
+settings. Select `QBITBOT_VERSION=0.4.0` in `.env`, pull the versioned images and
+use `--no-build`. First publication needs public package visibility before
+anonymous pulls work. The default commands above remain source builds.
+
 ## Upgrading
 
-Prebuilt registry images are not published yet. Upgrade the current source-build
-installation from the same checkout and Compose project. First follow the
+For registry upgrades, follow the [registry procedure](deployment/registry.md#upgrade-and-rollback).
+Upgrade a source-build installation from the same checkout and Compose project. First follow the
 [backup guide](backup.en.md), record the current Git commit, and check out the
 reviewed release or commit you intend to run. Preserve `.env`, `bot.env`, volume
 names, download paths and any explicit Compose project name. For an older

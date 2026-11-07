@@ -264,3 +264,21 @@ cookie even with the API key; do not use them or weaken dashboard protection.
 Offline helper tests require host jq, declared in README. With cap-drop ALL,
 root has no DAC override: private service configuration backups must run as the
 existing config owner, without changing state ownership or broadening permissions.
+
+## GHCR release preparation, 2026-11-07
+
+Owner authorized implementing/publishing registry release0.4.0 and QNAP pull tests.
+Keep default Compose source builds; registry overlays require Compose2.24.4+ and
+remove only builds/add version images, preserving projects/state/security. Publish
+bot plus three patched companions, Linux amd64 only, with version and full SHA
+tags. No mutable latest tag. Existingv0.3.0 and version images must not be replaced.
+integration/registry_release.py requires a stable tag, matching package/changelog,
+exact main-push checks and absent image version tags; only upload job gets
+packages:write. If a partial upload leaves version tags, use a new version rather
+than overwriting artifacts. Source linking inherits permissions, not GHCR visibility:
+new personal packages are private and need owner Package settings UI to become
+public; supported REST/GraphQL provides no visibility mutation. Do not claim
+public pulls before anonymous verification or require production PATs for users.
+Current all-layer privacy audit found only public Python signing fingerprints
+and libmagic5.47-r2 format recognizers. Verify exact pinned-base/package equality
+before applying anchored artifact-only exceptions; never weaken source scanning.

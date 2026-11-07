@@ -24,6 +24,7 @@ def check(docker="docker", context=None):
         "QBIT_WEBUI_PORT",
         "JACKETT_WEBUI_PORT",
         "TORRENT_PORT",
+        "QBITBOT_VERSION",
     ):
         env.pop(key, None)
     with tempfile.TemporaryDirectory(prefix="qbitbot-config-") as directory:
@@ -32,6 +33,9 @@ def check(docker="docker", context=None):
             "compose.yaml",
             "deploy/compose.bot-only.yaml",
             "deploy/compose.flaresolverr.yaml",
+            "deploy/compose.ghcr.yaml",
+            "deploy/compose.bot-only.ghcr.yaml",
+            "deploy/compose.flaresolverr.ghcr.yaml",
         ):
             (root / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, root / name)
@@ -133,6 +137,42 @@ def check(docker="docker", context=None):
                     assert not bot.get("depends_on")
                     if not blank:
                         assert bot["environment"]["QBIT_URL"] == "http://external.invalid:8080"
+        # Resolve the actual registry overlays and compare every setting except
+        # image/build. No additional service, network or durable volume may appear.
+        variants = (
+            (["compose.yaml"], ["deploy/compose.ghcr.yaml"]),
+            (["deploy/compose.bot-only.yaml"], ["deploy/compose.bot-only.ghcr.yaml"]),
+            (
+                ["compose.yaml", "deploy/compose.flaresolverr.yaml"],
+                ["deploy/compose.ghcr.yaml", "deploy/compose.flaresolverr.ghcr.yaml"],
+            ),
+        )
+
+        def resolved(files, version):
+            result = subprocess.run(
+                command
+                + ["compose", "--project-directory", str(root)]
+                + [arg for f in files for arg in ("-f", str(root / f))]
+                + ["config", "--format", "json"],
+                env=env | {"QBITBOT_VERSION": version},
+                capture_output=True,
+                timeout=30,
+            )
+            if result.returncode:
+                raise RuntimeError("Registry Compose resolution failed; output withheld")
+            return json.loads(result.stdout)
+
+        for source_files, overlays in variants:
+            for version in ("0.4.0", "0.4.1"):
+                source = resolved(source_files, version)
+                registry = resolved(source_files + overlays, version)
+                assert source["services"].keys() == registry["services"].keys()
+                for name, service in registry["services"].items():
+                    suffix = "" if name == "bot" else "-" + name
+                    assert service.pop("image") == f"ghcr.io/nerfagol/qbitbot{suffix}:{version}"
+                    assert "build" not in service
+                    source["services"][name].pop("build")
+                assert registry == source
         # Exercise Docker's real directory-context filtering, not just a hand-picked
         # tar archive (stdin archives bypass the CLI's .dockerignore processing).
         allowed = [

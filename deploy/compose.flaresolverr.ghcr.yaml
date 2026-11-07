@@ -1,0 +1,5 @@
+# Apply after compose.flaresolverr.yaml and the bundled registry overlay.
+services:
+  flaresolverr:
+    build: !reset null
+    image: ghcr.io/nerfagol/qbitbot-flaresolverr:${QBITBOT_VERSION:-0.4.0}

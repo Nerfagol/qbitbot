@@ -1,0 +1,5 @@
+# Apply after compose.bot-only.yaml, with --project-directory . from root.
+services:
+  bot:
+    build: !reset null
+    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.0}

@@ -7,6 +7,8 @@ belong here; keep real bot.env/.env, databases and downloads outside this folder
 - deploy/compose.bot-only.yaml connects the bot to existing services.
 - deploy/compose.flaresolverr.yaml adds an optional browser to the bundled stack.
 - deploy/docker/ owns all image recipes and solver build patches.
+- deploy/compose.*ghcr.yaml overlays select versioned GHCR images without builds;
+  see [registry commands and first-publication visibility](../docs/deployment/registry.md).
 
 Follow the [setup guides](../docs/README.md) to fill credentials before startup.
 

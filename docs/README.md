@@ -11,6 +11,7 @@ Commands in current guides run from the repository root.
 - [Container restrictions and offline state migration](deployment/container-hardening.md)
 - [Optional FlareSolverr](deployment/flaresolverr.md)
 - [Image inputs](deployment/images.md)
+- [GHCR images and registry overlays](deployment/registry.md)
 
 ## Develop and release
 
