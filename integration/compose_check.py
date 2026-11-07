@@ -168,8 +168,8 @@ def check(docker="docker", context=None):
                 registry = resolved(source_files + overlays, version)
                 assert source["services"].keys() == registry["services"].keys()
                 for name, service in registry["services"].items():
-                    suffix = "" if name == "bot" else "-" + name
-                    assert service.pop("image") == f"ghcr.io/nerfagol/qbitbot{suffix}:{version}"
+                    prefix = "" if name == "bot" else name + "-"
+                    assert service.pop("image") == f"ghcr.io/nerfagol/qbitbot:{prefix}{version}"
                     assert "build" not in service
                     source["services"][name].pop("build")
                 assert registry == source

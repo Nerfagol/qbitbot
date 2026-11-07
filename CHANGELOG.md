@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Group runtime images under one GHCR package with component-prefixed companion
+  tags. Add digest-preserving consolidation of0.4.0 and guarded, explicitly
+  approved legacy cleanup; keep separate containers, state and service isolation.
+
 - Keep generated disposable integration credentials in explicit Compose subprocess
   environments; fixture env/override files no longer store their values.
 

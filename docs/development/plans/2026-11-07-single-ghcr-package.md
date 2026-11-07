@@ -10,9 +10,9 @@ labels, published Git tags and live services. Future publication uses this layou
 - [x] Add a checksum-pinned, manual, main-only consolidation workflow. Verify
   exact current CI and the public0.4.0 source/digest lock; reject conflicting
   target tags, preserve existing equal tags and verify every copied digest.
-- [ ] Verify/review source, publish it and run consolidation. Test anonymous
+- [x] Verify/review source, publish it and run consolidation. Test anonymous
   access and QNAP pulls against the original manifest/config digests.
-- [ ] Update current registry guides and add a consolidated public release asset.
+- [x] Update current registry guides and add a consolidated public release asset.
   Retain original immutable source/tag/artifacts as historical evidence.
 - [ ] Only after verified migration, request explicit approval before deleting
   the three old packages, because their existing public pull URLs will break.
@@ -29,3 +29,12 @@ regctl0.11.7 was checksum verified and read-only checks confirmed every original
 released digest and complete raw manifest graph. Source publication is phased:
 publish the migration/publisher first while keeping existing registry overlays
 valid; switch overlays/guides only after new tags are anonymously accessible.
+
+Sourced143846 passed all4 hosted workflows; consolidation run42415347375 succeeded
+in default copy mode. All4 canonical version tags are anonymous-readable and their
+manifest/config digests equal the original public lock. QNAP pulled all4 tags with
+an empty registry config and verified original config/source metadata. Every live
+container ID/start time stayed unchanged. Added a new canonical release manifest
+asset and updated release notes; original Git tag/manifest were retained.
+Legacy package tag lists contain only0.4.0 and its original source SHA. No deletion
+has been authorized or performed; await explicit owner cleanup approval.

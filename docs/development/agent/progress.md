@@ -1,5 +1,24 @@
 # Project Progress
 
+## 2026-11-07 — Verified canonical component tags in one GHCR package
+
+- Sourced143846 passed all4 hosted checks. Manual consolidation42415347375 ran
+  default copy successfully: bot0.4.0/source tags stayed unchanged; companions
+  now use qbittorrent-0.4.0, jackett-0.4.0 and flaresolverr-0.4.0 plus component
+  source tags inside ghcr.io/nerfagol/qbitbot. No artifacts were rebuilt/retagged
+  to different content and no source Git tags were moved.
+- Anonymous manifest hashes and config digests match the original0.4.0 asset for
+  all4 images. QNAP pulled the canonical version tags using an empty registry
+  config; original image/config/source metadata and every live container ID/start
+  time were retained. No service restart, tracker warm-up or real search occurred.
+- Updated current registry overlays/guides and published an additional canonical
+  release-manifest asset plus release notes. Original published Git tag and digest
+  manifest remain historical evidence; tagged0.4.0 overlays predate the new names.
+- Read-only tag lists of the3 legacy companion packages contain only the expected
+  original0.4.0/source tags. They remain public for compatibility. Explicit owner
+  approval is still required before selecting optional cleanup because those old
+  pull URLs will stop working; no deletion has been performed.
+
 ## 2026-11-07 — Preparing one GHCR package with component tags
 
 - Owner explicitly selected one package with separate containers. Preserve bot

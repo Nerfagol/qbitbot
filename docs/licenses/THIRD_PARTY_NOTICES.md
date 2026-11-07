@@ -54,6 +54,9 @@ commits are pinned in the workflows. [Gitleaks](https://github.com/gitleaks/gitl
 uses MIT and is pinned with an archive checksum in the release checklist. Generated
 preview images contain only synthetic fixture text and no third-party screenshots.
 
+Registry consolidation uses checksum-pinned [regctl0.11.7](https://github.com/regclient/regclient/tree/v0.11.7)
+under Apache-2.0, only in CI/operator tooling; it is not included in runtime images.
+
 - Optional [FlareSolverr3.5.2](https://github.com/FlareSolverr/FlareSolverr/tree/v3.5.2) uses MIT;
   its notice is retained in `deploy/docker/flaresolverr/LICENSE` and the derived image.
   Browser and OS packages retain their upstream licenses.

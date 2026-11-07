@@ -1,15 +1,15 @@
 # GHCR images
 
 The release workflow publishes Linux **amd64** images from stable version tags
-after the four existing workflows pass on that exact main commit. Version0.4.0
-uses these image names:
+after the four existing workflows pass on that exact main commit. All components
+use **one package**, `ghcr.io/nerfagol/qbitbot`, with separate image tags/containers:
 
 | Service | Image |
 | --- | --- |
 | Bot | `ghcr.io/nerfagol/qbitbot:0.4.0` |
-| qBittorrent | `ghcr.io/nerfagol/qbitbot-qbittorrent:0.4.0` |
-| Jackett | `ghcr.io/nerfagol/qbitbot-jackett:0.4.0` |
-| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot-flaresolverr:0.4.0` |
+| qBittorrent | `ghcr.io/nerfagol/qbitbot:qbittorrent-0.4.0` |
+| Jackett | `ghcr.io/nerfagol/qbitbot:jackett-0.4.0` |
+| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot:flaresolverr-0.4.0` |
 
 Version0.4.0 is public: anonymous manifests/pulls and QNAP compatibility were
 verified. No registry login or personal token is needed. For future packages,
@@ -26,7 +26,16 @@ builds from source. The overlays remove builds and preserve service settings,
 project and volume names; keep any existing explicit project name on every command.
 Set `QBITBOT_VERSION=0.4.0` in Compose's `.env` to choose a release. There is no
 mutable `latest` tag. Version images must never be overwritten; full-source-SHA
-tags and OCI source/revision/version labels identify their build inputs.
+tags and OCI source/revision/version labels identify their build inputs. Bot
+source tags use `sha-<revision>`; companion source tags use
+`<component>-sha-<revision>`, preventing component collisions in the same package.
+Each image retains its upstream licenses and service isolation.
+
+The0.4.0 companion images were copied into these tags without rebuilding or changing
+their digests. The published Git tag is unchanged, so its original registry
+overlays show the former package names. Use the current overlays/guide for the
+single-package layout. The release's additional `images-0.4.0-single-package.json`
+asset records current references; its original manifest remains historical evidence.
 
 Bundled services:
 
@@ -86,3 +95,12 @@ the partial release and choose a new version for a new publication attempt.
 Before marking the GitHub release published, verify anonymous pulls, manifests,
 source/version labels and QNAP compatibility. Record any live acceptance still
 pending. A successful scan is dated evidence, not a blanket security guarantee.
+
+The manual `consolidate.yml` workflow verifies exact main CI and the public0.4.0
+digest lock, then uses checksum-pinned regctl0.11.7 to copy manifests. Existing
+equal tags are preserved; conflicts stop before writes. Its default `copy` mode
+deletes nothing. A separately approved, owner-only `cleanup` mode can remove the
+three former companion packages after validating all canonical tags and every
+legacy version/tag. Deletion breaks old public pull URLs; obtain explicit owner
+approval after migration verification before selecting cleanup. Unknown legacy
+data stops the whole cleanup before any deletion.

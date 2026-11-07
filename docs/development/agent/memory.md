@@ -319,3 +319,11 @@ only after aliases are verified anonymously, so current pull commands stay valid
 Legacy package deletion requires a separate explicit approval after migration:
 it breaks old public URLs. Cleanup must remain owner/main-only and reject unknown
 versions/tags or a canonical digest mismatch before deleting any package.
+
+Consolidationd143846/run42415347375 has now copied all4 released images into the
+canonical package; anonymous digests and QNAP pulls match original0.4.0 content,
+and no running containers were restarted. Current registry overlays/guides use
+the new tags. The added images-0.4.0-single-package.json release asset records
+canonical locations; retain the original manifest/tag as historical evidence.
+All3 legacy companion packages still exist; their tag lists show only0.4.0 and
+the original source SHA. No cleanup permission has been received or used yet.

@@ -86,7 +86,9 @@ This starts only the bot. Do not run both entry points with the same Telegram to
 For Linux amd64 and Compose2.24.4+, use the [registry overlays and commands](deployment/registry.md)
 after filling the same private settings described above. They support the bundled
 stack, bot-only mode and optional FlareSolverr, preserving project/volume/security
-settings. Select `QBITBOT_VERSION=0.4.0` in `.env`, pull the versioned images and
+settings. All images share one `ghcr.io/nerfagol/qbitbot` package; companions use
+component-prefixed tags while remaining separate containers. Select
+`QBITBOT_VERSION=0.4.0` in `.env`, pull the versioned images and
 use `--no-build`. The0.4.0 images are public and require no registry login.
 The default commands above remain source builds.
 
