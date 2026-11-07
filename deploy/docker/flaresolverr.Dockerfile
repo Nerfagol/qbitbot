@@ -5,6 +5,7 @@ COPY --from=upstream /app/ /app/
 COPY --from=upstream /package.json /package.json
 RUN apk upgrade --no-cache \
     && apk add --no-cache chromium chromium-chromedriver xvfb xauth dumb-init procps font-noto ca-certificates \
+        libexpat=2.10.0-r0 zlib=1.4-r0 \
     && addgroup -g 1000 flaresolverr \
     && adduser -D -u 1000 -G flaresolverr -h /app flaresolverr \
     && cp /usr/bin/chromedriver /app/chromedriver \
