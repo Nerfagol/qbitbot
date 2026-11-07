@@ -15,9 +15,11 @@
 - Real disposable public-stack acceptance passed both languages, authenticated
   services, bot-only mode, outage/recovery, state/rollback/backup and scoped cleanup.
   These checks use only owned fixtures and generate no real tracker traffic.
-- Next: publish source and confirm hosted CodeQL marks the original alert fixed
-  with no replacement alert. Do not dismiss the alert or change scanner rules.
-  Published0.4.0 images and the live QNAP deployment need no runtime update.
+- Published source4966021. Hosted CodeQL run42412642819 succeeded; GitHub marks
+  alert#1 fixed at2026-11-07T20:47:04Z and reports0 open alerts on main, with no
+  replacement finding. No dismissal or scanner-rule change was made; the earlier
+  administrative approval request is obsolete. Published0.4.0 images and the live
+  QNAP deployment need no runtime update.
 
 ## 2026-11-07 — Published GHCR0.4.0 and verified QNAP registry rollout
 

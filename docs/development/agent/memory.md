@@ -302,5 +302,7 @@ generated service credentials in an explicit child Compose environment using
 dedicated QBITBOT_TEST_ names. The bundled test overlay and generated bot-only
 override contain variable references only; bot.env stays empty/0600. Ambient app
 settings remain filtered and no os.environ mutation is used. Do not reintroduce
-the old generated-credential env-file write. Hosted automatic alert closure must
-be verified before claiming fixed; no dismissal or scanner suppression is needed.
+the old generated-credential env-file write. Source4966021 passed hosted CodeQL;
+GitHub marked#1 fixed at2026-11-07T20:47:04Z, with0 open main alerts. No dismissal
+or scanner suppression was used. The earlier blocked-dismissal approval request
+is obsolete. Regression and full660 checks plus real public-stack acceptance pass.
