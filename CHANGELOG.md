@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Refresh the README quick start and CI badges, align English/Russian source-build
+  upgrades, and document version/tag preparation for the next release.
+
+- Add CodeQL Python analysis, redacted full-history/source secret scans, PR
+  dependency review and weekly GitHub Actions updates through Dependabot.
+  Keep the existing complete Python lock and four-image vulnerability gates.
+
+- Patch image-build Expat, Python and zlib vulnerabilities; update Jackett to
+  0.24.3025 with bundled .NET 9.0.22. Pin patched zlib in both bot build stages
+  and Expat/zlib in FlareSolverr, including cached-build invalidation. See
+  [image inputs and verification](docs/deployment/images.md).
+
 - Patch curl/libcurl to8.23.0-r0 in qBittorrent/Jackett image builds after the
   recurring audit detected new advisory records. Report every image scan even
   when one fails, retaining the strict failing exit status and no suppressions.
@@ -35,13 +47,13 @@
   redirect checks, decoded response limits and recurring security CI.
 
 - Refresh Python dependencies and pin Python 3.12.15; exclude build-only pip from
-  the runtime image. Update bundled qBittorrent to 5.3.0 and Jackett to v0.24.2900.
+  the runtime image. Update bundled qBittorrent to 5.3.0.
   Support their HTTP 204 authentication/add responses alongside older 5.x APIs.
   Local verification and residual configuration limits are recorded in
   [the current hardening review](docs/archive/security/security-hardening-2026-10-24.md).
 
-- Organize runtime code and catalogs under `qbitbot/`, with maintenance commands in
-  `qbitbot/cli/`. Start from a source checkout with `python -m qbitbot`; setup and
+- Organize runtime code and catalogs under `src/qbitbot/`, with maintenance commands in
+  `src/qbitbot/cli/`. After installing the package, start with `python -m qbitbot`; setup and
   backup commands now use `python -m qbitbot.cli.setup_check` and
   `python -m qbitbot.cli.backup_state`. Compose starts the new entry point automatically.
   Bot behavior, environment settings and persistent state formats remain unchanged.

@@ -82,6 +82,51 @@ docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d
 
 Запускается только бот. Не запускайте два экземпляра с одинаковым Telegram-токеном.
 
+## Обновление
+
+Готовые образы в реестре пока не опубликованы. Обновляйте установку со сборкой
+из исходников в прежнем каталоге и проекте Compose. Сначала выполните
+[резервное копирование](backup.ru.md), запишите текущий Git-коммит и выберите
+проверенный релиз или коммит для обновления. Сохраните `.env`, `bot.env`, имена
+томов, пути загрузок и явно заданное имя проекта Compose. Если старая установка
+запускала бота от root, перед запуском нового образа выполните
+[офлайн-перенос прав](deployment/container-hardening.md).
+
+Для общего стека:
+
+```sh
+docker compose stop bot
+docker compose build --pull bot qbittorrent jackett
+docker compose up -d qbittorrent jackett
+docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check
+```
+
+Если сборка или диагностика завершилась с ошибкой, исправьте её до запуска бота.
+После успешной проверки:
+
+```sh
+docker compose up -d bot
+```
+
+В режиме только бота оставьте существующие сервисы работающими и выполните:
+
+```sh
+docker compose --project-directory . -f deploy/compose.bot-only.yaml stop bot
+docker compose --project-directory . -f deploy/compose.bot-only.yaml build --pull bot
+docker compose --project-directory . -f deploy/compose.bot-only.yaml run --rm --no-deps bot python -m qbitbot.cli.setup_check
+```
+
+После успешной проверки:
+
+```sh
+docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d bot
+```
+
+Проверьте Поиск, Загрузки и Состояние в Telegram. Для отката используйте
+[процедуру с сохранением состояния](backup.ru.md); восстановление снимка базы —
+отдельная операция. Если включён FlareSolverr, пересоберите и пересоздайте его с
+тем же [дополнением Compose](deployment/flaresolverr.md), что и при установке.
+
 ## Сохранение данных
 
 `docker compose down` сохраняет именованные тома. Для обновления пересоздавайте

@@ -81,6 +81,51 @@ docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d
 
 This starts only the bot. Do not run both entry points with the same Telegram token.
 
+## Upgrading
+
+Prebuilt registry images are not published yet. Upgrade the current source-build
+installation from the same checkout and Compose project. First follow the
+[backup guide](backup.en.md), record the current Git commit, and check out the
+reviewed release or commit you intend to run. Preserve `.env`, `bot.env`, volume
+names, download paths and any explicit Compose project name. For an older
+root-running installation, complete the [offline ownership migration](deployment/container-hardening.md)
+before starting the new bot image.
+
+For the bundled stack:
+
+```sh
+docker compose stop bot
+docker compose build --pull bot qbittorrent jackett
+docker compose up -d qbittorrent jackett
+docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check
+```
+
+If the build or setup check fails, resolve it before starting the bot. After a
+successful check:
+
+```sh
+docker compose up -d bot
+```
+
+For bot-only mode, leave the existing services running and use:
+
+```sh
+docker compose --project-directory . -f deploy/compose.bot-only.yaml stop bot
+docker compose --project-directory . -f deploy/compose.bot-only.yaml build --pull bot
+docker compose --project-directory . -f deploy/compose.bot-only.yaml run --rm --no-deps bot python -m qbitbot.cli.setup_check
+```
+
+After a successful check:
+
+```sh
+docker compose --project-directory . -f deploy/compose.bot-only.yaml up -d bot
+```
+
+Verify Search, Downloads and Health in Telegram. For rollback, follow the
+[retained-state recovery procedure](backup.en.md); restoring a database snapshot
+is a separate operation. If you use FlareSolverr, rebuild/recreate it with the
+same [overlay](deployment/flaresolverr.md) used for installation.
+
 ## Persistence
 
 Normal `docker compose down` keeps named configuration/state volumes. Recreate

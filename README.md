@@ -1,5 +1,10 @@
 # qbitbot
 
+[![Tests](https://github.com/Nerfagol/qbitbot/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/Nerfagol/qbitbot/actions/workflows/check.yml)
+[![Containers](https://github.com/Nerfagol/qbitbot/actions/workflows/containers.yml/badge.svg?branch=main)](https://github.com/Nerfagol/qbitbot/actions/workflows/containers.yml)
+[![Security](https://github.com/Nerfagol/qbitbot/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/Nerfagol/qbitbot/actions/workflows/security.yml)
+[![CodeQL](https://github.com/Nerfagol/qbitbot/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Nerfagol/qbitbot/actions/workflows/codeql.yml)
+
 Search torrents and manage qBittorrent downloads from Telegram, in English or Russian.
 Run the bot, qBittorrent and Jackett together with Docker Compose, or connect the bot
 to services you already operate.
@@ -33,6 +38,38 @@ Follow the [English](docs/setup.en.md) or [Russian](docs/setup.ru.md) guide to
 configure private credentials, set the Telegram allowlist and run the setup check
 before starting the bot. The check verifies service access without polling
 Telegram or adding torrents. Jackett indexers must be configured manually.
+
+### Quick start from source
+
+```sh
+git clone https://github.com/Nerfagol/qbitbot.git
+cd qbitbot
+cp .env.example .env
+cp config/bot.env.example bot.env
+chmod 600 .env bot.env
+mkdir -p downloads
+```
+
+Set the download directory, its owner IDs and any alternate ports in `.env` using
+the [setup guide](docs/setup.en.md#bundled-bot-qbittorrent-and-jackett), then build
+and start the services:
+
+```sh
+docker compose build
+docker compose up -d qbittorrent jackett
+```
+
+Follow the guide to set a qBittorrent password, configure Jackett indexers and fill
+`bot.env` with your service credentials, Telegram token and allowed user IDs.
+Then check the configuration and start the bot:
+
+```sh
+docker compose run --rm --no-deps bot python -m qbitbot.cli.setup_check && \
+docker compose up -d bot
+```
+
+Open `/start` in Telegram. For existing qBittorrent/Jackett installations, follow
+the [bot-only instructions](docs/setup.en.md#existing-qbittorrent-and-jackett).
 
 For indexers requiring browser challenges, enable the optional
 [FlareSolverr overlay](docs/deployment/flaresolverr.md). Its API stays on a private
@@ -71,6 +108,10 @@ a built wheel; its code and both locale catalogs live in `src/qbitbot/`. See
 [layout upgrade notes](deploy/README.md#upgrade-from-the-former-root-layout) when
 updating an older checkout.
 
+For source-build upgrades, follow the [English](docs/setup.en.md#upgrading) or
+[Russian](docs/setup.ru.md#обновление) instructions. A source update needs an image
+rebuild and container recreation before its fixes reach a running installation.
+
 ## Security and verification
 
 Current `main` includes updated dependency pins, patched service images, a non-root
@@ -84,12 +125,13 @@ Web management interfaces bind to localhost by default. Keep them private, retai
 service authentication and protect `.env`/`bot.env`; never commit credentials or
 run two bot instances with the same Telegram token.
 
-Automated verification includes offline tests, disposable API/recovery checks and
-weekly dependency/image security scans. The dated
-[security review](docs/archive/security/security-hardening-2026-10-24.md) records the
-2026-10-24 scan results and remaining limits; scans need repeating as advisories
-and packages change. Check [GitHub Actions](https://github.com/Nerfagol/qbitbot/actions)
-for the status of a particular commit.
+Automated verification includes offline tests, disposable API/recovery checks,
+CodeQL Python analysis, secret scanning, PR dependency review and weekly
+dependency/image security scans. See [current image inputs and dated scan evidence](docs/deployment/images.md)
+and [GitHub Actions](https://github.com/Nerfagol/qbitbot/actions) for a particular
+commit. Scans need repeating as advisories and packages change; the
+[security review](docs/archive/security/security-hardening-2026-10-24.md) documents
+the original hardening scope and remaining limits.
 
 The operator confirmed live Telegram acceptance of **v0.3.0** on 2026-09-27;
 see its [acceptance record](docs/archive/acceptance-v0.3.0.md). Later security and setup

@@ -1,5 +1,23 @@
 # Project Progress
 
+## 2026-11-07 — Polished release documentation
+
+- Owner requested repository release polish before GHCR work. Added four main
+  workflow badges and a source-build quick start; setup-check failure prevents
+  the quick-start bot launch. Updated security coverage and current image links.
+- Added matching EN/RU upgrade commands for bundled and bot-only installations,
+  preserving Compose project/volume identity, backups, ownership migration and
+  retained-state recovery. Registry images remain explicitly unavailable.
+- Updated Unreleased notes for CI/image security repairs and corrected current
+  source-layout/Jackett wording. Release checklist keeps version selection, package
+  metadata/tag alignment and registry validation as deliberate release steps.
+- Prior repair92e0e79 was pushed to main and all4 hosted workflows passed;
+  security run42391488811 and containers42391488813 confirmed the repair.
+- Documentation validation:51 local Markdown targets and21 shell examples passed;
+  all4 badge workflow files exist and git diff --check passed. No runtime changes,
+  version bump, tag, registry publication or deployment. Owner authorized committing
+  this polish; pushing it and implementing/testing the GHCR workflow remain next.
+
 ## 2026-11-07 — Repaired image vulnerability failures
 
 - The owner requested repair of security run42314915135 on0515b13. CodeQL,

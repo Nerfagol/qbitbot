@@ -3,6 +3,21 @@
 Run from the independent public checkout. Never import deployment environments,
 private Git refs, diagnostic reports or database snapshots into a release.
 
+## Release preparation
+
+The latest published release is v0.3.0. Current changes remain under **Unreleased**
+in CHANGELOG.md; package metadata still says0.3.0. Before the next release, select
+a new version, update `[project].version` in pyproject.toml and move the unreleased
+notes under that version with the actual release date. Keep the package version,
+Git tag and any future Docker version tags consistent. Never republish current
+source under the existing v0.3.0 tag.
+
+README badges track main; verify the intended release commit separately. Keep the
+English/Russian installation and upgrade guides aligned. The supported verified
+container target remains Linux amd64. Current instructions build images from
+source; GHCR publication is not implemented yet. Add registry pull instructions
+only after publishing and testing the actual images.
+
 ## Verification
 
 - `make check`: offline behavior/regressions, catalog parity, lint/format, compilation and dependency compatibility.
