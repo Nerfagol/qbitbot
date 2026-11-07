@@ -193,3 +193,16 @@ New DB findings also require zlib1.4-r0 in both bot stages and explicit
 libexpat2.10.0-r0/zlib1.4-r0 in FlareSolverr to invalidate vulnerable cached builds.
 Keep build-only fixes, full scan severity gates and existing runtime restrictions.
 See deployment/images.md for exact inputs; dated local/hosted evidence is in progress.md.
+
+## GitHub Actions maintenance, 2026-11-07
+
+Dependabot PR dependency review initially failed because Dependency graph was
+disabled, independently of the image findings. Enabling repository vulnerability
+alerts through GitHub's API also enabled the graph; its SBOM endpoint and real PR
+dependency-review jobs then passed. Automatic security-update merging remains off.
+Reviewed action updates use checkout7.0.1, setup-python7.1.0 and dependency-review5.0.0,
+all full-commit pinned, with persist-credentials false and unchanged token scopes.
+Merge commits preserve history and avoid Dependabot-authored squash/SARIF issues.
+An intermittent solver Chrome-not-reachable startup failure occurred in a push
+run while the same head's PR run passed. A single targeted job rerun passed;
+do not treat that as a root-cause fix or weaken browser/TLS/scanner requirements.

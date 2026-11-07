@@ -1,5 +1,28 @@
 # Project Progress
 
+## 2026-11-07 — Validated and merged Dependabot action updates
+
+- Owner authorized enabling required security settings, refreshing/testing and
+  merging PRs2/3/4, then deleting their merged branches. Enabled vulnerability
+  alerts/Dependency graph; SBOM returned11 packages and PR dependency review passed.
+- Verified official tag/commit correspondence for dependency-review5.0.0,
+  setup-python7.1.0 and checkout7.0.1. Preserved full pins, read-only defaults,
+  disabled persisted checkout credentials and the existing Python/image gates.
+  Corrected PR2's stale version comment through CLI because the connector lacks
+  workflow write/merge/rerun permission; no additional permissions were granted.
+- Refreshed each PR with current main, required every current check to pass and
+  merged sequentially with exact-head checks: PR2 eebcdd7, PR3 aac6085, PR4 656b3e4.
+  All3 merged branches are removed. Main passed all4 workflows after PR2 and PR3.
+- PR2's push smoke run exited when Chrome could not be reached, while the same
+  head's independent PR smoke/scan passed. Preserved diagnostics, reran only that
+  failed job once and confirmed success. Root cause remains unproven; no fixture
+  readiness, TLS, scanner or severity rule was relaxed.
+- Final main656b3e4 passed check, CodeQL, security and containers workflows
+  (security42397641144, containers42397641172). Local actionlint passed. The local
+  release-polish commit was rebased onto main as cd53dde and remains unpushed;
+  no Docker publication or production operation occurred. This maintenance record
+  remains local with the polish; publishing those docs and GHCR work are separate.
+
 ## 2026-11-07 — Polished release documentation
 
 - Owner requested repository release polish before GHCR work. Added four main
