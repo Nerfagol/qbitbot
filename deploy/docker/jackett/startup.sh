@@ -40,34 +40,16 @@ if ! jq -e '(.Port // 9117) == 9117 and
     exit 0
 fi
 
-if ! curl --disable --noproxy '*' --proto '=http' --silent --fail \
-    --connect-timeout 2 --max-time 10 --url-query "apikey@$work/key" \
-    --url-query 'configured=true' --output "$work/indexers.json" \
-    http://127.0.0.1:9117/api/v2.0/indexers 2>/dev/null ||
-    ! jq -er 'if type == "array" and all(.[];
-        (.id | type == "string" and test("^[a-z0-9_-]+$")))
-        then map(.id) | unique | .[] else error("invalid indexers") end' \
-        "$work/indexers.json" > "$work/ids" 2>/dev/null; then
-    echo 'Jackett startup warm-up: no usable configured indexers; no tests scheduled.'
-    exit 0
+# Management Test/list APIs require a dashboard cookie even with a valid API
+# key. Use the same API-key-authorized manual search route as the bot instead;
+# an empty query touches configured sources once without a dashboard password.
+if curl --disable --noproxy '*' --proto '=http' --silent --fail \
+    --connect-timeout 2 --max-time 110 --url-query "apikey@$work/key" \
+    --url-query 'query=' --output "$work/response.json" \
+    http://127.0.0.1:9117/api/v2.0/indexers/all/results 2>/dev/null &&
+    sources=$(jq -er '.Indexers | if type == "array" then length
+        else error("invalid response") end' "$work/response.json" 2>/dev/null); then
+    echo "Jackett startup warm-up: finished ($sources sources reported); no retries scheduled."
+else
+    echo 'Jackett startup warm-up: failed; no retries scheduled.'
 fi
-
-deadline=$(($(date +%s) + 110))
-attempted=0
-succeeded=0
-while IFS= read -r id; do
-    remaining=$((deadline - $(date +%s)))
-    [ "$remaining" -gt 0 ] || break
-    [ "$remaining" -le 45 ] || remaining=45
-    attempted=$((attempted + 1))
-    # Exactly one Test invocation per configured indexer; Jackett itself owns
-    # tracker pagination/challenge handling. The helper never retries it.
-    code=$(curl --disable --noproxy '*' --proto '=http' --silent --fail \
-        --connect-timeout 2 --max-time "$remaining" --request POST \
-        --url-query "apikey@$work/key" --output /dev/null --write-out '%{http_code}' \
-        "http://127.0.0.1:9117/api/v2.0/indexers/$id/test" 2>/dev/null) || code=failed
-    if [ "$code" = 204 ]; then
-        succeeded=$((succeeded + 1))
-    fi
-done < "$work/ids"
-echo "Jackett startup warm-up: finished ($succeeded/$attempted tests succeeded); no retries scheduled."

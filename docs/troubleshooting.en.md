@@ -37,11 +37,12 @@ means torrent **and files**, and requires a named confirmation.
 ## Slow first search
 
 A tracker can need a fresh login or browser challenge after Jackett starts or its
-cookies expire. The bundled stack attempts one warm-up per configured tracker
-on **Jackett container start**, with no helper retries or periodic keep-alive.
-Jackett's Test operation can make several tracker requests internally. Warm-up
-has a roughly two-minute total budget; it can skip remaining trackers if that
-budget expires. Failures do not prevent startup after the attempt completes.
+cookies expire. On **Jackett container start**, the bundled stack makes one
+empty search across configured trackers through the normal API-key endpoint,
+with no helper retries or periodic keep-alive. Jackett can make several HTTP
+requests per tracker internally. Warm-up has a roughly two-minute wait budget;
+a timeout ends the startup wait, while already running Jackett requests may
+still finish. Failures do not prevent startup after the attempt completes.
 The bot still waits for complete source coverage on every normal search.
 
 Bot restarts and internal Jackett process restarts do not rerun this container

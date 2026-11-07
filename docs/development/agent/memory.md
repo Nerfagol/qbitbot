@@ -246,14 +246,21 @@ do not claim a speed fix or silently drop slow sources. Keep raw history private
 
 Owner explicitly rejects periodic tracker warm-up traffic. The derived Jackett
 image now has an opt-in native s6 oneshot, enabled by bundled Compose through
-JACKETT_WARMUP_ON_START=1. It runs after svc-jackett readiness, lists configured
-indexers locally and invokes Test at most once each within a roughly120s budget.
-No helper retries, scheduling or bot-startup trigger. Test can itself involve
-multiple tracker HTTP requests. Completion is best effort, tied to host boot ID
+JACKETT_WARMUP_ON_START=1. After svc-jackett readiness it makes one empty search
+across configured indexers through the normal API-key search endpoint, with a
+110s wait budget. No helper retries, scheduling or bot-startup trigger. Jackett
+can itself make several HTTP requests per tracker. Completion is best effort,
+tied to host boot ID
 and PID1 start ticks; health waits for it, then probes only the local Dashboard.
 Internal service-process restarts do not rerun this container-start hook.
 Do not implement this as custom-services.d: its longruns restart after exit.
 Never promise warm-up prevents later cookie expiry or all30s outliers.
 Native s6/real curl/jq verification uses integration/jackett_startup.py against
-synthetic HTTP in a network-disabled namespace, including a500 response and
-container restart. Offline helper tests require host jq, declared in README.
+synthetic HTTP in a network-disabled namespace, including partial-source failure
+and container restart. A real Jackett fixture
+with a synthetic admin password verifies management APIs stay protected while
+the API-key search succeeds. Test/list management routes require a dashboard
+cookie even with the API key; do not use them or weaken dashboard protection.
+Offline helper tests require host jq, declared in README. With cap-drop ALL,
+root has no DAC override: private service configuration backups must run as the
+existing config owner, without changing state ownership or broadening permissions.

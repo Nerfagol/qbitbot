@@ -20,20 +20,19 @@ class H(BaseHTTPRequestHandler):
         path = urlparse(self.path)
         if path.path == '/counts':
             body = json.dumps(counts).encode()
-        elif path.path == '/api/v2.0/indexers':
-            assert parse_qs(path.query) == {'apikey':['synthetic-key'], 'configured':['true']}
-            body = b'[{"id":"fixture-a"},{"id":"fixture-b"}]'
-        else:
+        elif path.path == '/api/v2.0/indexers/all/results':
+            assert parse_qs(path.query, keep_blank_values=True) == {'apikey':['synthetic-key'], 'query':['']}
+            counts[path.path] = counts.get(path.path, 0) + 1
+            time.sleep(3)
+            body = b'{"Indexers":[{"Status":0},{"Status":1}],"Results":[]}'
+        elif path.path == '/UI/Dashboard':
             body = b'healthy'
+        else:
+            self.send_response(302); self.send_header('Location','/UI/Login'); self.end_headers()
+            return
         self.send_response(200); self.end_headers(); self.wfile.write(body)
     def do_POST(self):
-        path = urlparse(self.path)
-        assert parse_qs(path.query) == {'apikey':['synthetic-key']}
-        assert path.path in ('/api/v2.0/indexers/fixture-a/test', '/api/v2.0/indexers/fixture-b/test')
-        counts[path.path] = counts.get(path.path, 0) + 1
-        time.sleep(3)
-        self.send_response(204 if 'fixture-a' in path.path else 500)
-        self.end_headers()
+        self.send_response(302); self.send_header('Location','/UI/Login'); self.end_headers()
 ThreadingHTTPServer(('127.0.0.1',9117), H).serve_forever()
 """
 
@@ -143,7 +142,7 @@ def main():
             docker("cp", str(path / "Jackett"), jackett + ":/config/")
             docker("cp", str(service), jackett + ":/etc/s6-overlay/s6-rc.d/svc-jackett/run")
         docker("start", jackett)
-        expected = {"/api/v2.0/indexers/fixture-a/test": 1, "/api/v2.0/indexers/fixture-b/test": 1}
+        expected = {"/api/v2.0/indexers/all/results": 1}
         wait_ready(expected)
         # Ordinary health polling and elapsed idle time must never trigger tests.
         for _ in range(3):
@@ -153,10 +152,72 @@ def main():
         docker("restart", "--time", "5", jackett)
         wait_ready({key: 2 for key in expected})
         logs = docker("logs", jackett).stdout
-        assert logs.count("Jackett startup warm-up: finished (1/2 tests succeeded)") == 2
+        assert logs.count("Jackett startup warm-up: finished (2 sources reported)") == 2
         assert "synthetic-key" not in logs
+        # Check the real upstream authorization boundary too: a synthetic
+        # dashboard password must protect management routes while an empty,
+        # API-key search still works. No indexers exist and network is disabled.
+        actual = owner + "-auth"
+        created.append(actual)
+        docker(
+            "create",
+            "--name",
+            actual,
+            "--network",
+            "none",
+            "--label",
+            "qbitbot.verification=" + owner,
+            "-e",
+            "AUTO_UPDATE=false",
+            "-e",
+            "JACKETT_WARMUP_ON_START=1",
+            args.image,
+        )
+        with tempfile.TemporaryDirectory(prefix=owner) as directory:
+            path = Path(directory) / "Jackett"
+            path.mkdir()
+            (path / "ServerConfig.json").write_text(
+                json.dumps(
+                    {
+                        "APIKey": "synthetic-key",
+                        "AdminPassword": "0" * 128,
+                        "Port": 9117,
+                    }
+                )
+            )
+            docker("cp", str(path), actual + ":/config/")
+        docker("start", actual)
+        deadline = time.monotonic() + 45
+        while time.monotonic() < deadline:
+            logs = docker("logs", actual).stdout
+            if "Jackett startup warm-up: finished (0 sources reported)" in logs:
+                break
+            if "Jackett startup warm-up: failed" in logs:
+                raise RuntimeError("real API-key warm-up failed with dashboard password set")
+            time.sleep(1)
+        else:
+            raise RuntimeError("real API-key warm-up did not complete")
+        code = docker(
+            "exec",
+            actual,
+            "curl",
+            "--disable",
+            "--noproxy",
+            "*",
+            "--silent",
+            "--max-time",
+            "5",
+            "--output",
+            "/dev/null",
+            "--write-out",
+            "%{http_code}",
+            "--url-query",
+            "apikey=synthetic-key",
+            "http://127.0.0.1:9117/api/v2.0/indexers",
+        ).stdout
+        assert code == "302", "dashboard authentication must remain required"
         print(
-            "PASS native s6 readiness, failed-test no-retry, idle health and one warm-up per container restart"
+            "PASS native s6, API-key search with real dashboard protection, idle health and restart-only warm-up"
         )
     finally:
         for name in reversed(created):

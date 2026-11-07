@@ -28,13 +28,11 @@ def startup(tmp_path):
         "from pathlib import Path\n"
         "args = sys.argv[1:]\n"
         "with open(os.environ['CALLS'], 'a') as f: f.write(json.dumps(args) + '\\n')\n"
-        "if '--request' in args:\n"
-        "    print('synthetic-key secret-response', file=sys.stderr)\n"
-        "    print('204')\n"
-        "    sys.exit(int(os.environ.get('POST_EXIT', '0')))\n"
         "if '--url-query' in args:\n"
+        "    print('synthetic-key secret-response', file=sys.stderr)\n"
         "    out = args[args.index('--output') + 1]\n"
-        "    Path(out).write_text(os.environ.get('INDEXERS', '[]'))\n"
+        "    Path(out).write_text(os.environ.get('RESPONSE', '{\"Indexers\":[],\"Results\":[]}'))\n"
+        "    sys.exit(int(os.environ.get('SEARCH_EXIT', '0')))\n"
     )
     curl.chmod(0o755)
     env = dict(os.environ, PATH=str(commands) + os.pathsep + os.environ["PATH"])
@@ -59,16 +57,19 @@ def startup(tmp_path):
     return run, requests, state
 
 
-def test_each_configured_tracker_once_and_no_second_run(startup):
+def test_api_key_search_runs_once_without_dashboard_login(startup):
     run, requests, state = startup
-    indexers = json.dumps([{"id": "fixture-a"}, {"id": "fixture-b"}])
-    assert run(INDEXERS=indexers).returncode == 0
+    assert run().returncode == 0
     first = requests()
-    assert len([r for r in first if "--request" in r]) == 2
-    assert run(INDEXERS=indexers).returncode == 0
+    assert len(first) == 1
+    assert first[0][-1] == "http://127.0.0.1:9117/api/v2.0/indexers/all/results"
+    assert "query=" in first[0]
+    assert "--request" not in first[0]
+    assert run().returncode == 0
     assert requests() == first
     assert (state / "complete").is_file()
     assert not any("synthetic-key" in arg for r in first for arg in r)
+    assert not list(state.glob("private.*"))
 
 
 @pytest.mark.parametrize("enabled", ["0", "false", ""])
@@ -78,19 +79,21 @@ def test_disabled_warmup_makes_no_api_requests(startup, enabled):
     assert requests() == []
 
 
-def test_empty_configuration_does_not_test_trackers(startup):
+def test_empty_configuration_reports_zero_sources(startup):
     run, requests, _ = startup
-    assert run().returncode == 0
-    assert not any("--request" in r for r in requests())
+    result = run()
+    assert result.returncode == 0
+    assert "0 sources reported" in result.stdout
+    assert len(requests()) == 1
 
 
-def test_failed_test_is_not_retried_or_leaked_and_health_can_continue(startup):
+def test_failed_search_is_not_retried_or_leaked_and_health_can_continue(startup):
     run, requests, state = startup
-    result = run(INDEXERS='[{"id":"fixture-a"}]', POST_EXIT="22")
+    result = run(SEARCH_EXIT="22")
     assert result.returncode == 0
     assert "synthetic-key" not in result.stdout + result.stderr
     assert "secret-response" not in result.stdout + result.stderr
-    assert len([r for r in requests() if "--request" in r]) == 1
+    assert len(requests()) == 1
     assert (state / "complete").is_file()
     assert run("health").returncode == 0
 
@@ -103,26 +106,19 @@ def test_health_rejects_previous_boot_completion_without_http(startup):
     assert requests() == []
 
 
-def test_malformed_indexer_ids_fail_closed_without_tracker_calls(startup):
+def test_login_redirect_or_invalid_response_is_not_followed_or_retried(startup):
     run, requests, _ = startup
-    assert run(INDEXERS='[{"id":"../../untrusted"}]').returncode == 0
-    assert not any("--request" in r for r in requests())
-
-
-def test_total_budget_stops_remaining_trackers_without_background_work(startup, tmp_path):
-    run, requests, state = startup
-    clock = tmp_path / "bin/date"
-    clock.write_text(
-        "#!/bin/sh\n"
-        'file="$CALLS-clock"\n'
-        'value=$(cat "$file" 2>/dev/null || echo 0)\n'
-        'echo "$((value + 60))" > "$file"\n'
-        'echo "$value"\n'
-    )
-    clock.chmod(0o755)
-    result = run(INDEXERS='[{"id":"fixture-a"},{"id":"fixture-b"}]')
+    result = run(RESPONSE="<html>login</html>")
     assert result.returncode == 0
-    posts = [r for r in requests() if "--request" in r]
-    assert len(posts) == 1
-    assert int(posts[0][posts[0].index("--max-time") + 1]) <= 45
-    assert not list(state.glob("private.*"))
+    assert "failed" in result.stdout
+    assert len(requests()) == 1
+    assert "--location" not in requests()[0]
+    assert "-L" not in requests()[0]
+
+
+def test_search_has_bounded_timeout_and_no_retry_option(startup):
+    run, requests, _ = startup
+    assert run().returncode == 0
+    request = requests()[0]
+    assert 0 < int(request[request.index("--max-time") + 1]) <= 120
+    assert "--retry" not in request

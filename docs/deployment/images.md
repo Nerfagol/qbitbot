@@ -17,7 +17,7 @@ not evidence that every supported platform has been tested.
 The derived Jackett image also includes an opt-in native s6 startup oneshot
 (`JACKETT_WARMUP_ON_START=1`, enabled by bundled Compose). It waits for the
 service's readiness notification, privately reads the existing local API key and
-calls Test once per configured indexer within a bounded budget. It installs no
+makes one empty API-key search across configured indexers within a bounded budget. It installs no
 packages or schedules at runtime. Its health helper gates on completion for the
 current container boot, then probes only the Dashboard. See [operation and
 limits](../troubleshooting.en.md#slow-first-search). Verify native startup and

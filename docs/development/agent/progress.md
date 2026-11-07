@@ -1,5 +1,27 @@
 # Project Progress
 
+## 2026-11-07 — Corrected warm-up API authorization after NAS acceptance
+
+- The first warm-up source1538285 passed all4 hosted workflows, but real NAS
+  acceptance showed management Test/list returns302 with a dashboard password
+  despite the API key. No tracker warm-up tests were scheduled. The synthetic
+  HTTP fixture had incorrectly assumed API-key access to management routes.
+- Keep dashboard authentication unchanged: replaced that approach with one empty
+  search across configured sources using the same API-key manual-search endpoint
+  as the bot. One request per container boot,110s max wait, no helper retries or
+  periodic traffic. Normal user searches still retain complete-source behavior.
+- Three revised regressions failed against the old route, then9 helper tests
+  passed. Native s6 fixture now rejects management requests and counts aggregate
+  searches per boot; added a real Jackett fixture with synthetic admin password
+  in network-none, verifying management stays302 and warm-up finishes0sources.
+  Corrected Docker fixture passed; full checks/review and rollout are in progress.
+- First private rollout backup guard failed before image change because root
+  with cap-drop ALL could not read owner-only Jackett configuration. Services
+  resumed safely; a fresh backup attempt using its verified existing owner
+  succeeded without chmod/chown. The deployed first image is healthy but its
+  skipped warm-up does not establish successful warming. Corrected rollout must
+  preserve that backup guard, state/project identity and private artifacts.
+
 ## 2026-11-07 — Verified restart-only Jackett tracker warm-up
 
 - Owner selected restart-only warm-up, explicitly rejecting periodic requests;

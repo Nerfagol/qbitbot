@@ -6,9 +6,11 @@ to indexers, credentials, TLS or durable state.
 
 Add a native s6 oneshot to the derived Jackett image, dependent on its existing
 service readiness notification. Opt in through `JACKETT_WARMUP_ON_START=1` in
-the bundled stack. Read the local API key privately, list configured indexers
-locally and make one supported Test request per indexer with bounded time and
-no helper retries. Failures finish best effort; health waits for completion,
+the bundled stack. Read the local API key privately and make one empty search
+across configured indexers using the normal API-key search endpoint, with a
+bounded wait and no helper retries. Management Test/list routes require a
+dashboard cookie; keep that protection and require no dashboard password.
+Failures finish best effort; health waits for completion,
 then retains the normal Dashboard probe. Associate completion with PID1's start
 time so a container restart cannot reuse an old marker. Bot-only restarts do
 not rerun the hook. An internal Jackett process restart does not rerun the
@@ -25,4 +27,6 @@ container oneshot. Cookie expiry can still cause a later cold search.
 Source review found no blockers after declaring host jq for offline tests.
 645 tests and normal checks, Docker context exclusions, synthetic native-s6
 startup/restart/idle tests, full public-stack acceptance/rollback and the current
-Jackett image vulnerability scan passed. Deployment remains a separate next step.
+Jackett image vulnerability scan passed. NAS acceptance exposed management-route dashboard authentication; corrected to
+the normal search API and added a real Jackett/password regression. Corrected
+source deployment remains pending.
