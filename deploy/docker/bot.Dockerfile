@@ -1,4 +1,5 @@
 FROM python:3.12.15-alpine3.24@sha256:b658b05ce9c4eb97ec6fc19424818a1f31993659c2b505a532f470e83807815d AS package
+RUN apk add --upgrade --no-cache zlib=1.4-r0
 WORKDIR /build
 COPY requirements/build.lock /build/requirements.build.lock
 RUN python -m pip install --no-cache-dir pip==26.2.2 \
@@ -9,6 +10,7 @@ COPY src/qbitbot /build/src/qbitbot
 RUN python -m pip wheel --no-index --no-deps --no-build-isolation --wheel-dir /dist .
 
 FROM python:3.12.15-alpine3.24@sha256:b658b05ce9c4eb97ec6fc19424818a1f31993659c2b505a532f470e83807815d
+RUN apk add --upgrade --no-cache zlib=1.4-r0
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

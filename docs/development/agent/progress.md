@@ -1,5 +1,30 @@
 # Project Progress
 
+## 2026-11-07 — Repaired image vulnerability failures
+
+- The owner requested repair of security run42314915135 on0515b13. CodeQL,
+  check, containers, secrets and Python dependency audit passed; the image gate
+  correctly found16 qBit Expat/Python records and2 Jackett .NET records. Solver
+  startup/browser smoke passed; no timeout/scanner relaxation was appropriate.
+- Preserved qBittorrent5.3.0; image-build patches pin Expat2.10.0-r0,
+  Python3/pyc family3.14.10-r1 and zlib1.4-r0. Alpine removed Python r0 from its
+  index, so the first candidate build established the available fixed r1 revision.
+- Resolved/pulled immutable upstream Jackett f235901dce0b… (0.24.3025-ls29),
+  confirmed patched.NET9.0.22 in server/updater manifests. Updating Alpine Brotli
+  alone cannot patch the old self-contained.NET runtime. Exact pin in images.md.
+- Fresh baseline scan reproduced17 qBit findings with an additional zlib record.
+  New DB/cached-build scans also found bot zlib and solver Expat/zlib, repaired
+  through explicit pins in both bot stages and the solver build layer.
+- Final verification: all4 rebuilt image scans0 with Trivy0.76.1 DB updated
+  2026-11-07T12:52Z; make check633 passed; actual API/controls/restart/rollback,
+  fresh EN/RU/bot-only/outage/backup/recovery and solver JS/invalid-TLS passed.
+  Independent review found no remaining code blockers. Staged secret scan clean.
+- Runtime Python locks, UID/capabilities/TLS/state constraints and all-severity
+  security gate unchanged. No existing services, private state or NAS rollout.
+- Commit/push is authorized under the ongoing CI repair; next verify hosted
+  workflows on the exact repair commit. Docker publishing remains a later phase.
+  Private diagnostic/build/scan output stays under /tmp/qbitbot-security-fix-20261107.
+
 ## 2026-11-06 — Added CI security checks before Docker publication
 
 - Owner selected security improvements first and clarified that later packaging
