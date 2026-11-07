@@ -296,3 +296,11 @@ generated disposable credentials, private temp dir,0600 file, internal owned ser
 no production inputs. Administrative dismissal was blocked by automatic approval
 review for lack of explicit permission; asynchronous approval requested, no answer
 yet. Keep alert open unless owner explicitly authorizes that scoped dismissal.
+
+Owner subsequently requested a source fix for CodeQL#1. public_stack.py now keeps
+generated service credentials in an explicit child Compose environment using
+dedicated QBITBOT_TEST_ names. The bundled test overlay and generated bot-only
+override contain variable references only; bot.env stays empty/0600. Ambient app
+settings remain filtered and no os.environ mutation is used. Do not reintroduce
+the old generated-credential env-file write. Hosted automatic alert closure must
+be verified before claiming fixed; no dismissal or scanner suppression is needed.

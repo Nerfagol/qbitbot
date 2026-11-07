@@ -11,6 +11,17 @@ import tempfile
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURE_ENV_KEYS = (
+    "BOT_TOKEN",
+    "ALLOWED_USERS",
+    "QBIT_USER",
+    "QBIT_PASS",
+    "QBIT_URL",
+    "JACKETT_API_KEY",
+    "JACKETT_TORZNAB_URL",
+    "PTB_USE_AIOHTTP",
+    "WATCH_INTERVAL_SEC",
+)
 
 
 def cleanup_project(docker, project):
@@ -99,6 +110,8 @@ def install_fixture_source(docker, container, source):
 
 
 def fresh(docker, root, project, image, checks):
+    compose_environment = {}
+
     def compose(*args, only=False):
         files = (
             ["deploy/compose.bot-only.yaml", "only.test.json"]
@@ -114,10 +127,11 @@ def fresh(docker, root, project, image, checks):
         ]
         for name in files:
             command.extend(["-f", str(root / name)])
-        return docker(*command, *args, timeout=360)
+        return docker(*command, *args, environment=compose_environment, timeout=360)
 
     (root / ".env").write_text("TEST_BOT_IMAGE=" + image + "\n")
     (root / "bot.env").write_text("")
+    (root / "bot.env").chmod(0o600)
     cfg = json.loads(compose("config", "--format", "json"))
     validate_isolation(cfg)
     compose("build", "bot", "qbittorrent", "jackett")
@@ -144,10 +158,9 @@ def fresh(docker, root, project, image, checks):
         "PTB_USE_AIOHTTP": "0",
         "WATCH_INTERVAL_SEC": "1",
     }
-    (root / "bot.env").write_text(
-        "".join(k + "='" + v.replace("'", "\\'") + "'\n" for k, v in values.items())
-    )
-    (root / "bot.env").chmod(0o600)
+    # Keep generated credentials in memory, not in the exported fixture files.
+    # Only the test overlays interpolate these names into the disposable bot.
+    compose_environment = {"QBITBOT_TEST_" + name: values[name] for name in FIXTURE_ENV_KEYS}
     compose("run", "--rm", "--no-deps", "bot", "python", "-m", "qbitbot.cli.setup_check")
     compose("up", "-d", "--no-deps", "bot")
     bot = compose("ps", "-q", "bot").decode().strip()
@@ -169,6 +182,7 @@ def fresh(docker, root, project, image, checks):
                 "image": image,
                 "command": ["python", "-c", "import time; time.sleep(1800)"],
                 "restart": "no",
+                "environment": {name: "${QBITBOT_TEST_" + name + "}" for name in FIXTURE_ENV_KEYS},
             }
         },
         "networks": {"default": {"external": True, "name": network}},
@@ -285,9 +299,13 @@ def main(argv=None):
         if k in ("PATH", "HOME", "DOCKER_HOST", "DOCKER_CONFIG", "XDG_RUNTIME_DIR", "WSL_INTEROP")
     }
 
-    def docker(*parts, stdin=None, timeout=120):
+    def docker(*parts, stdin=None, timeout=120, environment=None):
         result = subprocess.run(
-            command + list(parts), input=stdin, capture_output=True, env=env, timeout=timeout
+            command + list(parts),
+            input=stdin,
+            capture_output=True,
+            env=env | (environment or {}),
+            timeout=timeout,
         )
         if result.returncode:
             diagnostic = ROOT / ".verification" / "public-failure.log"

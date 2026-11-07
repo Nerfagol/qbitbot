@@ -4,6 +4,16 @@ services:
     image: ${TEST_BOT_IMAGE}
     command: [python, -c, 'import time; time.sleep(1800)']
     restart: 'no'
+    environment:
+      BOT_TOKEN: ${QBITBOT_TEST_BOT_TOKEN:-}
+      ALLOWED_USERS: ${QBITBOT_TEST_ALLOWED_USERS:-}
+      QBIT_USER: ${QBITBOT_TEST_QBIT_USER:-}
+      QBIT_PASS: ${QBITBOT_TEST_QBIT_PASS:-}
+      QBIT_URL: ${QBITBOT_TEST_QBIT_URL:-}
+      JACKETT_API_KEY: ${QBITBOT_TEST_JACKETT_API_KEY:-}
+      JACKETT_TORZNAB_URL: ${QBITBOT_TEST_JACKETT_TORZNAB_URL:-}
+      PTB_USE_AIOHTTP: ${QBITBOT_TEST_PTB_USE_AIOHTTP:-0}
+      WATCH_INTERVAL_SEC: ${QBITBOT_TEST_WATCH_INTERVAL_SEC:-1}
   qbittorrent:
     ports: !reset []
     volumes: !override [qbit-config:/config, test-downloads:/downloads]

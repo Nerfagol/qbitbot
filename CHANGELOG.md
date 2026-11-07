@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep generated disposable integration credentials in explicit Compose subprocess
+  environments; fixture env/override files no longer store their values.
+
 ## 0.4.0 — 2026-11-07
 
 - Add tag-triggered, exact-commit CI-gated GHCR publishing for the bot and patched

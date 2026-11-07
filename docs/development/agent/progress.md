@@ -1,5 +1,24 @@
 # Project Progress
 
+## 2026-11-07 — Removed the CodeQL integration credential-to-file flow
+
+- Owner requested a source fix for CodeQL#1. Replaced the generated credential
+  write in public_stack.py with explicit child-process environment injection.
+  Bundled test Compose and bot-only overrides interpolate dedicated fixture names;
+  generated files contain only placeholders and the retained0600 bot.env is empty.
+  No global environment mutation or production configuration import was added.
+- A regression first failed on the plaintext password persisted in bot.env, then
+  passed with the source fix. It verifies file contents, child env delivery and
+  secret-free Docker argv. Retained the empty file's0600 protection after a
+  separate red/green check. Independent review found no blockers;11 focused tests
+  and the final full660 tests/lint/format/compile/dependency checks passed.
+- Real disposable public-stack acceptance passed both languages, authenticated
+  services, bot-only mode, outage/recovery, state/rollback/backup and scoped cleanup.
+  These checks use only owned fixtures and generate no real tracker traffic.
+- Next: publish source and confirm hosted CodeQL marks the original alert fixed
+  with no replacement alert. Do not dismiss the alert or change scanner rules.
+  Published0.4.0 images and the live QNAP deployment need no runtime update.
+
 ## 2026-11-07 — Published GHCR0.4.0 and verified QNAP registry rollout
 
 - Published exact sourcee342894, new immutablev0.4.0 and public release with a
