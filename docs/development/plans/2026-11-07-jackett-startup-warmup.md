@@ -20,13 +20,17 @@ container oneshot. Cookie expiry can still cause a later cold search.
 - [x] Implement the startup hook, image inputs and bundled Compose health gate.
 - [x] Verify zero idle/retry traffic and container restart behavior using only
   synthetic Docker fixtures; run normal checks and directory-context exclusions.
-- [ ] Review, document results and deploy only after verification, preserving
+- [x] Review, document results and deploy only after verification, preserving
   private configuration and backups. Never use repeated real tracker queries
   as a warm-up test.
 
 Source review found no blockers after declaring host jq for offline tests.
 645 tests and normal checks, Docker context exclusions, synthetic native-s6
 startup/restart/idle tests, full public-stack acceptance/rollback and the current
-Jackett image vulnerability scan passed. NAS acceptance exposed management-route dashboard authentication; corrected to
-the normal search API and added a real Jackett/password regression. Corrected
-source deployment remains pending.
+Jackett image vulnerability scan passed. NAS acceptance exposed management-route
+dashboard authentication; corrected to the normal search API and added a real
+Jackett/password regression. Corrected source5644275 passed all4 hosted workflows
+and was deployed with fresh verified private backups. Its one warm-up completed
+in36.805s across2 reported sources before the bot started. No extra real tracker
+searches were used for verification. Later cookie-expiry behavior and owner search
+acceptance remain separate.

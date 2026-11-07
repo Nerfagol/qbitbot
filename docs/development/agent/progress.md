@@ -14,13 +14,28 @@
   passed. Native s6 fixture now rejects management requests and counts aggregate
   searches per boot; added a real Jackett fixture with synthetic admin password
   in network-none, verifying management stays302 and warm-up finishes0sources.
-  Corrected Docker fixture passed; full checks/review and rollout are in progress.
+  Corrected Docker fixture and645 tests/lint/format/compile/dependency checks
+  passed; independent review found no blockers. Fresh disposable EN/RU stack,
+  authenticated APIs, outage/recovery and bot-only checks passed. Corrected image
+  scan found0 records with the current dated database.
 - First private rollout backup guard failed before image change because root
   with cap-drop ALL could not read owner-only Jackett configuration. Services
   resumed safely; a fresh backup attempt using its verified existing owner
   succeeded without chmod/chown. The deployed first image is healthy but its
-  skipped warm-up does not establish successful warming. Corrected rollout must
-  preserve that backup guard, state/project identity and private artifacts.
+  skipped warm-up did not establish successful warming.
+- Published corrected5644275; all4 hosted workflows passed. Deployed only the
+  Jackett image after verifying transfer/config/layer/source identities and a
+  fresh offline SQLite/config backup. Existing image, state volume and security
+  restrictions of the bot were retained; solver container identity was unchanged.
+  Normal readiness and private state-integrity/count comparisons passed.
+- Actual startup warm-up ran exactly once, completed in36.805s and reported both
+  configured sources. Bot started after completion; no startup/polling-conflict
+  error markers were found. No extra real tracker searches were used to verify
+  it. No periodic warm-up or helper retries were added. User acceptance of a
+  later real search remains separate; cookie expiry can still cause a cold run.
+- Sanitized handoff/plan records capture the completed deployment; runtime source
+  is published. Private descriptors, snapshots, logs and rollout helpers remain
+  on NAS or under /tmp. GHCR remains deferred until owner acceptance.
 
 ## 2026-11-07 — Verified restart-only Jackett tracker warm-up
 
