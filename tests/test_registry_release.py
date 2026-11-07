@@ -100,3 +100,21 @@ def test_existing_version_tag_is_never_overwritten(release):
     with pytest.raises(ValueError):
         release.check_available(versions, "0.4.0")
     release.check_available(versions, "0.4.1")
+
+
+def test_one_repository_uses_distinct_component_version_and_source_tags(release):
+    expected = {
+        "bot": ("0.4.0", "sha-" + SHA),
+        "qbittorrent": ("qbittorrent-0.4.0", "qbittorrent-sha-" + SHA),
+        "jackett": ("jackett-0.4.0", "jackett-sha-" + SHA),
+        "flaresolverr": ("flaresolverr-0.4.0", "flaresolverr-sha-" + SHA),
+    }
+    assert {c: release.component_tags(c, "0.4.0", SHA) for c in expected} == expected
+    assert len({tag for tags in expected.values() for tag in tags}) == 8
+
+
+@pytest.mark.parametrize("tag", ["jackett-0.4.0", "flaresolverr-sha-" + SHA])
+def test_companion_tag_collision_blocks_a_single_package_release(release, tag):
+    versions = [{"metadata": {"container": {"tags": [tag]}}}]
+    with pytest.raises(ValueError):
+        release.check_release_available(versions, "0.4.0", SHA)

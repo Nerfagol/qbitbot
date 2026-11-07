@@ -56,18 +56,19 @@ jobs:
       - name: Build the four Linux amd64 release images
         run: |
           for component in bot qbittorrent jackett flaresolverr; do
-            image="$PREFIX"
-            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
+            tag="$VERSION"
+            sha_tag="sha-$GITHUB_SHA"
+            if [ "$component" != bot ]; then tag="$component-$VERSION"; sha_tag="$component-sha-$GITHUB_SHA"; fi
             docker build --platform linux/amd64 -f "deploy/docker/$component.Dockerfile" \
               --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
               --label "org.opencontainers.image.revision=$GITHUB_SHA" \
               --label "org.opencontainers.image.version=$VERSION" \
-              -t "$image:$VERSION" -t "$image:sha-$GITHUB_SHA" .
+              -t "$PREFIX:$tag" -t "$PREFIX:$sha_tag" .
           done
       - name: Verify release artifacts with synthetic services
         run: |
-          python integration/jackett_startup.py --image "$PREFIX-jackett:$VERSION"
-          python integration/flaresolverr.py --image "$PREFIX-flaresolverr:$VERSION"
+          python integration/jackett_startup.py --image "$PREFIX:jackett-$VERSION"
+          python integration/flaresolverr.py --image "$PREFIX:flaresolverr-$VERSION"
           docker run --rm --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges:true -e "EXPECTED_VERSION=$VERSION" \
             --entrypoint python "$PREFIX:$VERSION" \
@@ -82,9 +83,9 @@ jobs:
             "$RUNNER_TEMP/trivy/archive.tar.gz" | sha256sum --check
           tar -xzf "$RUNNER_TEMP/trivy/archive.tar.gz" -C "$RUNNER_TEMP/trivy" trivy
           for component in bot qbittorrent jackett flaresolverr; do
-            image="$PREFIX"
-            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
-            "$RUNNER_TEMP/trivy/trivy" image --scanners vuln,secret --exit-code 1 --no-progress "$image:$VERSION"
+            tag="$VERSION"
+            if [ "$component" != bot ]; then tag="$component-$VERSION"; fi
+            "$RUNNER_TEMP/trivy/trivy" image --scanners vuln,secret --exit-code 1 --no-progress "$PREFIX:$tag"
           done
       - name: Upload verified images
         env:
@@ -93,9 +94,10 @@ jobs:
           printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           trap 'docker logout ghcr.io' EXIT
           for component in bot qbittorrent jackett flaresolverr; do
-            image="$PREFIX"
-            if [ "$component" != bot ]; then image="$PREFIX-$component"; fi
-            docker push "$image:$VERSION"
-            docker push "$image:sha-$GITHUB_SHA"
-            printf '%s\n' "Published $image:$VERSION" >> "$GITHUB_STEP_SUMMARY"
+            tag="$VERSION"
+            sha_tag="sha-$GITHUB_SHA"
+            if [ "$component" != bot ]; then tag="$component-$VERSION"; sha_tag="$component-sha-$GITHUB_SHA"; fi
+            docker push "$PREFIX:$tag"
+            docker push "$PREFIX:$sha_tag"
+            printf '%s\n' "Published $PREFIX:$tag" >> "$GITHUB_STEP_SUMMARY"
           done

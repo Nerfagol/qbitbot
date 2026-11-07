@@ -1,0 +1,31 @@
+{
+  "version": "0.4.0",
+  "revision": "e3428944e882044a810f49a1b17215c91f602c51",
+  "platform": "linux/amd64",
+  "images": {
+    "bot": {
+      "ref": "ghcr.io/nerfagol/qbitbot@sha256:333c922c868e07943a524978afbfadc4535f831e7b4b8190dcc0b05c8547690e",
+      "tag": "ghcr.io/nerfagol/qbitbot:0.4.0",
+      "digest": "sha256:333c922c868e07943a524978afbfadc4535f831e7b4b8190dcc0b05c8547690e",
+      "config_digest": "sha256:c8ab9e27afb92327c89296fded9481cd684e510d622ed4c2b1c758fb0ecee799"
+    },
+    "qbittorrent": {
+      "ref": "ghcr.io/nerfagol/qbitbot-qbittorrent@sha256:6511d4227433d99d70789ab7bde2d6da2d539f570721ec9250c22df6413259a0",
+      "tag": "ghcr.io/nerfagol/qbitbot-qbittorrent:0.4.0",
+      "digest": "sha256:6511d4227433d99d70789ab7bde2d6da2d539f570721ec9250c22df6413259a0",
+      "config_digest": "sha256:86cb15c9f33eb6b91e8ed3f8b57470a253814520482730fe32c0818df83b1aca"
+    },
+    "jackett": {
+      "ref": "ghcr.io/nerfagol/qbitbot-jackett@sha256:fddc8107929af6e73bae35220d3c162c1fb271931625573be81dd59e255a9c34",
+      "tag": "ghcr.io/nerfagol/qbitbot-jackett:0.4.0",
+      "digest": "sha256:fddc8107929af6e73bae35220d3c162c1fb271931625573be81dd59e255a9c34",
+      "config_digest": "sha256:8ac294638bcdeaaf3efb1395eeff5ef5556b00cee84208a1d45e04b8e00b1c2c"
+    },
+    "flaresolverr": {
+      "ref": "ghcr.io/nerfagol/qbitbot-flaresolverr@sha256:3a0bf0c40de14b1826bbd63068346a9f41c38823d0f515f6c1c6c660cf819d5b",
+      "tag": "ghcr.io/nerfagol/qbitbot-flaresolverr:0.4.0",
+      "digest": "sha256:3a0bf0c40de14b1826bbd63068346a9f41c38823d0f515f6c1c6c660cf819d5b",
+      "config_digest": "sha256:e0156b9a8d91d60b95652bcaa4402251343f5726b4d169bda7853bd1941d08b2"
+    }
+  }
+}

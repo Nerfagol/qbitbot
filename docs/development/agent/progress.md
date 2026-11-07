@@ -1,5 +1,27 @@
 # Project Progress
 
+## 2026-11-07 — Preparing one GHCR package with component tags
+
+- Owner explicitly selected one package with separate containers. Preserve bot
+  tags in ghcr.io/nerfagol/qbitbot; companion version/source tags get component
+  prefixes. No image rebuild, Git retag, live service restart or tracker query.
+- Added a main-only manual consolidation workflow with checksum-pinned regctl,
+  exact current CI gate and a public lock copied from the published0.4.0 digest
+  asset. Copy rejects conflicting tags, preserves equal ones and verifies copied
+  digests. Future publishing preflights all8 tags in the single canonical package.
+- Optional legacy cleanup remains unauthorized and undispatched. Its owner-only
+  path verifies every canonical tag and all legacy versions against copied
+  manifest graphs/known tags before deleting only the3 named companion packages.
+  Ask explicit owner approval after migration because old pull URLs will break.
+- Verified675 tests/normal checks,29 focused registry regressions, actionlint and
+  resolved Compose equivalence/context exclusions. Independent review found no
+  blockers. Read-only regctl verified all4 original root digests/raw manifest
+  graphs. No scanner exclusions or runtime changes were introduced.
+- Publication is phased: push migration/publisher code first, wait for hosted
+  checks, run default copy, verify anonymous/QNAP access, then publish new overlays
+  and current guides. The2 overlay files and compose_check assertion are held
+  locally until aliases exist; primary owns these edits, no other writers.
+
 ## 2026-11-07 — Removed the CodeQL integration credential-to-file flow
 
 - Owner requested a source fix for CodeQL#1. Replaced the generated credential

@@ -306,3 +306,16 @@ the old generated-credential env-file write. Source4966021 passed hosted CodeQL;
 GitHub marked#1 fixed at2026-11-07T20:47:04Z, with0 open main alerts. No dismissal
 or scanner suppression was used. The earlier blocked-dismissal approval request
 is obsolete. Regression and full660 checks plus real public-stack acceptance pass.
+
+## Single-package registry transition, 2026-11-07
+
+Owner chose one GHCR package with separate containers. Canonical bot tags remain
+0.4.0/sha-<revision>; companions use <component>-0.4.0 and <component>-sha-<revision>
+inside ghcr.io/nerfagol/qbitbot. Copy existing released manifests without rebuilding
+or changing their digests/labels. Published0.4.0 Git tag/artifacts stay immutable.
+Consolidation uses a reviewed public release lock and checksum-pinned regctl0.11.7.
+Keep normal version/SHA overwrite guards. New overlay references are published
+only after aliases are verified anonymously, so current pull commands stay valid.
+Legacy package deletion requires a separate explicit approval after migration:
+it breaks old public URLs. Cleanup must remain owner/main-only and reject unknown
+versions/tags or a canonical digest mismatch before deleting any package.

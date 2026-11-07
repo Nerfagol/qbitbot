@@ -59,6 +59,19 @@ def check_available(versions, version):
         raise ValueError("Version image already exists; never overwrite a released version")
 
 
+def component_tags(component, version, revision):
+    if component not in COMPONENTS:
+        raise ValueError("Unknown image component")
+    prefix = "" if component == "bot" else component + "-"
+    return prefix + version, prefix + "sha-" + revision
+
+
+def check_release_available(versions, version, revision):
+    for component in COMPONENTS:
+        for tag in component_tags(component, version, revision):
+            check_available(versions, tag)
+
+
 def api(path, *, missing_ok=False, paginate=False):
     command = ["gh", "api"] + (["--paginate", "--slurp"] if paginate else []) + [path]
     result = subprocess.run(command, capture_output=True, text=True, timeout=60)
@@ -67,6 +80,18 @@ def api(path, *, missing_ok=False, paginate=False):
             return []
         raise RuntimeError("GitHub API check failed; publication stopped")
     return json.loads(result.stdout)
+
+
+def wait_for_checks(repository, revision):
+    deadline = time.monotonic() + 1200
+    while True:
+        data = api(f"repos/{repository}/actions/runs?head_sha={revision}&event=push&per_page=100")
+        if checks_passed(data["workflow_runs"], revision):
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Required exact-commit workflows did not finish in time")
+        print("Waiting for required checks on the exact main source commit", flush=True)
+        time.sleep(15)
 
 
 def main():
@@ -83,31 +108,19 @@ def main():
         ref_type=os.environ["GITHUB_REF_TYPE"],
     )
     if args.mode == "gate":
-        deadline = time.monotonic() + 1200
-        while True:
-            data = api(
-                f"repos/{repository}/actions/runs?head_sha={revision}&event=push&per_page=100"
-            )
-            if checks_passed(data["workflow_runs"], revision):
-                break
-            if time.monotonic() >= deadline:
-                raise RuntimeError("Required exact-commit workflows did not finish in time")
-            print("Waiting for required checks on the exact main source commit", flush=True)
-            time.sleep(15)
+        wait_for_checks(repository, revision)
         with open(os.environ["GITHUB_OUTPUT"], "a") as output:
             for key, value in values.items():
                 output.write(f"{key}={value}\n")
         print("Release metadata and all four exact-commit workflows verified")
     else:
         owner, name = repository.lower().split("/")
-        for component in COMPONENTS:
-            package = name + ("-" + component if component != "bot" else "")
-            pages = api(
-                f"users/{owner}/packages/container/{package}/versions?per_page=100",
-                missing_ok=True,
-                paginate=True,
-            )
-            check_available([v for page in pages for v in page], values["version"])
+        pages = api(
+            f"users/{owner}/packages/container/{name}/versions?per_page=100",
+            missing_ok=True,
+            paginate=True,
+        )
+        check_release_available([v for page in pages for v in page], values["version"], revision)
         print("All version image tags are available")
 
 

@@ -1,0 +1,52 @@
+name: consolidate-registry
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Copy 0.4.0 images; cleanup deletes legacy public packages only after explicit owner approval'
+        required: true
+        default: copy
+        type: choice
+        options: [copy, cleanup]
+permissions:
+  contents: read
+concurrency:
+  group: registry-release
+  cancel-in-progress: false
+jobs:
+  consolidate:
+    if: github.repository == 'Nerfagol/qbitbot' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.15'
+      - name: Install checksum-pinned registry copier
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/regctl"
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 120 \
+            https://github.com/regclient/regclient/releases/download/v0.11.7/regctl-linux-amd64 \
+            --output "$RUNNER_TEMP/regctl/regctl"
+          printf '%s  %s\n' 3737fbbdd791e04e7a831640b681f3397a376498e80e2ad9b1b2d27296f239bc \
+            "$RUNNER_TEMP/regctl/regctl" | sha256sum --check
+          chmod 755 "$RUNNER_TEMP/regctl/regctl"
+          echo "$RUNNER_TEMP/regctl" >> "$GITHUB_PATH"
+      - name: Verify and copy or explicitly clean up
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          export REGCTL_CONFIG="$RUNNER_TEMP/regctl/auth.json"
+          printf '%s' "$GH_TOKEN" | regctl registry login ghcr.io -u "$GITHUB_ACTOR" --pass-stdin
+          trap 'regctl registry logout ghcr.io' EXIT
+          python -m integration.consolidate_registry "$OPERATION"
