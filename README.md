@@ -102,8 +102,8 @@ and service configuration before upgrades; `docker compose down -v` deletes name
 state/configuration volumes. Before reusing an existing bot volume, follow the
 [offline ownership migration guide](docs/deployment/container-hardening.md).
 
-Use the [GHCR release-image overlays](docs/deployment/registry.md) for versioned
-Linux amd64 pulls after package publication/visibility verification. Default
+Use the [public GHCR release-image overlays](docs/deployment/registry.md) for versioned
+Linux amd64 pulls without a registry login. Default
 Compose builds the bot and patched service
 images from the reviewed Dockerfiles in `deploy/docker/`. The bot runtime installs
 a built wheel; its code and both locale catalogs live in `src/qbitbot/`. See

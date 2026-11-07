@@ -1,5 +1,35 @@
 # Project Progress
 
+## 2026-11-07 — Published GHCR0.4.0 and verified QNAP registry rollout
+
+- Published exact sourcee342894, new immutablev0.4.0 and public release with a
+  digest-manifest asset. All4 main-commit workflows passed, along with tag checks.
+  Publisher's first attempt failed before upload on the known intermittent
+  Chrome-not-reachable browser startup; one failed-job rerun passed every gate
+  unchanged and uploaded all4 amd64 images. No root-cause browser fix is claimed.
+- Confirmed all4 public manifests anonymously, hashing them against the exact
+  successful upload digests. The images were already public: no owner visibility
+  change was required. Keep visibility guidance conditional on actual state.
+- Pulled all4 images on QNAP using an empty registry config. Verified manifest/
+  config digests, OCI source/version labels and Linux amd64; bot wheel0.4.0/UID,
+  qBit5.3.0, Jackett runtime files and Chromium version probes passed. All24 bot
+  source/catalog hashes match the release. Private probe shell/path assumptions
+  were corrected without service changes; these were not image/runtime defects.
+- Switched only the bot to its public digest-pinned image with a fresh verified
+  offline backup. State schema/counts and configuration bytes were retained;
+  source hashes, running image, UID/read-only state mount and clean startup were
+  verified. qBit/Jackett/solver container IDs and start times stayed unchanged,
+  so this rollout caused no additional tracker warm-up or real search requests.
+- Open CodeQL#1 flags only generated credentials written for isolated disposable
+  integration services. Independent review traced the private temporary directory,
+  0600 env file, fresh volumes/internal network and synthetic Telegram token;
+  production config is not imported. Automatic approval review rejected changing
+  this high-rated alert's security state without explicit user authorization.
+  Approval was requested asynchronously; alert remains open, no rules weakened.
+- Updated public registry/setup/release records to actual publication and QNAP
+  evidence. Real Telegram/search acceptance and formal test-alert dismissal remain
+  separate; private snapshots/descriptors/logs/helpers stay outside Git.
+
 ## 2026-11-07 — Prepared GHCR release0.4.0 for publication
 
 - Owner explicitly authorized the proposed workflow/version/changelog/publication
@@ -29,6 +59,17 @@
   default private; official GitHub docs provide only an owner UI visibility change.
   Complete all available work before requesting that one-time external action;
   anonymous public/QNAP pulls and GitHub release publication remain pending.
+- Sourcee342894 was pushed and all4 exact main-commit workflows passed. Created
+  new annotatedv0.4.0 at that commit and a draft GitHub release;v0.3.0 unchanged.
+  Downloaded GitHub tag archive matches every tracked file. First publish attempt
+  stopped before scans/upload because the existing solver browser test hit the
+  known intermittent Chrome-not-reachable startup failure. Main/tag security and
+  local browser checks passed on the same source. One failed-job rerun is active;
+  no source change, relaxed check or production retry loop was introduced.
+- Private anonymous-registry manifest/digest verification, QNAP pull/probe and
+  backed-up bot-only registry rollout helpers are prepared outside Git. Current
+  NAS services are unchanged. Public visibility/anonymous pulls and final release
+  publication remain pending; do not treat the draft/tag as a completed release.
 
 ## 2026-11-07 — Corrected warm-up API authorization after NAS acceptance
 

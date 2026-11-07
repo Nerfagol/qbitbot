@@ -5,9 +5,11 @@ private Git refs, diagnostic reports or database snapshots into a release.
 
 ## Release preparation
 
-Version0.4.0 is prepared in pyproject.toml and the dated changelog. v0.3.0 remains
-the existing published release until the new release passes its publication and
-registry-pull checks. For each later release, choose a new version, update
+The latest published release is [v0.4.0](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.0),
+with matching package version and public amd64 GHCR images. Its exact source
+commite342894 passed all4 workflows and publication, anonymous manifest/pull and
+QNAP checks. The release asset records immutable digests. v0.3.0 remains unchanged.
+For each later release, choose a new version, update
 `[project].version` and date its changelog notes. Keep package, Git tag and Docker
 version tags aligned. Never overwrite an existing release tag or version image.
 
@@ -15,8 +17,8 @@ README badges track main; verify the intended release commit separately. Keep th
 English/Russian installation and upgrade guides aligned. The supported verified
 container target remains Linux amd64. Default Compose builds from source;
 [registry overlays and publication requirements](../deployment/registry.md)
-provide the prebuilt-image path. New personal GHCR packages default to private;
-the owner must set public visibility before anonymous/QNAP pulls can be verified.
+provide the prebuilt-image path. Check actual package visibility; if private, the
+owner must make it public before anonymous/QNAP pulls can be verified.
 
 ## Verification
 

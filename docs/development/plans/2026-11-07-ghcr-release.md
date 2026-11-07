@@ -22,9 +22,9 @@ availability. GitHub package visibility may require a one-time owner setting.
   update version, changelog and aligned EN/RU registry/setup instructions.
 - [x] Verify tests/context/integration/builds and source/history/image privacy;
   get independent review before publishing source or release tags.
-- [ ] Push source, wait for exact-commit CI, create new tag and publish images;
+- [x] Push source, wait for exact-commit CI, create new tag and publish images;
   verify anonymous registry availability, digests, labels and pullability.
-- [ ] Test pulled images using synthetic fixtures and QNAP, retain verified
+- [x] Test pulled images using synthetic fixtures and QNAP, retain verified
   backups/config/project identities and old images, and document actual results.
 
 No periodic tracker requests or extra real search tests. Prefer pull/inspect and
@@ -40,4 +40,22 @@ regular layer files passed. Layer Gitleaks flagged4 public Python signing
 fingerprints and libmagic's header-recognition database; exact upstream/package
 equality and an independent review justified anchored, artifact-only exceptions.
 No source-scanner exclusions were added. Final artifact scan passed. Independent
-release-workflow review found no blockers. Hosted publication remains unverified.
+release-workflow review found no blockers.
+
+Published sourcee342894 and immutablev0.4.0 after all4 exact main checks passed.
+Publication attempt1 stopped before upload on the pre-existing intermittent
+Chrome-not-reachable startup failure; a single failed-job rerun passed unchanged
+checks and uploaded all4 images. No root-cause fix for that intermittent failure
+is claimed. All4 manifests were already anonymously readable; no owner UI change
+was needed. Their public digests match the uploaded versions and QNAP image
+config/source/version/platform metadata. Downloaded tag source matches every file.
+QNAP CLI/package probes passed, including all24 bot source/catalog hashes. Bot-only
+registry rollout used a verified offline backup and digest pin, retaining durable
+state/security and all3 companion containers/start times. Published GitHub release
+includes a public digest manifest. No extra tracker warm-up/search was triggered.
+
+One CodeQL cleartext-storage alert at the disposable test env sink was independently
+reviewed as test-only. Automatic approval review rejected its administrative
+dismissal without explicit owner permission; requested approval remains pending
+and the alert stays open. Scanner rules were not changed. This is separate from
+the completed image publication; real Telegram/search acceptance remains distinct.

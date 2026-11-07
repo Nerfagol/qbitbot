@@ -11,11 +11,11 @@ uses these image names:
 | Jackett | `ghcr.io/nerfagol/qbitbot-jackett:0.4.0` |
 | Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot-flaresolverr:0.4.0` |
 
-First publication creates private packages. The owner must make each public in
-its GitHub package settings before anonymous pulls work. Repository permissions
-inheritance does not change package visibility. A successful upload alone does
-not prove public availability. See [GitHub's visibility instructions](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
-Public images require no registry login or personal token.
+Version0.4.0 is public: anonymous manifests/pulls and QNAP compatibility were
+verified. No registry login or personal token is needed. For future packages,
+check actual visibility after publication. If a package is private, the owner
+can make it public in GitHub package settings. A successful upload or repository
+link alone does not prove anonymous availability. See [GitHub's visibility instructions](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 
 ## Use release images
 

@@ -276,9 +276,23 @@ integration/registry_release.py requires a stable tag, matching package/changelo
 exact main-push checks and absent image version tags; only upload job gets
 packages:write. If a partial upload leaves version tags, use a new version rather
 than overwriting artifacts. Source linking inherits permissions, not GHCR visibility:
-new personal packages are private and need owner Package settings UI to become
-public; supported REST/GraphQL provides no visibility mutation. Do not claim
+new personal packages may require owner Package settings UI for public access;
+supported REST/GraphQL provides no visibility mutation. Check actual anonymous
+access before requesting any owner UI action. Do not claim
 public pulls before anonymous verification or require production PATs for users.
 Current all-layer privacy audit found only public Python signing fingerprints
 and libmagic5.47-r2 format recognizers. Verify exact pinned-base/package equality
 before applying anchored artifact-only exceptions; never weaken source scanning.
+
+Release0.4.0 is now public, tag/sourcee342894, all4 registry images anonymously
+readable and pulled/checked on QNAP. Default-private documentation did not establish
+their actual visibility: verify anonymous access before requesting owner UI work.
+Live bot now uses its GHCR manifest digest; companion containers were not restarted.
+Retained old images and fresh verified offline state/config backup support rollback.
+The publisher hit one known intermittent Chromium startup failure before upload;
+one targeted rerun passed unchanged gates. Do not call this a browser root-cause fix.
+CodeQL#1 cleartext storage at integration/public_stack.py:148 is reviewed test-only:
+generated disposable credentials, private temp dir,0600 file, internal owned services,
+no production inputs. Administrative dismissal was blocked by automatic approval
+review for lack of explicit permission; asynchronous approval requested, no answer
+yet. Keep alert open unless owner explicitly authorizes that scoped dismissal.

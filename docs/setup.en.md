@@ -87,8 +87,8 @@ For Linux amd64 and Compose2.24.4+, use the [registry overlays and commands](dep
 after filling the same private settings described above. They support the bundled
 stack, bot-only mode and optional FlareSolverr, preserving project/volume/security
 settings. Select `QBITBOT_VERSION=0.4.0` in `.env`, pull the versioned images and
-use `--no-build`. First publication needs public package visibility before
-anonymous pulls work. The default commands above remain source builds.
+use `--no-build`. The0.4.0 images are public and require no registry login.
+The default commands above remain source builds.
 
 ## Upgrading
 
