@@ -88,8 +88,8 @@ after filling the same private settings described above. They support the bundle
 stack, bot-only mode and optional FlareSolverr, preserving project/volume/security
 settings. All images share one `ghcr.io/nerfagol/qbitbot` package; companions use
 component-prefixed tags while remaining separate containers. Select
-`QBITBOT_VERSION=0.4.0` in `.env`, pull the versioned images and
-use `--no-build`. The0.4.0 images are public and require no registry login.
+`QBITBOT_VERSION=0.4.1` in `.env`, pull the versioned images and
+use `--no-build`. The0.4.1 images are public and require no registry login.
 The default commands above remain source builds.
 
 ## Upgrading

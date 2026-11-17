@@ -2,4 +2,4 @@
 services:
   bot:
     build: !reset null
-    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.0}
+    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.1}

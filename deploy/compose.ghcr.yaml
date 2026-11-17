@@ -2,10 +2,10 @@
 services:
   bot:
     build: !reset null
-    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.0}
+    image: ghcr.io/nerfagol/qbitbot:${QBITBOT_VERSION:-0.4.1}
   qbittorrent:
     build: !reset null
-    image: ghcr.io/nerfagol/qbitbot:qbittorrent-${QBITBOT_VERSION:-0.4.0}
+    image: ghcr.io/nerfagol/qbitbot:qbittorrent-${QBITBOT_VERSION:-0.4.1}
   jackett:
     build: !reset null
-    image: ghcr.io/nerfagol/qbitbot:jackett-${QBITBOT_VERSION:-0.4.0}
+    image: ghcr.io/nerfagol/qbitbot:jackett-${QBITBOT_VERSION:-0.4.1}

@@ -1,5 +1,31 @@
 # Project Progress
 
+## 2026-11-17 — Published immutable GHCR0.4.1 and verified NAS pulls
+
+- Owner authorized the public patch release after reporting the NAS update good.
+  [PR#7](https://github.com/Nerfagol/qbitbot/pull/7) merged release metadata and
+  sanitized handoffs. Exact source10eee0f passed all4 main checks; annotated
+  v0.4.1 targets that source. [Publisher44190061144](https://github.com/Nerfagol/qbitbot/actions/runs/44190061144)
+  passed all gates/tests/scans/uploads without a rerun. [Releasev0.4.1](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.1)
+  is public with immutable image digest JSON and checksum assets.
+- Local675 checks, Compose/API/recovery/full-public-stack checks and source/history
+  Gitleaks scans passed. Tag archive matches all168 audited files. Exact published
+  artifact audit covered45 layers/16,541 regular files, with0 private-marker hits.
+  Independent review cleared8 upstream nonsecret scanner matches (public Python
+  signing fingerprints, Win32 binding, libmagic signatures, WebSocket test nonces);
+  no broad scanner suppressions or private audit inputs were committed.
+- Anonymous all8 version/source manifests, raw/config digests, labels and amd64
+  platform are verified. All recorded0.4.0 digests remain unchanged. Empty-auth
+  NAS pulls and config/layer/revision checks passed for all4 new images, followed
+  by bot0.4.1, qBit5.3.0, Jackett.NET9.0.23/WebUtilities2.3.14 and matching Chromium/
+  driver probes. Disposable probes use the packaged qBit path and writable scratch.
+- NAS running image/container/start identities remained unchanged during release
+  verification; it retains the verified3331911 deployment. No second rollout,
+  production configuration change or live test torrent was performed.
+- Current registry defaults/EN-RU guides now select available0.4.1. Tagged source
+  predates this post-publication default update; its release notes explicitly
+  require QBITBOT_VERSION=0.4.1. Prior release tags/assets remain immutable.
+
 ## 2026-11-17 — Preparing authorized GHCR0.4.1 patch release
 
 - Owner reported the NAS update looked good and authorized the GHCR release.
