@@ -178,9 +178,32 @@ stages and Jackett0.24.3078 at upstream digest6ff71f9c754a64190874851b726461b16e
 with .NET/ASP.NET9.0.23 and WebUtilities2.3.14. Both rebuilt amd64 images scan
 with0 records using Trivy0.76.1/DB2026-11-17;675 checks and compose-check pass.
 The owner subsequently authorized publishing source, checking CI and merging.
-Image publication and deployment remain unauthorized; published0.4.0 images and
-live services remain unchanged. Hosted verification is tracked in progress.md;
-no claim about current exploitability is made.
+Image publication was outside that package-update request; the owner later
+authorized the NAS rollout recorded below. Published0.4.0 images remain unchanged.
+Hosted verification is tracked in progress.md; no claim about current
+exploitability is made.
+
+## Authorized NAS security rollout, 2026-11-17
+
+Owner authorized deploying the verified source3331911 after all4 main workflows
+passed. Built/scanned3 labelled amd64 images and transferred them directly;
+the public GHCR0.4.0 release was not overwritten or republished. Bot, Jackett and
+FlareSolverr now run those candidates. qBittorrent's existing reviewed package
+versions matched and its container/start time remained unchanged.
+Offline verified SQLite/config backups and old images support rollback. Existing
+state ownership, private bot configuration, project/mount/network identity and
+security/resource limits are preserved. Exact image configs/layers/revisions,
+installed source/catalog hashes, all3 database integrity/table counts, existing
+torrent identities, authenticated readiness, Telegram identity/EN/RU menus and
+absence of startup/polling-conflict markers passed. Live search/download/completion
+acceptance remains manual. Private artifacts stay on NAS or /tmp, outside Git.
+
+Docker inspect arrays can reorder environment entries and mounts without changing
+values. Compare environment entries independently of ordering and mounts by
+destination; optional HostConfig keys may be absent. A conservative first attempt
+rolled back on an order-only comparison; the corrected verifier passed captured
+settings and a fresh-backup retry completed. Jackett runs its configured one-time
+warm-up on each container restart; no periodic warm-up or test torrent was added.
 
 ## curl advisory maintenance, 2026-10-26
 

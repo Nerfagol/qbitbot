@@ -1,5 +1,45 @@
 # Project Progress
 
+## 2026-11-17 — Preparing authorized GHCR0.4.1 patch release
+
+- Owner reported the NAS update looked good and authorized the GHCR release.
+  Prepare new immutable0.4.1 tags for all4 amd64 components; keep0.4.0 unchanged.
+  Package metadata and dated changelog align. Include the sanitized NAS handoff.
+- Release remains gated on local checks/privacy audit, independent review,
+  exact-main-commit hosted checks, publisher artifact tests/scans, anonymous
+  registry verification and NAS pull compatibility. No second NAS service rollout
+  is implied; its verified3331911 candidate remains running.
+- Publication and final release evidence remain pending; this entry is preparation,
+  not a claim that0.4.1 is available. Primary owns release metadata/records.
+
+## 2026-11-17 — Deployed verified security/browser updates to NAS
+
+- Owner explicitly authorized NAS rollout. Source3331911 passed check, containers,
+  security and CodeQL on main after [PR#6](https://github.com/Nerfagol/qbitbot/pull/6).
+  Built3 labelled amd64 candidates; exact-image vulnerability/secret scans had
+  zero findings. Synthetic browser output/JavaScript/TLS and native Jackett
+  startup/restart checks passed. No public release/tag or GHCR image overwrite.
+- Transferred archive checksum and NAS-loaded config/layer/revision identities
+  match local artifacts. Updated only bot, Jackett and FlareSolverr. Existing
+  qBittorrent already had the reviewed package fixes; its container/start time
+  and all existing torrent identities were retained. No test torrent mutation.
+- Verified offline SQLite snapshots and full Jackett config archive before
+  switching; retained old images/private descriptors for rollback. Old and
+  candidate readers saw identical offline state. Existing ownership, storage,
+  networks, private bot config bytes and security/resource limits are unchanged.
+- First attempt restored old images conservatively because the verifier compared
+  ordered environment arrays. Corrected it to compare values, normalize mount
+  order and handle absent Docker fields; verified captured candidate settings,
+  confirmed healthy rollback, then completed a fresh-backup retry.
+- Final checks passed: running image/source/catalog identities; authenticated
+  qBit/Jackett/state readiness; solver/Jackett health; one state-volume poller;
+  all3 database integrity checks and unchanged table row counts; Telegram identity,
+  no webhook, EN/RU menus and no startup/polling-conflict log markers.
+- Private snapshots/configuration/descriptors/scripts/logs stay outside Git.
+  Live Telegram search/download/completion/hourly acceptance remains manual;
+  a new public registry release is optional and was not part of this direct
+  NAS rollout. The sanitized handoff is included in the subsequent release preparation.
+
 ## 2026-11-17 — Fixed reproducible detached browser stream failure
 
 - Owner requested a FlareSolverr fix after main security44173994627 failed twice

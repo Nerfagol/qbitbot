@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.4.1 — 2026-11-17
+
+- Update the bot's build/runtime Kerberos libraries to1.22.3-r0 and Jackett to
+  0.24.3078 with bundled .NET/ASP.NET9.0.23 and WebUtilities2.3.14 after new
+  vulnerability findings in the scheduled image scan.
+
+- Give detached Chromium streams durable `/dev/null` endpoints instead of pipes
+  whose readers exit with the launch helper. Add a real-process regression for
+  `SIGPIPE` and blocked startup output while retaining browser JavaScript and
+  strict TLS checks. Chromium and its matching driver remain inside the image;
+  no host Chrome installation is required.
+
 - Group runtime images under one GHCR package with component-prefixed companion
   tags. Add digest-preserving consolidation of0.4.0 and guarded, explicitly
   approved legacy cleanup; keep separate containers, state and service isolation.
