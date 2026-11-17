@@ -188,6 +188,7 @@ def check(docker="docker", context=None):
             "docs/licenses/THIRD_PARTY_NOTICES.md",
             "deploy/docker/flaresolverr/LICENSE",
             "deploy/docker/flaresolverr/strict_tls.py",
+            "deploy/docker/flaresolverr/browser_process.py",
             "deploy/docker/jackett/startup.sh",
         ]
         forbidden = [

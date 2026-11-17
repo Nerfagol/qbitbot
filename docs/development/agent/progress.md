@@ -1,5 +1,25 @@
 # Project Progress
 
+## 2026-11-17 — Fixed reproducible detached browser stream failure
+
+- Owner requested a FlareSolverr fix after main security44173994627 failed twice
+  with Chrome-not-reachable while other checks/scans passed. Chromium and driver
+  are already installed in the image; no host browser installation is needed.
+- The primary reproduced SIGPIPE(-13) with synthetic output through the installed
+  detached launcher after its helper exits. An asserted build patch replaces
+  its3 PIPE streams with DEVNULL, preserving process management and avoiding
+  buffer blockage or browser-URL leakage. Actual Chromium's original CI exit
+  signal was not captured; this is evidence of a launcher defect, not proof
+  that every earlier startup failure had the same cause.
+- Baseline smoke with the new process regression failed(-13); patched regression
+  and real JavaScript/selfsigned-TLS rejection passed. Standard675 tests/checks
+  pass. Independent review found no blockers. Runtime restrictions, TLS guards
+  and scoped fixture cleanup are retained; no deployment is authorized.
+- Local image build/scan and compose-check pass; Trivy0.76.1/DB2026-11-17 has
+  zero findings. [PR#6](https://github.com/Nerfagol/qbitbot/pull/6) records hosted
+  checks and merge status. No image publishing, production service changes or
+  host Chrome installation performed.
+
 ## 2026-11-17 — Updated affected packages locally; no deployment
 
 - Owner requested package updates only. The primary updated both bot stages to
