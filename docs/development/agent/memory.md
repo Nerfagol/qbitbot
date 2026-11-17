@@ -95,6 +95,19 @@ Synthetic browser JavaScript and selfsigned-TLS negative checks pass on amd64;
 public-source rebuild scan reports zero records with the2026-10-24 database.
 See docs/deployment/flaresolverr.md. No private deployment data belongs here.
 
+## Detached Chromium launch maintenance, 2026-11-17
+
+Post-merge security44173994627 failed twice on Chromium startup despite clean
+scans; PR checks passed. Chrome/driver156.0.8078.79 are already inside the image;
+host Chrome is irrelevant. Bundled UC defaults to detached launch with PIPE
+streams whose reader dies with its helper. A deterministic installed-launcher
+test reproduces SIGPIPE(-13) on synthetic startup output; exact-anchor build
+patch browser_process.py switches all3 streams to DEVNULL. Regression and real
+JavaScript/TLS smoke pass on the patched image. This proves the stream-lifetime
+defect, not Chromium's unobserved original CI exit signal. Retain that distinction;
+do not replace missing diagnostics with repeated retries or loosen runtime/TLS
+restrictions. Hosted verification status belongs in progress.md/the linked PR.
+
 ## Contributor documentation placement
 
 Agent notes live in docs/development/agent/memory.md and docs/development/agent/progress.md;

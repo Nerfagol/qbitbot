@@ -30,12 +30,20 @@ never use `down -v` as a maintenance shortcut.
 ## Build and security
 
 `deploy/docker/flaresolverr.Dockerfile` copies official FlareSolverr3.5.2 source from a
-pinned release digest onto pinned Python3.11.17/Alpine3.24. Chromium155.0.8059.84
-and its matching Alpine driver replace the vulnerable Debian browser/packages.
+pinned release digest onto pinned Python3.11.17/Alpine3.24. Alpine Chromium
+and its matching driver replace the vulnerable Debian browser/packages
+(156.0.8078.79 in the 2026-11-17 verification).
 CA/urllib3 fixes are applied and unused installer/SeleniumManager binaries removed.
 Two asserted patches enable certificate verification and reject Chromium internal
 error documents, preventing invalid certificates from becoming false API success.
 This is a local derivative that requires deliberate maintenance as upstream changes.
+
+Chromium is installed **inside the image**; host Chrome is not required. An asserted
+build patch connects detached Chromium's standard streams to `/dev/null`. The
+upstream launch helper exits immediately, leaving its output pipes without readers;
+a child writing startup output can then die with `SIGPIPE`. The patch avoids closed
+or undrained pipes and keeps browser diagnostics, which can contain visited URLs,
+out of production logs. It does not add startup retries or relax TLS verification.
 
 The API has no authentication. Only Jackett and FlareSolverr join its separate
 Docker network; the API has **no published host port**. It intentionally accepts
@@ -73,6 +81,10 @@ python3 integration/flaresolverr.py --image qbitbot-flaresolverr:local
 The check requires Docker and host OpenSSL, creates only its own internal network
 and generated fixtures, publishes no ports, and cleans up its own containers.
 Weekly/on-change security CI builds/scans this optional image and runs this check.
+The check also exercises the installed detached launcher with synthetic output
+larger than pipe capacity after its helper exits, rejecting both `SIGPIPE` and
+blocked output. This reproduced a launcher defect; the exact Chromium exit signal
+behind the earlier intermittent CI failures was not captured.
 
 References: [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr),
 [Jackett troubleshooting](https://github.com/Jackett/Jackett/wiki/Troubleshooting#challenge-detected-but-flaresolverr-is-not-configured).

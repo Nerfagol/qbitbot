@@ -24,6 +24,8 @@ RUN apk upgrade --no-cache \
 COPY deploy/docker/flaresolverr/LICENSE /usr/share/licenses/flaresolverr/LICENSE
 COPY deploy/docker/flaresolverr/strict_tls.py /tmp/strict_tls.py
 RUN python /tmp/strict_tls.py && rm /tmp/strict_tls.py
+COPY deploy/docker/flaresolverr/browser_process.py /tmp/browser_process.py
+RUN python /tmp/browser_process.py && rm /tmp/browser_process.py
 ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1
 USER 1000:1000
 EXPOSE 8191

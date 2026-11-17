@@ -10,6 +10,34 @@ import time
 import uuid
 
 
+DETACHED_BROWSER_CHECK = """
+import ctypes, os, signal, sys, time
+from undetected_chromedriver.dprocess import start_detached
+
+# Adopt the detached child so its actual exit status remains observable.
+assert ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0) == 0
+child = (
+    'import os, signal, time; '
+    'signal.signal(signal.SIGPIPE, signal.SIG_DFL); time.sleep(0.2); '
+    'os.write(1, b"x" * 131072); os.write(2, b"x" * 131072)'
+)
+pid = start_detached(sys.executable, '-c', child)
+deadline = time.monotonic() + 5
+while time.monotonic() < deadline:
+    reaped, status = os.waitpid(pid, os.WNOHANG)
+    if reaped:
+        code = os.waitstatus_to_exitcode(status)
+        assert code == 0, f'Detached browser output caused exit {code}'
+        break
+    time.sleep(0.05)
+else:
+    os.kill(pid, signal.SIGKILL)
+    os.waitpid(pid, 0)
+    raise AssertionError('Detached browser blocked writing startup output')
+print('PASS: detached browser output survives helper exit without blocking')
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--docker", default="docker")
@@ -130,6 +158,10 @@ def main():
                 time.sleep(1)
             else:
                 raise RuntimeError("Generated browser fixture readiness timed out")
+            print(
+                run("exec", name + "-fixture", "python", "-c", DETACHED_BROWSER_CHECK),
+                flush=True,
+            )
             run(
                 "run",
                 "-d",
