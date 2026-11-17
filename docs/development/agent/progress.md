@@ -15,8 +15,10 @@
   and real JavaScript/selfsigned-TLS rejection passed. Standard675 tests/checks
   pass. Independent review found no blockers. Runtime restrictions, TLS guards
   and scoped fixture cleanup are retained; no deployment is authorized.
-- Source publication and hosted verification are next; no image publishing,
-  production service changes or host Chrome installation performed.
+- Local image build/scan and compose-check pass; Trivy0.76.1/DB2026-11-17 has
+  zero findings. [PR#6](https://github.com/Nerfagol/qbitbot/pull/6) records hosted
+  checks and merge status. No image publishing, production service changes or
+  host Chrome installation performed.
 
 ## 2026-11-17 — Updated affected packages locally; no deployment
 
