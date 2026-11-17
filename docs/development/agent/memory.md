@@ -60,8 +60,8 @@ when editing rollback tests.
 - Existing state needs explicit offline backed-up UID1000 migration, never a
   startup chown. See docs/deployment/container-hardening.md. Old root rollback
   images can create root-owned journals: recheck permissions before upgrading.
-- Bundled qBittorrent5.3.0/Jackettv0.24.2900 use derived images that patch only
-  pinned Brotli/musl packages during build. Upstream init privileges are retained.
+- Bundled qBittorrent5.3.0/Jackettv0.24.3078 use derived images with pinned Alpine
+  package fixes during build. Upstream init privileges are retained.
   Runtime/setup support both HTTP204 empty and legacy200/Ok. responses.
 - http_safety.py pins connections to validated DNS answers, with only configured
   Jackett origin allowed private addresses; rejects private mappings/site-local/
@@ -155,6 +155,19 @@ is denied. Keep client and metadata-origin settings aligned in synthetic fixture
 631 checks, actual API/thread/controls/restart/rollback and fresh EN/RU/history/
 bot-only/backup/recovery pass; runtime scan0, no changed dependency pins. No NAS or
 production poller was touched. Publication status is tracked by Git/GitHub Actions.
+
+## Kerberos and Jackett advisory maintenance, 2026-11-17
+
+Scheduled security run43904459727 failed on unchanged8123fef: bot krb5-libs
+1.22.2-r1 had21 findings; Jackett's application/updater manifests had7 records
+across6 distinct CVEs. The local candidate pins krb5-libs1.22.3-r0 in both bot
+stages and Jackett0.24.3078 at upstream digest6ff71f9c754a64190874851b726461b16e18b7680f237fd6eb9225a0622ec193,
+with .NET/ASP.NET9.0.23 and WebUtilities2.3.14. Both rebuilt amd64 images scan
+with0 records using Trivy0.76.1/DB2026-11-17;675 checks and compose-check pass.
+The owner subsequently authorized publishing source, checking CI and merging.
+Image publication and deployment remain unauthorized; published0.4.0 images and
+live services remain unchanged. Hosted verification is tracked in progress.md;
+no claim about current exploitability is made.
 
 ## curl advisory maintenance, 2026-10-26
 

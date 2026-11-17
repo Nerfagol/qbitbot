@@ -8,9 +8,11 @@ Docker named volumes inherit `/state` ownership from the image; bind mounts and
 existing volumes require an explicit permission check/migration. PUID/PGID apply
 to the bundled LinuxServer services, not the bot.
 
-qBittorrent 5.3.0 and Jackett v0.24.2900 retain their reviewed upstream digests.
-Small derived Dockerfiles apply only Brotli 1.2.1-r0 and musl/musl-utils 1.2.6-r3
-from their upstream Alpine repositories at **build time**. `docker compose build`
+qBittorrent 5.3.0 and Jackett v0.24.3078 use reviewed, digest-pinned upstream images.
+Small derived Dockerfiles apply exact Alpine package fixes at **build time**;
+the bot also patches `krb5-libs` to 1.22.3-r0 in both build and runtime stages.
+Jackett bundles .NET/ASP.NET 9.0.23 and WebUtilities 2.3.14. See
+`deploy/docker/*.Dockerfile` for the complete package pins. `docker compose build`
 builds these service images as well as the bot. A missing pinned package fails the
 build; it never falls back to installing packages during startup. Rebuild/review
 the pins when security updates arrive. LinuxServer init needs its existing root
