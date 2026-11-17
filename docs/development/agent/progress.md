@@ -1,5 +1,27 @@
 # Project Progress
 
+## 2026-11-17 — Updated affected packages locally; no deployment
+
+- Owner requested package updates only. The primary updated both bot stages to
+  krb5-libs1.22.3-r0 and pinned Jackett0.24.3078 at upstream digest
+  `6ff71f9c754a64190874851b726461b16e18b7680f237fd6eb9225a0622ec193`.
+  Inspected bundled manifests confirm .NET9.0.23 and WebUtilities2.3.14;
+  existing startup hooks and Alpine patch pins are retained.
+- Addresses scheduled [security run43904459727](https://github.com/Nerfagol/qbitbot/actions/runs/43904459727)
+  on unchanged8123fef:21 bot Kerberos findings and7 Jackett manifest records.
+  Local amd64 bot/Jackett builds passed; Trivy0.76.1 with DB2026-11-17 reports
+  zero findings for both OS and language dependencies in each updated image.
+- `make check` passed675 tests, lint/format, compilation and dependency checks.
+  `make compose-check` passed synthetic configuration, isolation and actual
+  Docker-context exclusions. Updated the current hardening guide and memory.
+- Owner subsequently authorized source publication, CI checks and merge in
+  [PR#5](https://github.com/Nerfagol/qbitbot/pull/5), which records hosted CI and
+  merge status. Independent review found no implementation/workflow blockers;
+  its stale image-reference documentation finding was corrected. Hosted checks
+  must pass before merge. No image publication, deployment, live service restart
+  or production state access is authorized. Published0.4.0 remains unchanged;
+  live acceptance is outside this source-only update.
+
 ## 2026-11-07 — Completed approved legacy GHCR cleanup
 
 - Owner explicitly approved deleting the3 named legacy packages and versions

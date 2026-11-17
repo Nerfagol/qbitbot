@@ -1,13 +1,13 @@
 # Container inputs
 
-Resolved on 2026-10-24 for Linux amd64, with Jackett refreshed on 2026-11-07.
+Resolved on 2026-10-24 for Linux amd64, with Jackett refreshed on 2026-11-17.
 These are immutable upstream manifest digests.
 
 | Component | Input |
 | --- | --- |
 | Python | `python:3.12.15-alpine3.24@sha256:b658b05ce9c4eb97ec6fc19424818a1f31993659c2b505a532f470e83807815d` |
 | qBittorrent | `lscr.io/linuxserver/qbittorrent@sha256:e887804fa9de4c60f5f0fb1f3a7e4febe40a8f69fe736f70c4e8589b1f868dab` (5.3.0) |
-| Jackett | `lscr.io/linuxserver/jackett@sha256:f235901dce0b102b2e8da55420d4a9b8d183dc8fff1e89bb6215209e066924cc` (0.24.3025, bundled .NET 9.0.22) |
+| Jackett | `lscr.io/linuxserver/jackett@sha256:6ff71f9c754a64190874851b726461b16e18b7680f237fd6eb9225a0622ec193` (0.24.3078, bundled .NET 9.0.23 and WebUtilities 2.3.14) |
 
 Both service images contain `/usr/bin/curl`, verified in network-disabled temporary
 containers. Readiness checks use that client without credentials. Jackett in-container
