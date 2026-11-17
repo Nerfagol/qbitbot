@@ -314,6 +314,23 @@ Offline helper tests require host jq, declared in README. With cap-drop ALL,
 root has no DAC override: private service configuration backups must run as the
 existing config owner, without changing state ownership or broadening permissions.
 
+## Published GHCR0.4.1, 2026-11-17
+
+Owner approved a new public patch release after the NAS update. Immutablev0.4.1
+targets10eee0f; publisher44190061144 passed on first attempt. All4 public amd64
+version/source tags, manifest/config hashes and empty-auth NAS pulls/probes match
+the release digest asset. Old0.4.0 tags/digests are unchanged. Package0.4.1 adds
+the Kerberos/Jackett and detached-browser fixes plus the post0.4.0 registry and
+credential-flow maintenance. Current guides/default overlays select0.4.1 only
+after the new aliases were verified. Tagged0.4.1 source still defaults to0.4.0;
+its release notes require explicit QBITBOT_VERSION=0.4.1 with registry overlays.
+
+Publication did not restart any NAS service; its verified3331911 direct candidate
+remains running. A registry-based replacement is a separate rollout, not an
+implicit consequence of publishing. Full source/history/layer audits and independent
+review passed with only reviewed upstream nonsecret scanner matches. Private
+match lists and raw reports stay outside Git; see progress.md for dated evidence.
+
 ## GHCR release preparation, 2026-11-07
 
 Owner authorized implementing/publishing registry release0.4.0 and QNAP pull tests.

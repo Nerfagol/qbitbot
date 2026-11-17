@@ -5,12 +5,17 @@ private Git refs, diagnostic reports or database snapshots into a release.
 
 ## Release preparation
 
-The latest published release is [v0.4.0](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.0),
+The latest published release is [v0.4.1](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.1),
 with matching package version and public amd64 GHCR images in one `qbitbot`
-package with component tags. Its exact source
-commite342894 passed all4 workflows and publication, anonymous manifest/pull and
-QNAP checks. The release asset records immutable digests. v0.3.0 remains unchanged.
-The additional single-package manifest records consolidated0.4.0 locations;
+package with component tags. Exact source10eee0f passed all4 main workflows;
+[publisher44190061144](https://github.com/Nerfagol/qbitbot/actions/runs/44190061144)
+passed metadata/overwrite gates, artifact tests/scans and all4 uploads. Anonymous
+version/source manifest and config hashes, plus QNAP pulls/package/browser probes,
+were verified. `images-0.4.1.json` records immutable digests with a checksum asset.
+Existing NAS services were not restarted by this release publication.
+
+Publishedv0.3.0/v0.4.0 and0.4.0 version/source image digests remain unchanged.
+The additional single-package0.4.0 manifest records its consolidated locations;
 original source/tag/images retain their digests and build labels.
 For each later release, choose a new version, update
 `[project].version` and date its changelog notes. Keep package, Git tag and Docker

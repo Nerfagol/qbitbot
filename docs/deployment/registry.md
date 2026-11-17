@@ -6,12 +6,12 @@ use **one package**, `ghcr.io/nerfagol/qbitbot`, with separate image tags/contai
 
 | Service | Image |
 | --- | --- |
-| Bot | `ghcr.io/nerfagol/qbitbot:0.4.0` |
-| qBittorrent | `ghcr.io/nerfagol/qbitbot:qbittorrent-0.4.0` |
-| Jackett | `ghcr.io/nerfagol/qbitbot:jackett-0.4.0` |
-| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot:flaresolverr-0.4.0` |
+| Bot | `ghcr.io/nerfagol/qbitbot:0.4.1` |
+| qBittorrent | `ghcr.io/nerfagol/qbitbot:qbittorrent-0.4.1` |
+| Jackett | `ghcr.io/nerfagol/qbitbot:jackett-0.4.1` |
+| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot:flaresolverr-0.4.1` |
 
-Version0.4.0 is public: anonymous manifests/pulls and QNAP compatibility were
+Version0.4.1 is public: anonymous manifests/pulls and QNAP compatibility were
 verified. No registry login or personal token is needed. For future packages,
 check actual visibility after publication. If a package is private, the owner
 can make it public in GitHub package settings. A successful upload or repository
@@ -24,15 +24,16 @@ root, after following the English/Russian setup guide for private `.env`,
 `bot.env`, download ownership and indexer configuration. Default Compose still
 builds from source. The overlays remove builds and preserve service settings,
 project and volume names; keep any existing explicit project name on every command.
-Set `QBITBOT_VERSION=0.4.0` in Compose's `.env` to choose a release. There is no
+Set `QBITBOT_VERSION=0.4.1` in Compose's `.env` to choose a release. There is no
 mutable `latest` tag. Version images must never be overwritten; full-source-SHA
 tags and OCI source/revision/version labels identify their build inputs. Bot
 source tags use `sha-<revision>`; companion source tags use
 `<component>-sha-<revision>`, preventing component collisions in the same package.
 Each image retains its upstream licenses and service isolation.
 
-The0.4.0 companion images were copied into these tags without rebuilding or changing
-their digests. The published Git tag is unchanged, so its original registry
+The0.4.0 companion images were copied into component-prefixed0.4.0 tags in the
+canonical package without rebuilding or changing their digests. The published
+v0.4.0 Git tag is unchanged, so its original registry
 overlays show the former package names. Use the current overlays/guide for the
 single-package layout. The release's additional `images-0.4.0-single-package.json`
 asset records current references; its original manifest remains historical evidence.
