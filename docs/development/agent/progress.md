@@ -14,8 +14,10 @@
 - `make check` passed675 tests, lint/format, compilation and dependency checks.
   `make compose-check` passed synthetic configuration, isolation and actual
   Docker-context exclusions. Updated the current hardening guide and memory.
-- Owner subsequently authorized source publication, CI checks and merge. The
-  primary is preparing a pull request; hosted checks and independent review
+- Owner subsequently authorized source publication, CI checks and merge in
+  [PR#5](https://github.com/Nerfagol/qbitbot/pull/5), which records hosted CI and
+  merge status. Independent review found no implementation/workflow blockers;
+  its stale image-reference documentation finding was corrected. Hosted checks
   must pass before merge. No image publication, deployment, live service restart
   or production state access is authorized. Published0.4.0 remains unchanged;
   live acceptance is outside this source-only update.
