@@ -5,7 +5,8 @@ COPY --from=upstream /app/ /app/
 COPY --from=upstream /package.json /package.json
 RUN apk upgrade --no-cache \
     && apk add --no-cache chromium chromium-chromedriver xvfb xauth dumb-init procps font-noto ca-certificates \
-        libexpat=2.10.0-r0 zlib=1.4-r0 \
+        libexpat=2.10.0-r0 zlib=1.4-r0 libcrypto3=3.5.9-r1 libssl3=3.5.9-r1 \
+        libfontenc=1.1.10-r0 libxml2=2.13.9-r3 gnutls=3.8.14-r0 \
     && addgroup -g 1000 flaresolverr \
     && adduser -D -u 1000 -G flaresolverr -h /app flaresolverr \
     && cp /usr/bin/chromedriver /app/chromedriver \
@@ -26,6 +27,8 @@ COPY deploy/docker/flaresolverr/strict_tls.py /tmp/strict_tls.py
 RUN python /tmp/strict_tls.py && rm /tmp/strict_tls.py
 COPY deploy/docker/flaresolverr/browser_process.py /tmp/browser_process.py
 RUN python /tmp/browser_process.py && rm /tmp/browser_process.py
+COPY deploy/docker/flaresolverr/proxy_credentials.py /tmp/proxy_credentials.py
+RUN python /tmp/proxy_credentials.py && rm /tmp/proxy_credentials.py
 ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1
 USER 1000:1000
 EXPOSE 8191

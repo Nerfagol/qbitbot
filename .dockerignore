@@ -11,8 +11,10 @@ deploy/docker/jackett/**
 !deploy/docker/jackett/startup.sh
 !deploy/docker/flaresolverr/
 deploy/docker/flaresolverr/**
-!deploy/docker/flaresolverr/*.py
 !deploy/docker/flaresolverr/LICENSE
+!deploy/docker/flaresolverr/browser_process.py
+!deploy/docker/flaresolverr/proxy_credentials.py
+!deploy/docker/flaresolverr/strict_tls.py
 !requirements/
 requirements/**
 !requirements/runtime.lock

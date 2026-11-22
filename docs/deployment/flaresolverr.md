@@ -38,6 +38,13 @@ Two asserted patches enable certificate verification and reject Chromium interna
 error documents, preventing invalid certificates from becoming false API success.
 This is a local derivative that requires deliberate maintenance as upstream changes.
 
+The image pins fixed Alpine builds of OpenSSL, `libfontenc`, `libxml2`, and GnuTLS.
+An asserted build patch encodes proxy strings as JSON literals in the Chromium
+extension to address the upstream proxy credential injection issue. The smoke
+check verifies that credentials with quotes, backslashes, and line breaks survive
+extension generation as literal values. See
+[GHSA-c52x-qhrp-8qqp](https://github.com/FlareSolverr/FlareSolverr/security/advisories/GHSA-c52x-qhrp-8qqp).
+
 Chromium is installed **inside the image**; host Chrome is not required. An asserted
 build patch connects detached Chromium's standard streams to `/dev/null`. The
 upstream launch helper exits immediately, leaving its output pipes without readers;

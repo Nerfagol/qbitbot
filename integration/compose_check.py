@@ -189,6 +189,7 @@ def check(docker="docker", context=None):
             "deploy/docker/flaresolverr/LICENSE",
             "deploy/docker/flaresolverr/strict_tls.py",
             "deploy/docker/flaresolverr/browser_process.py",
+            "deploy/docker/flaresolverr/proxy_credentials.py",
             "deploy/docker/jackett/startup.sh",
         ]
         forbidden = [
@@ -204,6 +205,7 @@ def check(docker="docker", context=None):
             "docs/archive/private-canary.txt",
             "deploy/private.env",
             "deploy/docker/flaresolverr/private.env",
+            "deploy/docker/flaresolverr/private.py",
             "deploy/docker/jackett/private.env",
             ".git/private-canary",
             "state/private-canary",
