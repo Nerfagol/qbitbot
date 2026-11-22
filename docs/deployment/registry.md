@@ -6,12 +6,12 @@ use **one package**, `ghcr.io/nerfagol/qbitbot`, with separate image tags/contai
 
 | Service | Image |
 | --- | --- |
-| Bot | `ghcr.io/nerfagol/qbitbot:0.4.1` |
-| qBittorrent | `ghcr.io/nerfagol/qbitbot:qbittorrent-0.4.1` |
-| Jackett | `ghcr.io/nerfagol/qbitbot:jackett-0.4.1` |
-| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot:flaresolverr-0.4.1` |
+| Bot | `ghcr.io/nerfagol/qbitbot:0.4.2` |
+| qBittorrent | `ghcr.io/nerfagol/qbitbot:qbittorrent-0.4.2` |
+| Jackett | `ghcr.io/nerfagol/qbitbot:jackett-0.4.2` |
+| Optional FlareSolverr | `ghcr.io/nerfagol/qbitbot:flaresolverr-0.4.2` |
 
-Version0.4.1 is public: anonymous manifests/pulls and QNAP compatibility were
+Version `0.4.2` is public. Anonymous manifests, pulls, and QNAP compatibility were
 verified. No registry login or personal token is needed. For future packages,
 check actual visibility after publication. If a package is private, the owner
 can make it public in GitHub package settings. A successful upload or repository
@@ -24,7 +24,7 @@ root, after following the English/Russian setup guide for private `.env`,
 `bot.env`, download ownership and indexer configuration. Default Compose still
 builds from source. The overlays remove builds and preserve service settings,
 project and volume names; keep any existing explicit project name on every command.
-Set `QBITBOT_VERSION=0.4.1` in Compose's `.env` to choose a release. There is no
+Set `QBITBOT_VERSION=0.4.2` in Compose's `.env` to choose a release. There is no
 mutable `latest` tag. Version images must never be overwritten; full-source-SHA
 tags and OCI source/revision/version labels identify their build inputs. Bot
 source tags use `sha-<revision>`; companion source tags use
