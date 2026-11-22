@@ -154,7 +154,7 @@ def check(docker="docker", context=None):
                 + ["compose", "--project-directory", str(root)]
                 + [arg for f in files for arg in ("-f", str(root / f))]
                 + ["config", "--format", "json"],
-                env=env | {"QBITBOT_VERSION": version},
+                env=env if version is None else env | {"QBITBOT_VERSION": version},
                 capture_output=True,
                 timeout=30,
             )
@@ -163,13 +163,14 @@ def check(docker="docker", context=None):
             return json.loads(result.stdout)
 
         for source_files, overlays in variants:
-            for version in ("0.4.0", "0.4.1"):
+            for version in (None, "0.4.0", "0.4.1", "0.4.2"):
                 source = resolved(source_files, version)
                 registry = resolved(source_files + overlays, version)
                 assert source["services"].keys() == registry["services"].keys()
                 for name, service in registry["services"].items():
                     prefix = "" if name == "bot" else name + "-"
-                    assert service.pop("image") == f"ghcr.io/nerfagol/qbitbot:{prefix}{version}"
+                    expected = version or "0.4.2"
+                    assert service.pop("image") == f"ghcr.io/nerfagol/qbitbot:{prefix}{expected}"
                     assert "build" not in service
                     source["services"][name].pop("build")
                 assert registry == source

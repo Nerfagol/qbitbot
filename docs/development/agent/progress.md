@@ -1,5 +1,24 @@
 # Project Progress
 
+## 2026-11-22 — Published immutable GHCR images for v0.4.2
+
+- [PR #9](https://github.com/Nerfagol/qbitbot/pull/9) merged the security fixes.
+  Exact source `ef835d8` passed check, containers, security, and CodeQL on main.
+  The GitHub archive matched all 169 reviewed files. Local verification passed
+  675 tests, Compose, API and recovery, and the full public-stack checks.
+- The publisher passed its metadata gate, smoke tests and image vulnerability
+  and secret scans on its first run. The four exact published images passed
+  a 47-layer privacy audit. Eight scanner matches corresponded to previously
+  reviewed public upstream constants or public Python signing fingerprints.
+  [Publisher run](https://github.com/Nerfagol/qbitbot/actions/runs/45070844827)
+- Verified all eight anonymous version and source tags and all four anonymous
+  QNAP image pulls and disposable package probes. The recorded `0.4.0` and
+  `0.4.1` image digests still match. The release digest and checksum assets
+  verified after download. [v0.4.2 release](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.2)
+- The current registry overlays and setup guides select `0.4.2`. The tagged
+  source predates this documentation update. Set `QBITBOT_VERSION=0.4.2`
+  explicitly when using that checkout's registry overlays.
+
 ## 2026-11-22 — Deployed the four security candidates to the NAS
 
 - Owner authorized the rollout of the four locally scanned Linux amd64 images.

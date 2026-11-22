@@ -5,14 +5,14 @@ private Git refs, diagnostic reports or database snapshots into a release.
 
 ## Release preparation
 
-The latest published release is [v0.4.1](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.1),
-with matching package version and public amd64 GHCR images in one `qbitbot`
-package with component tags. Exact source10eee0f passed all4 main workflows;
-[publisher44190061144](https://github.com/Nerfagol/qbitbot/actions/runs/44190061144)
-passed metadata/overwrite gates, artifact tests/scans and all4 uploads. Anonymous
-version/source manifest and config hashes, plus QNAP pulls/package/browser probes,
-were verified. `images-0.4.1.json` records immutable digests with a checksum asset.
-Existing NAS services were not restarted by this release publication.
+The latest published release is `v0.4.2`, with matching package version and
+public amd64 GHCR images in one `qbitbot` package with separate component tags.
+Exact source `ef835d8` passed all four main workflows. The publisher passed the
+metadata and tag-availability gates, artifact tests, and security scans before
+uploading all four images. [Publisher run](https://github.com/Nerfagol/qbitbot/actions/runs/45070844827)
+
+The release's `images-0.4.2.json` and checksum record the verified immutable
+version and source digests. [GitHub release](https://github.com/Nerfagol/qbitbot/releases/tag/v0.4.2)
 
 Publishedv0.3.0/v0.4.0 and0.4.0 version/source image digests remain unchanged.
 The additional single-package0.4.0 manifest records its consolidated locations;
