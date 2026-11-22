@@ -1,5 +1,34 @@
 # Project Progress
 
+## 2026-11-22 — Deployed the four security candidates to the NAS
+
+- Owner authorized the rollout of the four locally scanned Linux amd64 images.
+  Transfer checksum, image configuration digests and layer identities matched.
+- The first switch rolled back because QNAP Compose rejected `--pull` on `run`.
+  Verified the restored stack, then retried with a non-interactive readiness
+  command and verified offline backups.
+- All four updated containers are running with the patched packages. Jackett and
+  FlareSolverr are healthy. Authenticated readiness and SQLite integrity checks
+  passed. Verified a single poller and English/Russian Telegram menus. The owner
+  subsequently authorized the GitHub patch release.
+
+## 2026-11-22 — Rebuilt four local security candidate images
+
+- Built the bot, qBittorrent, Jackett and FlareSolverr for Linux amd64 under
+  `qbitbot-security-20261122` component tags. Verified the updated OpenSSL
+  packages in all four, the three additional FlareSolverr packages, and
+  matching Chromium and ChromeDriver `158.0.8127.36-r0`.
+- The FlareSolverr proxy regression failed on the baseline and passed on
+  the rebuilt image. The same smoke run covered detached browser output,
+  JavaScript rendering and rejection of self-signed HTTPS. Independent
+  review found no blockers in the patch or exact Docker input allowlist.
+- `make check` passed all 675 tests, lint, format, compilation and dependency
+  checks. `make compose-check`, `make integration` and `make integration-public`
+  passed with disposable resources and synthetic fixtures.
+- Trivy 0.76.1 reported zero vulnerability records for each of the four
+  OCI digest-verified exports using the 2026-11-22 19:00 UTC database.
+  Scope was local candidate builds and verification.
+
 ## 2026-11-17 — Published immutable GHCR0.4.1 and verified NAS pulls
 
 - Owner authorized the public patch release after reporting the NAS update good.

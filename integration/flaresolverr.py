@@ -37,6 +37,38 @@ else:
 print('PASS: detached browser output survives helper exit without blocking')
 """
 
+PROXY_CREDENTIALS_CHECK = r"""
+import json
+from pathlib import Path
+import shutil
+
+from utils import create_proxy_extension
+
+proxy = {
+    'url': 'http://proxy-fixture.invalid:8080',
+    'username': 'Example "name" \\ path',
+    'password': 'First line\nSecond line \u2603',
+}
+extension = Path(create_proxy_extension(proxy))
+try:
+    script = (extension / 'background.js').read_text()
+    expected = {
+        'scheme': 'http',
+        'host': 'proxy-fixture.invalid',
+        'port': 8080,
+        'username': proxy['username'],
+        'password': proxy['password'],
+    }
+    for line in script.splitlines():
+        field, _, value = line.strip().partition(':')
+        if field in expected:
+            assert json.loads(value.rstrip(',')) == expected.pop(field), field
+    assert not expected, f'Missing proxy settings: {expected.keys()}'
+finally:
+    shutil.rmtree(extension)
+print('PASS: proxy extension settings preserve credentials as literal data')
+"""
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -160,6 +192,10 @@ def main():
                 raise RuntimeError("Generated browser fixture readiness timed out")
             print(
                 run("exec", name + "-fixture", "python", "-c", DETACHED_BROWSER_CHECK),
+                flush=True,
+            )
+            print(
+                run("exec", name + "-fixture", "python", "-c", PROXY_CREDENTIALS_CHECK),
                 flush=True,
             )
             run(

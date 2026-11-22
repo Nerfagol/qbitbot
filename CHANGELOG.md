@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.4.2 — 2026-11-22
+
+- Update the OpenSSL libraries in all four container images to Alpine
+  `3.5.9-r1`. The bot uses the fixed libraries during wheel builds and at runtime.
+- Update FlareSolverr's `libfontenc`, `libxml2`, and GnuTLS packages. Encode
+  proxy strings as JSON literals in the Chromium extension to address
+  [GHSA-c52x-qhrp-8qqp](https://github.com/FlareSolverr/FlareSolverr/security/advisories/GHSA-c52x-qhrp-8qqp).
+  The image smoke test now verifies credential round-tripping alongside browser
+  JavaScript rendering and strict TLS.
+
 ## 0.4.1 — 2026-11-17
 
 - Update the bot's build/runtime Kerberos libraries to1.22.3-r0 and Jackett to

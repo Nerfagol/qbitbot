@@ -95,6 +95,21 @@ Synthetic browser JavaScript and selfsigned-TLS negative checks pass on amd64;
 public-source rebuild scan reports zero records with the2026-10-24 database.
 See docs/deployment/flaresolverr.md. No private deployment data belongs here.
 
+## Container security updates, 2026-11-22
+
+All four image recipes pin Alpine `libcrypto3` and `libssl3` to `3.5.9-r1`,
+including the bot wheel-build stage. The FlareSolverr recipe also pins
+`libfontenc=1.1.10-r0`, `libxml2=2.13.9-r3` and `gnutls=3.8.14-r0`.
+The derivative addresses GHSA-c52x-qhrp-8qqp with an asserted build patch
+that JSON-encodes proxy strings before inserting them into the extension
+script. Keep the port numeric and use the image smoke test to verify literal
+credential round-tripping alongside browser startup and strict TLS.
+
+QNAP Compose 2.29.1-qnap2 accepts `--pull never` on `up` and rejects `--pull`
+on `run`.
+Use `run --rm --no-deps -T` with a verified local tag and closed stdin for the
+one-off readiness probe.
+
 ## Detached Chromium launch maintenance, 2026-11-17
 
 Post-merge security44173994627 failed twice on Chromium startup despite clean

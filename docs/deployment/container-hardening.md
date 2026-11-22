@@ -11,6 +11,8 @@ to the bundled LinuxServer services, not the bot.
 qBittorrent 5.3.0 and Jackett v0.24.3078 use reviewed, digest-pinned upstream images.
 Small derived Dockerfiles apply exact Alpine package fixes at **build time**;
 the bot also patches `krb5-libs` to 1.22.3-r0 in both build and runtime stages.
+All four recipes pin the Alpine OpenSSL libraries to `3.5.9-r1`, including both
+bot stages.
 Jackett bundles .NET/ASP.NET 9.0.23 and WebUtilities 2.3.14. See
 `deploy/docker/*.Dockerfile` for the complete package pins. `docker compose build`
 builds these service images as well as the bot. A missing pinned package fails the
